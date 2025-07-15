@@ -194,9 +194,9 @@ public class ScheduleForm extends Dialog {
 
         // 予定所有者欄の設定
         owner.setLabel("予定の所有者*");
-        owner.setItems("ななほ", "りょうま", "りょうまななほ");
+        owner.setItems("ななほ", "りょうま", "りょうまななほ", "他");
         owner.setAllowCustomValue(true);
-        // owner.setItemLabelGenerator(Country::getName);
+
         // フォームに入力欄を配置
         formLayout.add(title, owner, isAllDay, startDatetime, date, endDatetime, endDate, description);
 
