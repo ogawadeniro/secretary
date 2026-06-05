@@ -1,0 +1,17 @@
+{
+  "name": "Secretary",
+  "short_name": "Secretary",
+  "description": "スケジュール管理・リマインダーアプリ",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#1a1a2e",
+  "theme_color": "#16213e",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
