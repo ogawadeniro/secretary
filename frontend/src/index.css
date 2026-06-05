@@ -340,7 +340,7 @@ body {
 }
 
 .delete-confirm-actions button.cancel-btn {
-  background: var(--color-surface2);
+  background: #2d2d3a;
   color: var(--color-text);
   border: 1px solid var(--color-border);
 }
