@@ -1,0 +1,6 @@
+target
+.git
+.gitignore
+*.md
+src/main/frontend/generated
+src/main/frontend/index.html
