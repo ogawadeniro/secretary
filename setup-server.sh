@@ -106,10 +106,11 @@ main() {
     echo "============================================"
     echo " Setup complete!"
     echo ""
-    echo " 次のステップ（開発マシンで実行）:"
-    echo "   1. グループ反映: newgrp docker"
-    echo "      (または一旦ログアウトして再ログイン)"
-    echo "   2. デプロイ: export DB_PASSWORD=... && bash deploy.sh"
+    echo " 次のステップ:"
+    echo "   1. ログアウトして再ログイン（Docker権限反映）"
+    echo "   2. 開発マシンで JARビルド: mvn package -DskipTests -Dvaadin.ignoreVersionChecks=true"
+    echo "   3. 開発マシンでデプロイ: export DB_PASSWORD=your-password && bash deploy.sh"
+    echo "       ※keystoreパスワードは自動で本番サーバから読み込むよ"
     echo "============================================"
 }
 

@@ -23,6 +23,19 @@ JAR_FILE="target/secretary-0.0.1-SNAPSHOT.jar"
 red()   { echo -e "\033[31m$1\033[0m"; }
 green() { echo -e "\033[32m$1\033[0m"; }
 
+load_keystore_password() {
+    if [ -n "${SSL_KEYSTORE_PASSWORD:-}" ]; then
+        return
+    fi
+    echo "=== Reading keystore password from server ==="
+    SSL_KEYSTORE_PASSWORD=$(ssh "${PROD_USER}@${PROD_HOST}" "cat /etc/secretary/keystore-password.txt 2>/dev/null" 2>/dev/null || true)
+    if [ -z "$SSL_KEYSTORE_PASSWORD" ]; then
+        echo "  WARNING: keystore password not found. HTTPS will be disabled."
+    else
+        green "  Keystore password loaded."
+    fi
+}
+
 check_prerequisites() {
     if [ -z "${DB_PASSWORD:-}" ]; then
         red "ERROR: DB_PASSWORD が設定されていません。"
@@ -112,6 +125,7 @@ main() {
     echo " Secretary - Deploy"
     echo "============================================"
     check_prerequisites
+    load_keystore_password
     transfer_files
     build_and_run_remote
     echo "============================================"
