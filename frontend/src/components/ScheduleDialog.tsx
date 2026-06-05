@@ -80,30 +80,31 @@ export default function ScheduleDialog({
             <p className="empty-msg">予定はありません</p>
           )}
 
-          {schedules.map((s) => (
-            <div key={s.id} className="schedule-card">
-              <div className="schedule-card-info">
-                <strong>{s.title}</strong>
-                <span className="schedule-time">
-                  {s.isAllDay
-                    ? "終日"
-                    : `${s.startDatetime.slice(11)} ~ ${s.endDatetime.slice(11)}`}
-                </span>
-                <span className="schedule-owner">{s.owner}</span>
+          {!showForm &&
+            schedules.map((s) => (
+              <div key={s.id} className="schedule-card">
+                <div className="schedule-card-info">
+                  <strong>{s.title}</strong>
+                  <span className="schedule-time">
+                    {s.isAllDay
+                      ? "終日"
+                      : `${s.startDatetime.slice(11)} ~ ${s.endDatetime.slice(11)}`}
+                  </span>
+                  <span className="schedule-owner">{s.owner}</span>
+                </div>
+                <div className="schedule-card-actions">
+                  <button
+                    onClick={() => {
+                      setEditing(s);
+                      setShowForm(true);
+                    }}
+                  >
+                    編集
+                  </button>
+                  <button onClick={() => handleDelete(s.id!)}>削除</button>
+                </div>
               </div>
-              <div className="schedule-card-actions">
-                <button
-                  onClick={() => {
-                    setEditing(s);
-                    setShowForm(true);
-                  }}
-                >
-                  編集
-                </button>
-                <button onClick={() => handleDelete(s.id!)}>削除</button>
-              </div>
-            </div>
-          ))}
+            ))}
 
           {showForm && (
             <ScheduleFormComponent
