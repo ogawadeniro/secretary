@@ -212,9 +212,9 @@ function ScheduleFormComponent({
         />
       </label>
       {!isAllDay && (
-        <>
+        <div className="time-fields">
           <label>
-            開始
+            開始時刻
             <input
               type="time"
               value={startTime}
@@ -222,14 +222,14 @@ function ScheduleFormComponent({
             />
           </label>
           <label>
-            終了
+            終了時刻
             <input
               type="time"
               value={endTime}
               onChange={(e) => setEndTime(e.target.value)}
             />
           </label>
-        </>
+        </div>
       )}
       <label>
         作成者
