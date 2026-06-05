@@ -230,6 +230,15 @@ function ScheduleFormComponent({
         />
       </label>
       <label>
+        作成者
+        <input
+          type="text"
+          value={owner}
+          onChange={(e) => setOwner(e.target.value)}
+          required
+        />
+      </label>
+      <label>
         終日
         <input
           type="checkbox"
@@ -257,15 +266,6 @@ function ScheduleFormComponent({
           </label>
         </div>
       )}
-      <label>
-        作成者
-        <input
-          type="text"
-          value={owner}
-          onChange={(e) => setOwner(e.target.value)}
-          required
-        />
-      </label>
       <label>
         説明
         <textarea
