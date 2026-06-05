@@ -79,8 +79,8 @@ check_prerequisites() {
         exit 1
     fi
     if [ ! -f "$JAR_FILE" ]; then
-        step "Building JAR..."
-        mvn package -DskipTests -Dvaadin.ignoreVersionChecks=true
+        step "Building JAR (React + Spring Boot)..."
+        bash build.sh
         ok "JAR built."
     fi
 }
