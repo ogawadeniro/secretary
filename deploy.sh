@@ -34,6 +34,14 @@ check_prerequisites() {
         echo "ERROR: Docker not found. Run 'bash setup-server.sh' first."
         exit 1
     fi
+    if ! docker info &>/dev/null; then
+        echo "ERROR: Cannot connect to Docker daemon."
+        echo "  Permission denied? 以下のいずれかを試してね:"
+        echo "    newgrp docker        # グループを即時反映"
+        echo "    または"
+        echo "    ログアウトして再ログイン"
+        exit 1
+    fi
     if [ -z "${DB_PASSWORD:-}" ]; then
         echo "ERROR: DB_PASSWORD is not set."
         echo "  export DB_PASSWORD=your-db-password"

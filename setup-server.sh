@@ -16,7 +16,9 @@ install_docker() {
     sudo dnf install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin
     sudo systemctl enable --now docker
     sudo usermod -aG docker "$(whoami)"
-    echo "=== Docker installed. You may need to log out and back in for group changes ==="
+    echo "=== Docker installed ==="
+    echo "!!! 一旦ログアウト/再ログインするか、以下を実行してグループを反映してね:"
+    echo "    newgrp docker"
 }
 
 # ---------- DBセットアップ ----------
@@ -66,7 +68,11 @@ main() {
     setup_database
     echo "============================================"
     echo " Setup complete!"
-    echo " Next step: bash deploy.sh"
+    echo ""
+    echo " 次のステップ:"
+    echo "   1. グループ反映: newgrp docker"
+    echo "      (または一旦ログアウトして再ログイン)"
+    echo "   2. デプロイ:     bash deploy.sh"
     echo "============================================"
 }
 
