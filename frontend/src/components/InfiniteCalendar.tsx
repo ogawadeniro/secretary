@@ -48,6 +48,7 @@ export default function InfiniteCalendar() {
   const [ownerColors, setOwnerColors] = useState<Map<string, string>>(new Map());
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
+  const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
   const [loading, setLoading] = useState(false);
 
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -149,8 +150,10 @@ export default function InfiniteCalendar() {
       0,
       Math.min(weeks.length - 1, Math.floor(centerPx / ROW_HEIGHT))
     );
-    // 行の中央列（インデックス3）の日付の月をアクティブ月に
-    setCurrentMonth(weeks[rowIndex][3].getMonth());
+    // 行の中央列（インデックス3）の日付の年と月をアクティブ月に
+    const centerDate = weeks[rowIndex][3];
+    setCurrentYear(centerDate.getFullYear());
+    setCurrentMonth(centerDate.getMonth());
   }, [weeks]);
 
   const handleDateClick = (date: Date) => {
@@ -179,7 +182,7 @@ export default function InfiniteCalendar() {
       })
     : [];
 
-  const monthLabel = `${weeks[0]?.[0]?.getFullYear() ?? ""}年 ${currentMonth + 1}月`;
+  const monthLabel = `${currentYear}年 ${currentMonth + 1}月`;
 
   return (
     <div className="calendar-container">

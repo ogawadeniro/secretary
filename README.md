@@ -1,33 +1,82 @@
 # secretary — スケジュール管理・リマインダーアプリ
 
-Spring Boot 3.4.3 + Vaadin 24.6.6 + PostgreSQL。
+Spring Boot 3.4.3 (REST API) + React (Vite + TypeScript) + PostgreSQL。
 
-## アーキテクチャ（クリーンアーキテクチャ）
+## 機能要件
+
+### カレンダー表示
+- **無限スクロールカレンダー**: IntersectionObserver による上下方向の無限スクロール。初期表示は約2年分（104週）。端に到達すると12週ずつ追加読み込み。
+- **週7日表示**: 日〜土の7列固定。各行は1週間を表す。
+- **アクティブ月表示**: ヘッダーに現在の年/月を表示。画面中央付近に写っている日付の月を自動判定。
+- **アクティブ月ハイライト**: アクティブ月の日付テキストは明るく表示され、他の月の日付は薄く表示。
+- **当日ハイライト**: 今日の日付セルは背景色で強調表示。
+- **固定サイズセル**: 全日付セルは同一サイズ（高さ固定）。予定の数に関わらずレイアウトが崩れない。
+
+### カレンダーナビゲーション
+- **今日を中心に初期表示**: アプリ起動時に今日の週を中央に配置。
+- **無限過去/未来スクロール**: 上方向にスクロールで過去へ、下方向にスクロールで未来へ。自動的に週を追加。
+
+### 予定管理
+- **予定の閲覧**: 各日付セルに予定タイトルがチップ表示。3件以上の予定がある日は残り件数を表示。
+- **予定の作成**: 日付セルをクリック → ダイアログ → 予定追加フォーム。タイトル、終日フラグ、開始/終了時刻、作成者、説明を入力。
+- **予定の編集**: ダイアログから既存予定を編集。部分更新対応（PATCH）。
+- **予定の削除**: ダイアログから予定を削除。
+- **複数日またぎ対応**: 開始日〜終了日の範囲で予定を表示。
+- **オーナー色分け**: 作成者ごとに異なる色で予定チップを表示。
+- **即時反映**: 予定の作成/編集/削除後、カレンダー画面に戻りすぐに反映。
+
+### REST API
+- **CRUD**: 予定の取得（一覧/個別）、作成、部分更新、削除。
+- **日付形式**: `yyyy/MM/dd-HH:mm`（Jackson @JsonFormat）。
+- **updateTime自動設定**: 作成・更新時のタイムスタンプはサーバー側で自動設定。
+
+## アーキテクチャ
+
+### 全体構成
 
 ```
-domain/ → application/ → infrastructure/ ← interface_adapter/
+frontend/ (React + Vite) → REST API ← backend/ (Spring Boot)
+                                  ↕
+                            PostgreSQL
+```
+
+### バックエンド（クリーンアーキテクチャ）
+
+```
+domain/ → application/ → infrastructure/
 ```
 
 依存関係は外側→内側。内側（domain）はどのフレームワークにも依存しない。
 
 | レイヤー | 役割 | キーファイル |
 |----------|------|-------------|
-| `domain/` | エンティティ、リポジトリポート | `Schedule`, `ScheduleRepository` |
-| `application/` | ユースケース（アプリケーションサービス） | `ScheduleUseCase`, `ScheduleService` |
-| `infrastructure/` | JPA永続化、RESTエンドポイント | `JpaSchedule`, `SchedulePersistenceAdapter`, `ScheduleController`, `ScheduleDto` |
-| `interface_adapter/` | Vaadin UI、色生成ユーティリティ | `MainView`, `ScheduleForm`, `Calender`, `OwnerColorUtil` |
+| `domain/` | エンティティ、リポジトリポート | `Schedule.java`, `ScheduleRepository.java` |
+| `application/` | ユースケース | `ScheduleUseCase.java`, `ScheduleService.java` |
+| `infrastructure/` | JPA永続化、RESTエンドポイント | `JpaSchedule.java`, `ScheduleController.java`, `ScheduleDto.java` |
 
-### 補足
+### フロントエンド
 
-- Vaadin Flow によるJavaベースWeb UI（`/` ルート）と REST API（`/api/v1/schedules`）の二面性。
-- カレンダーは42コマ（6週×7日）の固定グリッド。
-- `domain/model/Schedule.java` は pure POJO（JPA/Jacksonアノテーションなし）。JPAエンティティは `infrastructure/persistence/JpaSchedule.java` が別途保持。
+```
+frontend/src/
+├── main.tsx                     # エントリーポイント
+├── App.tsx                      # ルートコンポーネント
+├── index.css                    # ダークテーマCSS
+├── types/schedule.ts            # Schedule型定義
+├── api/scheduleApi.ts           # REST APIクライアント
+├── utils/dateUtils.ts           # 日付ユーティリティ
+└── components/
+    ├── InfiniteCalendar.tsx     # 無限スクロールカレンダー
+    ├── WeekRow.tsx              # 週単位の行
+    ├── DayCell.tsx              # 日付セル
+    └── ScheduleDialog.tsx       # 予定CRUDダイアログ
+```
 
 ## 開発
 
 ### 要件
 
 - Java 21
+- Node.js 18+
 - Maven 3.9+
 - PostgreSQL（開発用DBが `localhost:5432/secretary` にあること）
 - Lombok（IDEで注釈処理を有効にすること）
@@ -35,20 +84,28 @@ domain/ → application/ → infrastructure/ ← interface_adapter/
 ### ビルド & 実行
 
 ```bash
-# ビルド
-mvn clean package -Dvaadin.ignoreVersionChecks=true
+# フルビルド（React → Spring Boot JAR）
+bash build.sh
 
-# 開発プロファイルで起動（DBは localhost:5432/secretary）
-export SPRING_PROFILES_ACTIVE=develop
-java -jar target/secretary-0.0.1-SNAPSHOT.jar
+# 開発サーバー起動（Spring Boot + Vite を同時起動）
+bash dev.sh
+
+# 個別起動
+SPRING_PROFILES_ACTIVE=develop java -jar target/secretary-0.0.1-SNAPSHOT.jar  # API:8080
+cd frontend && npm run dev                                                     # UI:5173
 ```
 
-> `npm` が古い環境では `-Dvaadin.ignoreVersionChecks=true` が必要。
+`dev.sh` は Ctrl+C で両方のサーバーを一括停止できる。
+Vite は `/api` へのリクエストを Spring Boot（8080）にプロキシする。
 
 ### テスト
 
 ```bash
-mvn test -Dvaadin.ignoreVersionChecks=true
+# 全テスト実行
+mvn test
+
+# テストのみ（フロントエンドビルド不要）
+mvn test
 ```
 
 | テストクラス | 種別 | フレームワーク |
@@ -64,21 +121,23 @@ mvn test -Dvaadin.ignoreVersionChecks=true
 
 ### 注意点
 
-- `src/main/frontend/generated/` は自動生成＋gitignore対象。手動編集禁止。
+- `src/main/resources/static/` は `build.sh` で自動生成。手動編集しても次回ビルドで上書きされる。
 - 日付フォーマットは `yyyy/MM/dd-HH:mm`（Jacksonの `@JsonFormat`）。REST DTOの `ScheduleDto` にのみ適用。
+- `updateTime` はサーバー側（`ScheduleService`）で自動設定。フロントエンドから送信しないこと。
 
 ## CI/CD
 
-`main` ブランチへのpush / PR で `mvn test` が実行される（`.github/workflows/ci.yml`）。
+`main` ブランチへのpush / PR で `mvn test` + Dockerイメージビルドが実行される（`.github/workflows/ci.yml`）。
+Node.js 20 で React フロントエンドをビルドし、Spring Boot JAR に統合する。
 
 ## デプロイ
 
 ### 構成
 
 ```
-開発マシン                        本番サーバ（160.16.206.42）
+開発マシン                        本番サーバ（tk2-245-32038.vs.sakura.ne.jp）
   │                                 │
-  │ mvn package                     │ Dockerコンテナ
+  │ bash build.sh                   │ Dockerコンテナ
   │ deploy.sh で転送＆ビルド ─────→ │   secretary:latest
   │                                 │   --network host
   │                                 │   8443: Spring Boot (HTTPS)
@@ -94,13 +153,6 @@ cd secretary
 bash setup-server.sh
 ```
 
-`setup-server.sh` の内容：
-1. Dockerインストール
-2. PostgreSQLロール・DB・テーブル作成
-3. HTTPS用keystore生成（`/etc/secretary/keystore.p12`）
-
-終わったら `newgrp docker` または再ログインしてDocker権限を反映。
-
 ### デプロイ（開発マシンから）
 
 ```bash
@@ -108,29 +160,16 @@ export DB_PASSWORD=your-password
 bash deploy.sh    # JARビルド→転送→Dockerビルド→起動まで自動
 ```
 
-`deploy.sh` の流れ：
-1. JAR + Dockerfile を本番サーバにSCP
-2. SSHで本番サーバで `docker build`（JARをコピーするだけ、数秒で完了）
-3. 古いコンテナを停止・削除
-4. 新しいコンテナを起動（`--network host`、HTTPS有効）
-5. ヘルスチェック
-
-### アクセス
-
-`https://160.16.206.42/`
-
-> 初回はプロバイダの管理画面で443番ポートの開放が必要。
-
 ## API
 
-ベースURL: `https://160.16.206.42/api/v1/schedules`
+ベースURL: `https://tk2-245-32038.vs.sakura.ne.jp/api/v1/schedules`
 
 | メソッド | エンドポイント | 説明 |
 |----------|---------------|------|
 | GET | /schedules | 全予定を取得 |
 | GET | /schedules/{id} | 指定IDの予定を取得 |
 | POST | /schedules | 予定を新規登録 |
-| PATCH | /schedules/{id} | 予定を部分更新（nullの項目は変更しない） |
+| PATCH | /schedules/{id} | 予定を部分更新 |
 | DELETE | /schedules/{id} | 予定を削除 |
 
 ### リクエスト/レスポンス形式
@@ -151,10 +190,14 @@ bash deploy.sh    # JARビルド→転送→Dockerビルド→起動まで自動
 ### curl例
 
 ```bash
-curl -k https://160.16.206.42/api/v1/schedules
-curl -k -X POST https://160.16.206.42/api/v1/schedules \
-  -H "Content-Type: application/json" \
-  -d '{"title":"test","startDatetime":"2025/03/07-12:30","endDatetime":"2025/03/07-13:30","owner":"rogawa"}'
+curl -X GET http://localhost:8080/api/v1/schedules
+curl -X POST http://localhost:8080/api/v1/schedules \
+  -H "Content-Type:application/json" \
+  -d '{"title":"test","isAllDay":false,"startDatetime":"2026/06/05-12:30","endDatetime":"2026/06/05-13:30","owner":"rogawa","description":"test schedule"}'
+curl -X PATCH http://localhost:8080/api/v1/schedules/1 \
+  -H "Content-Type:application/json" \
+  -d '{"title":"test2"}'
+curl -X DELETE http://localhost:8080/api/v1/schedules/2
 ```
 
 ## DB
