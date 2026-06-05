@@ -25,6 +25,8 @@ IMAGE="${IMAGE:-ghcr.io/ogawadeniro/secretary:latest}"
 CONTAINER_NAME="${CONTAINER_NAME:-secretary}"
 DB_URL="${DB_URL:-jdbc:postgresql://localhost:5432/secretary}"
 DB_USERNAME="${DB_USERNAME:-rogawa}"
+SSL_PORT="${SSL_PORT:-}"
+SSL_KEYSTORE_PASSWORD="${SSL_KEYSTORE_PASSWORD:-}"
 
 # ---------- 前提チェック ----------
 check_prerequisites() {
@@ -65,14 +67,38 @@ deploy() {
     docker rm "${CONTAINER_NAME}" 2>/dev/null || true
 
     echo "=== Starting container: ${CONTAINER_NAME} ==="
-    docker run -d \
-        --name "${CONTAINER_NAME}" \
-        --restart unless-stopped \
-        --network host \
-        -e SPRING_DATASOURCE_URL="${DB_URL}" \
-        -e SPRING_DATASOURCE_USERNAME="${DB_USERNAME}" \
-        -e SPRING_DATASOURCE_PASSWORD="${DB_PASSWORD}" \
-        "${IMAGE}"
+
+    local docker_opts=(
+        --name "${CONTAINER_NAME}"
+        --restart unless-stopped
+        --network host
+        -e SPRING_PROFILES_ACTIVE=product
+        -e SPRING_DATASOURCE_URL="${DB_URL}"
+        -e SPRING_DATASOURCE_USERNAME="${DB_USERNAME}"
+        -e SPRING_DATASOURCE_PASSWORD="${DB_PASSWORD}"
+    )
+
+    # HTTPS設定（keystoreがあれば注入）
+    if [ -f /etc/secretary/keystore.p12 ] && [ -n "$SSL_KEYSTORE_PASSWORD" ]; then
+        docker_opts+=(
+            -e SERVER_PORT="${SSL_PORT:-8443}"
+            -e SERVER_SSL_KEY_STORE=file:/etc/secretary/keystore.p12
+            -e SERVER_SSL_KEY_STORE_PASSWORD="${SSL_KEYSTORE_PASSWORD}"
+            -e SERVER_SSL_KEY_STORE_TYPE=PKCS12
+            -e SERVER_SSL_KEY_ALIAS=secretary
+        )
+        echo "  HTTPS enabled on port ${SSL_PORT:-8443}"
+    elif [ -f /etc/secretary/keystore.p12 ]; then
+        echo "  WARNING: keystore exists but SSL_KEYSTORE_PASSWORD not set. Skipping HTTPS."
+    fi
+
+    # keystoreディレクトリをマウント
+    if [ -d /etc/secretary ]; then
+        docker_opts+=(-v /etc/secretary:/etc/secretary:ro)
+        echo "  Mounted /etc/secretary (read-only)"
+    fi
+
+    docker run -d "${docker_opts[@]}" "${IMAGE}"
 
     echo "=== Container started ==="
     docker logs --tail 20 "${CONTAINER_NAME}"
@@ -84,7 +110,15 @@ health_check() {
     sleep 3
     if docker ps --filter "name=${CONTAINER_NAME}" --filter "status=running" --format "{{.Names}}" | grep -q "${CONTAINER_NAME}"; then
         echo "OK: ${CONTAINER_NAME} is running"
-        curl -s -o /dev/null -w "HTTP %{http_code}" http://localhost:8080/api/v1/schedules || echo " (API not ready yet)"
+        local scheme="http"
+        local port="8080"
+        if [ -f /etc/secretary/keystore.p12 ] && [ -n "$SSL_KEYSTORE_PASSWORD" ]; then
+            scheme="https"
+            port="${SSL_PORT:-8443}"
+            curl -sk -o /dev/null -w "HTTP %{http_code}" "${scheme}://localhost:${port}/api/v1/schedules" || echo " (API not ready yet)"
+        else
+            curl -s -o /dev/null -w "HTTP %{http_code}" "${scheme}://localhost:${port}/api/v1/schedules" || echo " (API not ready yet)"
+        fi
         echo ""
     else
         echo "FAIL: ${CONTAINER_NAME} is not running"
@@ -104,8 +138,14 @@ main() {
     health_check
     echo "============================================"
     echo " Deploy complete!"
-    echo " Web UI: http://localhost:${HOST_PORT}/"
-    echo " API:    http://localhost:${HOST_PORT}/api/v1/schedules"
+    if [ -f /etc/secretary/keystore.p12 ] && [ -n "$SSL_KEYSTORE_PASSWORD" ]; then
+        local port="${SSL_PORT:-8443}"
+        echo " Web UI: https://localhost:${port}/"
+        echo " API:    https://localhost:${port}/api/v1/schedules"
+    else
+        echo " Web UI: http://localhost:8080/"
+        echo " API:    http://localhost:8080/api/v1/schedules"
+    fi
     echo "============================================"
 }
 

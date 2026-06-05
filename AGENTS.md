@@ -9,8 +9,10 @@ mvn clean package -Dvaadin.ignoreVersionChecks=true
 java -jar target/secretary-0.0.1-SNAPSHOT.jar
 ```
 
-`application.properties` で `spring.profiles.active=develop` が固定。
-DB接続先は `application-develop.properties` を参照（開発環境IP直書き）。
+プロファイルは環境変数 `SPRING_PROFILES_ACTIVE` で選択:
+- 開発: `export SPRING_PROFILES_ACTIVE=develop`
+- 本番: Dockerコンテナ起動時は `deploy.sh` が自動設定
+- テスト: JUnit実行時は自動検出
 
 `npm` が古い環境では `-Dvaadin.ignoreVersionChecks=true` が必要。
 
@@ -48,6 +50,35 @@ domain/ → application/ → infrastructure/ ← interface_adapter/
 | 予定CRUDフォーム | `interface_adapter/vaadin/ScheduleForm.java`（Dialog） |
 | 日付クリック詳細 | `interface_adapter/vaadin/calendar/ScheduleEditor.java`（Dialog） |
 
+## プロファイル戦略
+
+| プロファイル | 設定ファイル | 使いどころ |
+|------------|-------------|-----------|
+| `develop` | `application-develop.properties` | ローカル開発（IDEやCLIで起動） |
+| `product` | `application-product.properties` | 本番Dockerコンテナ（`deploy.sh` が設定） |
+| `test` | テストリソース内に内蔵 | JUnit自動検出 |
+
+`application.properties` にはデフォルトプロファイルの指定がない。
+必ず `SPRING_PROFILES_ACTIVE` で明示的に指定すること。
+
+## HTTPS対応
+
+本番サーバでは自己署名証明書によるHTTPSが使える。
+初回セットアップ時に `setup-server.sh` が `/etc/secretary/keystore.p12` を生成し、
+パスワードは `/etc/secretary/keystore-password.txt` に保存される。
+
+`deploy.sh` に `SSL_KEYSTORE_PASSWORD` を渡すと、
+自動的にHTTPS（デフォルト8443）で起動する。
+
+```bash
+export SSL_KEYSTORE_PASSWORD=$(sudo cat /etc/secretary/keystore-password.txt)
+export SSL_PORT=8443
+bash deploy.sh
+```
+
+本番用の正式な証明書を使いたい場合は、
+`/etc/secretary/keystore.p12` を差し替えてからコンテナを再起動すればOK。
+
 ## 開発の注意点
 
 - **Java 21必須**。Vaadin Maven Pluginがフロントエンドを自動生成する（`prepare-frontend` + `build-frontend`）。
@@ -81,12 +112,12 @@ psql -U rogawa -d postgres
 create database secretary;
 \q
 psql -U rogawa -d secretary;
-create table schedules (
-    id serial primary key,
-    title text not null,
-    is_all_day boolean not null,
-    datetime timestamptz not null,
-    end_datetime timestamptz not null,
+    create table schedules (
+        id serial primary key,
+        title text not null,
+        is_all_day boolean not null,
+        start_datetime timestamptz not null,
+        end_datetime timestamptz not null,
     owner text not null,
     description text,
     update_time timestamptz not null

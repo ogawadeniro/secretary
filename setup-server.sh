@@ -21,6 +21,42 @@ install_docker() {
     echo "    newgrp docker"
 }
 
+# ---------- HTTPS用keystore生成 ----------
+setup_keystore() {
+    local keystore_dir="/etc/secretary"
+    local keystore_file="${keystore_dir}/keystore.p12"
+    local password_file="${keystore_dir}/keystore-password.txt"
+
+    if [ -f "$keystore_file" ]; then
+        echo "=== Keystore already exists: ${keystore_file} ==="
+        return
+    fi
+
+    echo "=== Generating self-signed keystore ==="
+    sudo mkdir -p "$keystore_dir"
+
+    local password
+    password=$(openssl rand -base64 32)
+    echo "$password" | sudo tee "$password_file" > /dev/null
+    sudo chmod 600 "$password_file"
+
+    sudo keytool -genkeypair \
+        -alias secretary \
+        -keyalg RSA \
+        -keysize 2048 \
+        -storetype PKCS12 \
+        -keystore "$keystore_file" \
+        -storepass "$password" \
+        -dname "CN=secretary.local, O=secretary, C=JP" \
+        -validity 3650
+
+    sudo chmod 600 "$keystore_file"
+    echo "=== Keystore generated: ${keystore_file} ==="
+    echo "    Password saved to: ${password_file}"
+    echo "!!! 自己証明書なのでブラウザで警告が出るよ。"
+    echo "    必要なら後で正式な証明書に差し替えてね。"
+}
+
 # ---------- DBセットアップ ----------
 setup_database() {
     echo "=== Setting up PostgreSQL database ==="
@@ -66,6 +102,7 @@ main() {
     echo "============================================"
     install_docker
     setup_database
+    setup_keystore
     echo "============================================"
     echo " Setup complete!"
     echo ""
