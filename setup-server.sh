@@ -60,9 +60,9 @@ setup_keystore() {
 # ---------- DBセットアップ ----------
 setup_database() {
     echo "=== Setting up PostgreSQL database ==="
-    echo "Enter DB host [192.168.40.254]:"
+    echo "Enter DB host [localhost]:"
     read -r db_host
-    db_host="${db_host:-192.168.40.254}"
+    db_host="${db_host:-localhost}"
 
     echo "Enter DB admin user [postgres]:"
     read -r db_admin
