@@ -104,12 +104,8 @@ bash setup-server.sh
 ### デプロイ（開発マシンから）
 
 ```bash
-# JARをビルド（まだなら）
-mvn package -DskipTests -Dvaadin.ignoreVersionChecks=true
-
-# デプロイ
 export DB_PASSWORD=your-password
-bash deploy.sh
+bash deploy.sh    # JARビルド→転送→Dockerビルド→起動まで自動
 ```
 
 `deploy.sh` の流れ：
