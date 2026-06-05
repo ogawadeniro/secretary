@@ -24,6 +24,14 @@ export default function ScheduleDialog({
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<Schedule | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [closing, setClosing] = useState(false);
+
+  const ANIMATION_DURATION = 200;
+
+  const handleClose = () => {
+    setClosing(true);
+    setTimeout(onClose, ANIMATION_DURATION);
+  };
 
   /** 予定を削除 */
   const handleDelete = async (id: number) => {
@@ -55,20 +63,20 @@ export default function ScheduleDialog({
         });
       }
       onSchedulesChanged();
-      onClose();
+      handleClose();
     } catch (e) {
       setError("保存に失敗しました");
     }
   };
 
   return (
-    <div className="dialog-overlay" onClick={onClose}>
-      <div className="dialog" onClick={(e) => e.stopPropagation()}>
+    <div className={`dialog-overlay ${closing ? "closing" : ""}`} onClick={handleClose}>
+      <div className={`dialog ${closing ? "closing" : ""}`} onClick={(e) => e.stopPropagation()}>
         <div className="dialog-header">
           <h2>
             {date.getMonth() + 1}月{date.getDate()}日の予定
           </h2>
-          <button className="close-btn" onClick={onClose}>
+          <button className="close-btn" onClick={handleClose}>
             ✕
           </button>
         </div>

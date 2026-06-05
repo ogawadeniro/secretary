@@ -160,6 +160,12 @@ body {
   justify-content: center;
   z-index: 100;
   padding: 0;
+  overflow: hidden;
+  transition: opacity 0.2s ease-out;
+}
+
+.dialog-overlay.closing {
+  opacity: 0;
 }
 
 .dialog {
@@ -174,12 +180,25 @@ body {
   animation: slideUp 0.2s ease-out;
 }
 
+.dialog.closing {
+  animation: slideDown 0.2s ease-out forwards;
+}
+
 @keyframes slideUp {
   from {
     transform: translateY(100%);
   }
   to {
     transform: translateY(0);
+  }
+}
+
+@keyframes slideDown {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(100%);
   }
 }
 
