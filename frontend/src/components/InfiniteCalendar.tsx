@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useLayoutEffect } from "react";
 import { Schedule } from "../types/schedule";
 import { fetchSchedules } from "../api/scheduleApi";
 import WeekRow from "./WeekRow";
@@ -126,15 +126,18 @@ export default function InfiniteCalendar() {
     return () => observer.disconnect();
   }, []);
 
-  // 初期表示を今日の週を中心にスクロール
-  useEffect(() => {
+  // 初期表示を今日の週を中心にスクロール（レイアウト確定後にRAFで確実に）
+  useLayoutEffect(() => {
     const el = scrollRef.current;
     if (!el || weeks.length === 0) return;
+    if (el.scrollTop !== 0) return; // すでにスクロール済みならスキップ
     const centerIndex = Math.floor(INITIAL_WEEKS / 2);
     const ROW_HEIGHT = 110;
-    el.scrollTop =
-      centerIndex * ROW_HEIGHT - el.clientHeight / 2 + ROW_HEIGHT / 2;
-  }, []);
+    requestAnimationFrame(() => {
+      el.scrollTop =
+        centerIndex * ROW_HEIGHT - el.clientHeight / 2 + ROW_HEIGHT / 2;
+    });
+  }, [weeks]);
 
   /**
    * スクロール位置からアクティブ月を決定。
