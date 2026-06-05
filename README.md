@@ -73,7 +73,7 @@ mvn test -Dvaadin.ignoreVersionChecks=true
 | mainブランチへのpush / PR | `mvn test` 実行 |
 | mainブランチへのpush（テスト通過後） | Dockerイメージをビルドし **GHCR** にpush |
 
-- Dockerイメージは `ghcr.io/<リポジトリ>/secretary:latest` として公開。
+- Dockerイメージは `ghcr.io/ogawadeniro/secretary:latest` として公開。
 - GitHub Secretsの `GITHUB_TOKEN` は自動設定済み。追加の設定は不要。
 
 ## Dockerデプロイ
@@ -90,7 +90,7 @@ mvn test -Dvaadin.ignoreVersionChecks=true
 
 ```bash
 # リポジトリをクローン
-git clone <リポジトリURL>
+git clone https://github.com/ogawadeniro/secretary.git
 cd secretary
 
 # Docker + DBのセットアップ（初回のみ）
@@ -105,7 +105,7 @@ bash setup-server.sh
 
 ```bash
 # 環境変数を設定
-export GHCR_USER=your-github-username
+export GHCR_USER=ogawadeniro
 export GHCR_TOKEN=your-github-pat  # プライベートリポジトリの場合
 export DB_PASSWORD=your-db-password
 
@@ -117,7 +117,7 @@ bash deploy.sh
 
 ```bash
 # イメージをpull
-docker pull ghcr.io/your-org/secretary:latest
+docker pull ghcr.io/ogawadeniro/secretary:latest
 
 # コンテナを起動
 docker run -d \
@@ -127,7 +127,7 @@ docker run -d \
     -e SPRING_DATASOURCE_URL=jdbc:postgresql://<DB_HOST>:5432/secretary \
     -e SPRING_DATASOURCE_USERNAME=rogawa \
     -e SPRING_DATASOURCE_PASSWORD=your-password \
-    ghcr.io/your-org/secretary:latest
+    ghcr.io/ogawadeniro/secretary:latest
 ```
 
 ## 開発の注意点

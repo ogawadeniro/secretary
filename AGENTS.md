@@ -55,7 +55,7 @@ domain/ → application/ → infrastructure/ ← interface_adapter/
 - 日付フォーマットは `yyyy/MM/dd-HH:mm`（Jacksonの `@JsonFormat`）。REST DTOの `ScheduleDto` にのみ適用。
 - Lombok（`@Data`）使用。IDEで注釈処理を有効にすること。
 - テストは JUnit 5 + Mockito + H2。`mvn test -Dvaadin.ignoreVersionChecks=true` で実行（テスト用プロファイル `test` を自動適用）。
-- CI/CDは GitHub Actions（`.github/workflows/ci.yml`）。mainブランチにpushで自動テスト→DockerイメージをGHCRにpush。
+- CI/CDは GitHub Actions（`.github/workflows/ci.yml`）。mainブランチにpushで自動テスト→Dockerイメージを `ghcr.io/ogawadeniro/secretary:latest` にpush。
 - Dockerデプロイは `Dockerfile` + `deploy.sh` を参照。Rocky Linux 9.4 で動作確認。
 
 ## APIテスト

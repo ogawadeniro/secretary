@@ -5,7 +5,7 @@ set -eu
 # secretary — Rocky Linux 9.4 デプロイスクリプト
 #
 # 使い方（初回セットアップ済みの場合）:
-#   export GHCR_USER=your-github-username
+#   export GHCR_USER=ogawadeniro
 #   export GHCR_TOKEN=your-github-pat
 #   export DB_PASSWORD=your-db-password
 #   bash deploy.sh
