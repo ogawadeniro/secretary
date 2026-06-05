@@ -11,13 +11,13 @@ set -eu
 # このスクリプトは既存テーブルを新しいスキーマに合わせる。
 #
 # 使い方:
-#   export DB_HOST=192.168.40.254
+#   export DB_HOST=localhost
 #   export DB_ADMIN_USER=postgres
 #   export DB_ADMIN_PASSWORD=your-password
 #   bash migrate.sh
 # ============================================================
 
-DB_HOST="${DB_HOST:-192.168.40.254}"
+DB_HOST="${DB_HOST:-localhost}"
 DB_ADMIN_USER="${DB_ADMIN_USER:-postgres}"
 DB_NAME="${DB_NAME:-secretary}"
 

@@ -2,7 +2,7 @@
 set -eu
 
 # Rocky Linux 9.4 初期セットアップスクリプト
-# 初回のみ実行（Dockerインストール + DB初期化）
+# 初回のみ実行（Dockerインストール + DB初期化 + HTTPS用keystore生成）
 
 # ---------- Dockerインストール ----------
 install_docker() {
@@ -106,10 +106,10 @@ main() {
     echo "============================================"
     echo " Setup complete!"
     echo ""
-    echo " 次のステップ:"
+    echo " 次のステップ（開発マシンで実行）:"
     echo "   1. グループ反映: newgrp docker"
     echo "      (または一旦ログアウトして再ログイン)"
-    echo "   2. デプロイ:     bash deploy.sh"
+    echo "   2. デプロイ: export DB_PASSWORD=... && bash deploy.sh"
     echo "============================================"
 }
 
