@@ -47,7 +47,7 @@ EOSQL
             id SERIAL PRIMARY KEY,
             title TEXT NOT NULL,
             is_all_day BOOLEAN NOT NULL,
-            datetime TIMESTAMPTZ NOT NULL,
+            start_datetime TIMESTAMPTZ NOT NULL,
             end_datetime TIMESTAMPTZ NOT NULL,
             owner TEXT NOT NULL,
             description TEXT,

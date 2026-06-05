@@ -146,7 +146,7 @@ docker run -d \
 | id | serial | PK | 一意ID |
 | title | text | NOT NULL | 予定タイトル |
 | is_all_day | boolean | NOT NULL | 終日予定フラグ |
-| datetime | timestamptz | NOT NULL | 予定の開始日時 |
+| start_datetime | timestamptz | NOT NULL | 予定の開始日時 |
 | end_datetime | timestamptz | NOT NULL | 予定の終了日時 |
 | owner | text | NOT NULL | 予定の所有者 |
 | description | text | | 予定の説明 |
@@ -169,7 +169,7 @@ create table schedules (
     id serial primary key,
     title text not null,
     is_all_day boolean not null,
-    datetime timestamptz not null,
+    start_datetime timestamptz not null,
     end_datetime timestamptz not null,
     owner text not null,
     description text,
