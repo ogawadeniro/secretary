@@ -1,4 +1,6 @@
 #!/bin/bash
+# secretary フルビルドスクリプト
+# React フロントエンドをビルド → Spring Boot の静的リソースにコピー → JAR にパッケージ
 set -euo pipefail
 
 echo "=== Building Frontend (React) ==="

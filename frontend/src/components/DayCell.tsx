@@ -9,6 +9,7 @@ interface DayCellProps {
   onDateClick: (date: Date) => void;
 }
 
+/** 1日分のセル（日付番号 + 予定チップ） */
 export default function DayCell({
   date,
   schedules,

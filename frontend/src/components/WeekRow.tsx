@@ -1,6 +1,6 @@
 import { Schedule } from "../types/schedule";
-import DayCell from "./DayCell";
 import { schedulesForDate, formatDateKey, isSameDay } from "../utils/dateUtils";
+import DayCell from "./DayCell";
 
 interface WeekRowProps {
   dates: Date[];
@@ -10,6 +10,7 @@ interface WeekRowProps {
   onDateClick: (date: Date) => void;
 }
 
+/** 1週間分（7日）の行を表示 */
 export default function WeekRow({
   dates,
   schedules,
