@@ -110,17 +110,6 @@ frontend/src/
 `application.properties` にはデフォルトプロファイルの指定がない。
 必ず `SPRING_PROFILES_ACTIVE` で明示的に指定すること。
 
-## HTTPS対応（本番）
-
-```bash
-export SSL_KEYSTORE_PASSWORD=$(sudo cat /etc/secretary/keystore-password.txt)
-export SSL_PORT=8443
-bash deploy.sh
-```
-
-初回セットアップ時に `setup-server.sh` が `/etc/secretary/keystore.p12` を生成。
-詳しくは `deploy.sh` と `setup-server.sh` を参照。
-
 ## 開発の注意点
 
 - **Java 21必須**。Node.js 18+。
@@ -137,8 +126,27 @@ bash deploy.sh
 |-----------|------|
 | `build.sh` | Reactビルド → Spring Bootのstaticにコピー → JARパッケージ |
 | `dev.sh` | Spring Boot + Vite を同時起動（Ctrl+Cで終了） |
-| `deploy.sh` | リモートサーバーにデプロイ（JAR転送 → Dockerビルド → 起動） |
+| `deploy.sh` | リモートサーバーにデプロイ（JARビルド → scp → Dockerビルド → 起動） |
 | `setup-server.sh` | 初回サーバーセットアップ（Docker/DB/キーストア） |
+
+### デプロイ
+
+```bash
+export SECRETARY_DB_PASSWORD=your-password
+export SSL_KEYSTORE_PASSWORD=$(sudo cat /etc/secretary/keystore-password.txt)
+bash deploy.sh
+```
+
+### ブランチ戦略
+
+```
+feature/xxx → merge → dev → (デプロイ時) → merge → main
+fix/xxx     → merge → dev → (デプロイ時) → merge → main
+```
+
+- `main`: 本番リリース版。デプロイ時にのみ更新
+- `dev`: 開発統合ブランチ。feature/fix はここにマージ
+- `feature/xxx`, `fix/xxx`: 1機能・1修正 = 1ブランチ
 
 ## APIテスト
 
