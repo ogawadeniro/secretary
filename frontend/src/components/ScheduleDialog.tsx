@@ -96,7 +96,7 @@ export default function ScheduleDialog({
             <p className="empty-msg">予定はありません</p>
           )}
 
-          {!showForm &&
+          {!showForm && !deleteTarget &&
             schedules.map((s) => (
               <div key={s.id} className="schedule-card">
                 <div className="schedule-card-info">
@@ -127,7 +127,7 @@ export default function ScheduleDialog({
               <p>「{deleteTarget.title}」を削除してもいいですか？</p>
               <div className="delete-confirm-actions">
                 <button className="delete-btn" onClick={() => handleDelete(deleteTarget.id!)}>削除する</button>
-                <button onClick={() => setDeleteTarget(null)}>キャンセル</button>
+                <button className="cancel-btn" onClick={() => setDeleteTarget(null)}>キャンセル</button>
               </div>
             </div>
           )}
