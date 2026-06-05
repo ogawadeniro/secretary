@@ -1,60 +1,56 @@
 package com.rogawa.secretary.interface_adapter.vaadin;
 
-import com.rogawa.secretary.interface_adapter.vaadin.calendar.Calender;
+import com.rogawa.secretary.interface_adapter.vaadin.calendar.InfiniteCalendar;
 import com.vaadin.flow.component.applayout.AppLayout;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
-import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.YearMonth;
 
 @Route
 @PageTitle("Securetary")
 public class MainView extends AppLayout {
 
     private final Header header;
-    private final Calender calender;
+    private final InfiniteCalendar infiniteCalendar;
 
     private LocalDate calenderMonth;
-    private static final DayOfWeek FIXED_DAY_OF_WEEK = DayOfWeek.SUNDAY;
 
-    public MainView(Header header, Calender calender) {
+    public MainView(Header header, InfiniteCalendar infiniteCalendar) {
         this.header = header;
-        this.calender = calender;
+        this.infiniteCalendar = infiniteCalendar;
         this.calenderMonth = LocalDate.now();
 
         getElement().getThemeList().set("dark", true);
         addToNavbar(true, this.header.createHeader());
-        setContent(this.calender);
+        setContent(this.infiniteCalendar);
 
-        changeViewMonth(this.calenderMonth);
+        this.infiniteCalendar.init();
 
-        this.header.addUpdateListener(c -> {
+        this.infiniteCalendar.addCurrentMonthListener(e -> {
+            YearMonth ym = e.getYearMonth();
+            this.calenderMonth = ym.atDay(1);
+            setHeaderDate();
         });
+
         this.header.addClickPrivBtnListener(c -> {
-            changeViewMonth(this.calenderMonth.plusMonths(-1));
+            scrollToMonth(this.calenderMonth.plusMonths(-1));
         });
         this.header.addClickNextBtnListener(c -> {
-            changeViewMonth(this.calenderMonth.plusMonths(1));
+            scrollToMonth(this.calenderMonth.plusMonths(1));
         });
         this.header.addSelectMonthListener(c -> {
-            changeViewMonth(c.getValue());
-        });
-        this.calender.addUpdateListener(c -> {
-            initCalender();
+            scrollToMonth(c.getValue());
         });
     }
 
-    private void changeViewMonth(LocalDate newMonth) {
+    private void scrollToMonth(LocalDate newMonth) {
         this.calenderMonth = newMonth;
         setHeaderDate();
-        initCalender();
+        this.infiniteCalendar.scrollToDate(newMonth);
     }
 
     private void setHeaderDate() {
         this.header.setCalenderMonth(this.calenderMonth);
-    }
-
-    private void initCalender() {
-        this.calender.initCalender(this.calenderMonth, FIXED_DAY_OF_WEEK);
     }
 }

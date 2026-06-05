@@ -155,15 +155,23 @@ build_and_run_remote() {
             "${IMAGE_NAME}:latest"
 
         remote_ok "container started."
-        sleep 3
 
         remote_step "Health check..."
-        if curl -sk -o /dev/null -w "HTTP %{http_code}" https://localhost:8443/api/v1/schedules; then
-            echo ""
-            remote_ok "Application is running!"
-        else
-            echo ""
-            remote_warn "Health check failed. Check: docker logs ${CONTAINER_NAME}"
+        local retries=0
+        local max_retries=10
+        while [ $retries -lt $max_retries ]; do
+            sleep 3
+            local http_code
+            http_code=$(curl -sk -o /dev/null -w "%{http_code}" https://localhost:8443/api/v1/schedules 2>/dev/null || true)
+            if [ "$http_code" = "200" ]; then
+                remote_ok "Application is running! (HTTP 200)"
+                break
+            fi
+            retries=$((retries + 1))
+            remote_info "waiting... ($((retries * 3))s, HTTP ${http_code})"
+        done
+        if [ $retries -ge $max_retries ]; then
+            remote_warn "Health check failed after $((max_retries * 3))s. Check: docker logs ${CONTAINER_NAME}"
         fi
 REMOTE
 }

@@ -2,13 +2,10 @@ package com.rogawa.secretary.interface_adapter.vaadin.calendar;
 
 import com.rogawa.secretary.domain.model.Schedule;
 import com.rogawa.secretary.interface_adapter.util.OwnerColorUtil;
-import com.vaadin.flow.component.ComponentEvent;
-import com.vaadin.flow.component.ComponentEventListener;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-import com.vaadin.flow.shared.Registration;
 import com.vaadin.flow.spring.annotation.SpringComponent;
 import com.vaadin.flow.spring.annotation.UIScope;
 import com.vaadin.flow.theme.lumo.LumoUtility;
@@ -39,6 +36,7 @@ public class DateCard extends VerticalLayout {
         this.setPadding(false);
         this.setSpacing(false);
         this.getStyle().set("width", this.widthStyleStr);
+        this.getStyle().set("min-height", "5rem");
         this.addClassNames(
                 LumoUtility.Border.LEFT,
                 LumoUtility.Border.TOP,
@@ -66,20 +64,15 @@ public class DateCard extends VerticalLayout {
         this.schedules = new ArrayList<>();
     }
 
-    public void initDateCard(LocalDate calenderMonth) {
-        placeItems(calenderMonth);
-    }
-
-    private void placeItems(LocalDate calenderMonth) {
+    public void render() {
         this.removeAll();
 
         if (this.date.equals(LocalDate.now())) {
             this.addClassName(LumoUtility.Background.PRIMARY_10);
-        } else if (this.date.getMonth() == calenderMonth.getMonth()) {
-            this.removeClassNames(LumoUtility.Background.PRIMARY_10);
-            this.addClassName(LumoUtility.Background.CONTRAST_5);
         } else {
-            this.removeClassNames(LumoUtility.Background.CONTRAST_5);
+            this.removeClassNames(
+                    LumoUtility.Background.PRIMARY_10,
+                    LumoUtility.Background.CONTRAST_5);
         }
 
         this.add(createDateChip());
@@ -132,15 +125,5 @@ public class DateCard extends VerticalLayout {
 
         titleChip.add(titleSpan);
         return titleChip;
-    }
-
-    public class UpdateEvent extends ComponentEvent<DateCard> {
-        public UpdateEvent(DateCard source) {
-            super(source, false);
-        }
-    }
-
-    public Registration addUpdateListener(ComponentEventListener<UpdateEvent> listener) {
-        return addListener(UpdateEvent.class, listener);
     }
 }
