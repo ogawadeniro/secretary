@@ -99,6 +99,16 @@ cd frontend && npm run dev                                                     #
 `dev.sh` は Ctrl+C で両方のサーバーを一括停止できる。
 Vite は `/api` へのリクエストを Spring Boot（8080）にプロキシする。
 
+`build.sh` が必要なケース:
+
+| 状況 | 使うスクリプト | 説明 |
+|------|--------------|------|
+| フロントエンド開発中 | `dev.sh` or `npm run dev` | Viteがホットリロードで即時反映 |
+| バックエンド開発中 | `mvn spring-boot:run` or IDE | フロントエンドはViteからAPI叩く |
+| デプロイ前 | `bash build.sh` | JARにフロントエンドを含めるために必要 |
+| `java -jar` で単体起動 | `bash build.sh` してから | 同上。Spring Bootが静的ファイルを配信 |
+| 本番Dockerデプロイ | `deploy.sh` が内部で実行 | 自動でビルド&転送される
+
 ### テスト
 
 ```bash
