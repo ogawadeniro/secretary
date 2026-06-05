@@ -204,36 +204,6 @@ create table schedules (
 }
 ```
 
-### curlテスト
-
-```bash
-# 全件取得
-curl -X GET http://localhost:8080/api/v1/schedules
-
-# 1件取得
-curl -X GET http://localhost:8080/api/v1/schedules/1
-
-# 新規登録
-curl -X POST http://localhost:8080/api/v1/schedules \
-  -H "Content-Type: application/json" \
-  -d '{"title":"test","startDatetime":"2025/03/07-12:30","endDatetime":"2025/03/07-13:30","owner":"rogawa","description":"test schedule"}'
-
-# 更新(PATCH)
-curl -X PATCH http://localhost:8080/api/v1/schedules/1 \
-  -H "Content-Type: application/json" \
-  -d '{"title":"test2"}'
-
-# 削除
-curl -X DELETE http://localhost:8080/api/v1/schedules/2
-```
-
-## リマインド処理
-
-- cronによる定期実行（未実装）
-  - 21:00：明日の予定をリマインド
-  - 8:00：今日の予定をリマインド
-- LINE API経由で通知（未実装）
-
 ## ライセンス
 
 MIT
