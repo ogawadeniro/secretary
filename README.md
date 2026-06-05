@@ -156,7 +156,7 @@ bash setup-server.sh
 ### デプロイ（開発マシンから）
 
 ```bash
-export DB_PASSWORD=your-password
+export SECRETARY_DB_PASSWORD=your-password
 bash deploy.sh    # JARビルド→転送→Dockerビルド→起動まで自動
 ```
 

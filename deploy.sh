@@ -73,9 +73,9 @@ load_keystore_password() {
 }
 
 check_prerequisites() {
-    if [ -z "${DB_PASSWORD:-}" ]; then
-        fail "DB_PASSWORD not set."
-        info "  export DB_PASSWORD=your-password"
+    if [ -z "${SECRETARY_DB_PASSWORD:-}" ]; then
+        fail "SECRETARY_DB_PASSWORD not set."
+        info "  export SECRETARY_DB_PASSWORD=your-password"
         exit 1
     fi
     if [ ! -f "$JAR_FILE" ]; then
@@ -96,7 +96,7 @@ transfer_files() {
 build_and_run_remote() {
     step "Building image and starting container on remote..."
 
-    ssh "${PROD_USER}@${PROD_HOST}" "DB_PASSWORD='${DB_PASSWORD}' SSL_KEYSTORE_PASSWORD='${SSL_KEYSTORE_PASSWORD:-}' bash -s" <<'REMOTE'
+    ssh "${PROD_USER}@${PROD_HOST}" "SECRETARY_DB_PASSWORD='${SECRETARY_DB_PASSWORD}' SSL_KEYSTORE_PASSWORD='${SSL_KEYSTORE_PASSWORD:-}' bash -s" <<'REMOTE'
         set -eu
         IMAGE_NAME="secretary"
         CONTAINER_NAME="secretary"
@@ -145,7 +145,7 @@ build_and_run_remote() {
             -e SPRING_PROFILES_ACTIVE=product \
             -e SPRING_DATASOURCE_URL="jdbc:postgresql://localhost:5432/secretary" \
             -e SPRING_DATASOURCE_USERNAME=rogawa \
-            -e SPRING_DATASOURCE_PASSWORD="${DB_PASSWORD}" \
+            -e SPRING_DATASOURCE_PASSWORD="${SECRETARY_DB_PASSWORD}" \
             -e SERVER_PORT=8443 \
             -e SERVER_SSL_KEY_STORE=file:/etc/secretary/keystore.p12 \
             -e SERVER_SSL_KEY_STORE_PASSWORD="${SSL_KEYSTORE_PASSWORD:-}" \
