@@ -25,6 +25,7 @@ export default function ScheduleDialog({
   const [editing, setEditing] = useState<Schedule | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [closing, setClosing] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<Schedule | null>(null);
 
   const ANIMATION_DURATION = 200;
 
@@ -41,7 +42,14 @@ export default function ScheduleDialog({
       onSchedulesChanged();
     } catch (e) {
       setError("削除に失敗しました");
+    } finally {
+      setDeleteTarget(null);
     }
+  };
+
+  /** 削除確認を表示 */
+  const handleDeleteRequest = (s: Schedule) => {
+    setDeleteTarget(s);
   };
 
   /** 予定を保存（新規 or 更新） */
@@ -109,10 +117,20 @@ export default function ScheduleDialog({
                   >
                     編集
                   </button>
-                  <button onClick={() => handleDelete(s.id!)}>削除</button>
+                  <button className="delete-btn" onClick={() => handleDeleteRequest(s)}>削除</button>
                 </div>
               </div>
             ))}
+
+          {deleteTarget && (
+            <div className="delete-confirm">
+              <p>「{deleteTarget.title}」を削除してもいいですか？</p>
+              <div className="delete-confirm-actions">
+                <button className="delete-btn" onClick={() => handleDelete(deleteTarget.id!)}>削除する</button>
+                <button onClick={() => setDeleteTarget(null)}>キャンセル</button>
+              </div>
+            </div>
+          )}
 
           {showForm && (
             <ScheduleFormComponent

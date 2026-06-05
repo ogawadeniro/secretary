@@ -312,6 +312,39 @@ body {
   opacity: 0.9;
 }
 
+.delete-confirm {
+  background: var(--color-surface2);
+  border-radius: 8px;
+  padding: 16px;
+  text-align: center;
+  margin-top: 8px;
+}
+
+.delete-confirm p {
+  margin: 0 0 12px;
+  font-size: 0.9rem;
+}
+
+.delete-confirm-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+
+.delete-btn {
+  background: var(--color-sun);
+  color: #fff;
+  border: none;
+  padding: 6px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+.delete-btn:hover {
+  opacity: 0.9;
+}
+
 /* Schedule form */
 .schedule-form {
   display: flex;
