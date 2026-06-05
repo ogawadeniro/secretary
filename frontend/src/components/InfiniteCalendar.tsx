@@ -130,46 +130,27 @@ export default function InfiniteCalendar() {
     const el = scrollRef.current;
     if (!el || weeks.length === 0) return;
     const centerIndex = Math.floor(INITIAL_WEEKS / 2);
-    const rowHeight = 120;
+    const ROW_HEIGHT = 110;
     el.scrollTop =
-      centerIndex * rowHeight - el.clientHeight / 2 + rowHeight / 2;
+      centerIndex * ROW_HEIGHT - el.clientHeight / 2 + ROW_HEIGHT / 2;
   }, []);
 
   /**
    * スクロール位置からアクティブ月を決定。
-   * 画面内に最も多く日付が含まれている月を選ぶ（中央行の最初の日付ではない）。
+   * 画面中央付近に写っている日付の月を選ぶ。
    */
   const handleScroll = useCallback(() => {
     const el = scrollRef.current;
     if (!el || weeks.length === 0) return;
-    const rowHeight = 120;
-    const firstIdx = Math.max(0, Math.floor(el.scrollTop / rowHeight));
-    const lastIdx = Math.min(
-      weeks.length - 1,
-      Math.ceil((el.scrollTop + el.clientHeight) / rowHeight)
+    const ROW_HEIGHT = 110;
+    // 画面中央のピクセル位置 → 対応する行を計算
+    const centerPx = el.scrollTop + el.clientHeight / 2;
+    const rowIndex = Math.max(
+      0,
+      Math.min(weeks.length - 1, Math.floor(centerPx / ROW_HEIGHT))
     );
-
-    // 可視範囲の各月の日付数をカウント
-    const monthCount = new Map<number, number>();
-    for (let i = firstIdx; i <= lastIdx; i++) {
-      for (const date of weeks[i]) {
-        const m = date.getMonth();
-        monthCount.set(m, (monthCount.get(m) ?? 0) + 1);
-      }
-    }
-
-    // 最も多く表示されている月をアクティブ月に
-    let bestMonth = -1;
-    let bestCount = 0;
-    for (const [month, count] of monthCount) {
-      if (count > bestCount) {
-        bestCount = count;
-        bestMonth = month;
-      }
-    }
-    if (bestMonth >= 0) {
-      setCurrentMonth(bestMonth);
-    }
+    // 行の中央列（インデックス3）の日付の月をアクティブ月に
+    setCurrentMonth(weeks[rowIndex][3].getMonth());
   }, [weeks]);
 
   const handleDateClick = (date: Date) => {
