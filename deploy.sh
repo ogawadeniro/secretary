@@ -157,11 +157,11 @@ build_and_run_remote() {
         remote_ok "container started."
 
         remote_step "Health check..."
-        local retries=0
-        local max_retries=10
+        retries=0
+        max_retries=10
         while [ $retries -lt $max_retries ]; do
             sleep 3
-            local http_code
+            http_code
             http_code=$(curl -sk -o /dev/null -w "%{http_code}" https://localhost:8443/api/v1/schedules 2>/dev/null || true)
             if [ "$http_code" = "200" ]; then
                 remote_ok "Application is running! (HTTP 200)"
