@@ -13,6 +13,7 @@ interface ScheduleDialogProps {
   onSchedulesChanged: () => void;
 }
 
+/** 選択した日付の予定一覧を表示し、追加・編集・削除を行うダイアログ */
 export default function ScheduleDialog({
   date,
   schedules: initialSchedules,
@@ -22,31 +23,42 @@ export default function ScheduleDialog({
   const [schedules, setSchedules] = useState<Schedule[]>(initialSchedules);
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<Schedule | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
+  /** 予定を削除 */
   const handleDelete = async (id: number) => {
-    await deleteSchedule(id);
-    setSchedules((prev) => prev.filter((s) => s.id !== id));
-    onSchedulesChanged();
+    try {
+      await deleteSchedule(id);
+      setSchedules((prev) => prev.filter((s) => s.id !== id));
+      onSchedulesChanged();
+    } catch (e) {
+      setError("削除に失敗しました");
+    }
   };
 
+  /** 予定を保存（新規 or 更新） */
   const handleSave = async (form: ScheduleFormData) => {
-    if (editing?.id) {
-      await updateSchedule(editing.id, form);
-    } else {
-      await createSchedule({
-        id: null,
-        title: form.title ?? "",
-        isAllDay: form.isAllDay ?? false,
-        startDatetime: form.startDatetime ?? "",
-        endDatetime: form.endDatetime ?? "",
-        owner: form.owner ?? "",
-        description: form.description ?? "",
-        updateTime: new Date().toISOString(),
-      });
+    setError(null);
+    try {
+      if (editing?.id) {
+        await updateSchedule(editing.id, form);
+      } else {
+        // updateTime はサーバー側で自動設定されるため送らない
+        await createSchedule({
+          id: null,
+          title: form.title ?? "",
+          isAllDay: form.isAllDay ?? false,
+          startDatetime: form.startDatetime ?? "",
+          endDatetime: form.endDatetime ?? "",
+          owner: form.owner ?? "",
+          description: form.description ?? "",
+        });
+      }
+      onSchedulesChanged();
+      onClose();
+    } catch (e) {
+      setError("保存に失敗しました");
     }
-    setShowForm(false);
-    setEditing(null);
-    onSchedulesChanged();
   };
 
   return (
@@ -62,6 +74,8 @@ export default function ScheduleDialog({
         </div>
 
         <div className="dialog-body">
+          {error && <p className="dialog-error">{error}</p>}
+
           {schedules.length === 0 && !showForm && (
             <p className="empty-msg">予定はありません</p>
           )}
@@ -129,6 +143,7 @@ interface ScheduleFormData {
   description?: string;
 }
 
+/** 予定の新規作成・編集フォーム */
 function ScheduleFormComponent({
   initial,
   date,

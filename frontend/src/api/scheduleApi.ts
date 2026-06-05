@@ -2,13 +2,15 @@ import { Schedule } from "../types/schedule";
 
 const BASE = "/api/v1/schedules";
 
+/** 全予定を取得 */
 export async function fetchSchedules(): Promise<Schedule[]> {
   const res = await fetch(BASE);
   if (!res.ok) throw new Error("Failed to fetch schedules");
   return res.json();
 }
 
-export async function createSchedule(s: Schedule): Promise<Schedule> {
+/** 予定を新規作成（updateTime はサーバー側で自動設定されるため省略） */
+export async function createSchedule(s: Omit<Schedule, "updateTime">): Promise<Schedule> {
   const res = await fetch(BASE, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -18,6 +20,7 @@ export async function createSchedule(s: Schedule): Promise<Schedule> {
   return res.json();
 }
 
+/** 予定を部分更新 */
 export async function updateSchedule(
   id: number,
   s: Partial<Schedule>
@@ -31,6 +34,7 @@ export async function updateSchedule(
   return res.json();
 }
 
+/** 予定を削除 */
 export async function deleteSchedule(id: number): Promise<void> {
   const res = await fetch(`${BASE}/${id}`, { method: "DELETE" });
   if (!res.ok) throw new Error("Failed to delete schedule");
