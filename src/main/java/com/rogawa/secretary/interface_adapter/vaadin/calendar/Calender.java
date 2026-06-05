@@ -108,8 +108,8 @@ public class Calender extends VerticalLayout {
             Schedule schedule = drawingSchedules.get(i);
             LocalDate scheduleStartDate = schedule.getStartDatetime().toLocalDate();
             LocalDate scheduleEndDate = schedule.getEndDatetime().toLocalDate();
-            Integer startIdx = scheduleStartDate.getDayOfYear() - firstDayOfCalender.getDayOfYear();
-            Integer scheduleRange = scheduleEndDate.getDayOfYear() - scheduleStartDate.getDayOfYear() + 1;
+            Integer startIdx = (int)(scheduleStartDate.toEpochDay() - firstDayOfCalender.toEpochDay());
+            Integer scheduleRange = (int)(scheduleEndDate.toEpochDay() - scheduleStartDate.toEpochDay() + 1);
 
             for (Integer j = 0; j < scheduleRange; j++) {
                 Integer targetDayIdx = startIdx + j;
