@@ -46,7 +46,8 @@ setup_keystore() {
     local password
     password=$(openssl rand -base64 32)
     echo "$password" | sudo tee "$PASSWORD_FILE" > /dev/null
-    sudo chmod 600 "$PASSWORD_FILE"
+    sudo chown "$(whoami):$(whoami)" "$PASSWORD_FILE"
+    chmod 600 "$PASSWORD_FILE"
 
     sudo keytool -genkeypair \
         -alias secretary \
@@ -57,7 +58,7 @@ setup_keystore() {
         -dname "CN=secretary.local,O=secretary,C=JP" \
         -validity 3650
 
-    sudo chmod 600 "$KEYSTORE_FILE"
+    sudo chown "$(whoami):$(whoami)" "$KEYSTORE_FILE"
     green "Keystore generated: ${KEYSTORE_FILE}"
     red "!!! 自己証明書です。ブラウザで警告が出ます。"
 }
@@ -85,7 +86,7 @@ setup_iptables() {
 # ---------- アプリ起動 ----------
 start_app() {
     local password
-    password=$(sudo cat "$PASSWORD_FILE")
+    password=$(cat "$PASSWORD_FILE")
 
     # 古いプロセスを停止
     if pgrep -f "secretary.*SNAPSHOT" > /dev/null; then
