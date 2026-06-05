@@ -14,18 +14,16 @@ set -eu
 #   bash setup-server.sh
 #
 # 環境変数デフォルト値:
-#   IMAGE         = ghcr.io/<リポジトリ>/secretary:latest
-#   DB_URL        = jdbc:postgresql://192.168.40.254:5432/secretary
-#   DB_USERNAME   = rogawa
+#   IMAGE          = ghcr.io/ogawadeniro/secretary:latest
+#   DB_URL         = jdbc:postgresql://localhost:5432/secretary
+#   DB_USERNAME    = rogawa
 #   CONTAINER_NAME = secretary
-#   HOST_PORT     = 8080
 # ============================================================
 
 REPO="${GITHUB_REPOSITORY:-$(git rev-parse --show-toplevel 2>/dev/null | xargs basename 2>/dev/null || echo 'secretary')}"
-IMAGE="${IMAGE:-ghcr.io/${GHCR_USER}/${REPO}:latest}"
+IMAGE="${IMAGE:-ghcr.io/ogawadeniro/secretary:latest}"
 CONTAINER_NAME="${CONTAINER_NAME:-secretary}"
-HOST_PORT="${HOST_PORT:-8080}"
-DB_URL="${DB_URL:-jdbc:postgresql://192.168.40.254:5432/secretary}"
+DB_URL="${DB_URL:-jdbc:postgresql://localhost:5432/secretary}"
 DB_USERNAME="${DB_USERNAME:-rogawa}"
 
 # ---------- 前提チェック ----------
@@ -70,7 +68,7 @@ deploy() {
     docker run -d \
         --name "${CONTAINER_NAME}" \
         --restart unless-stopped \
-        -p "${HOST_PORT}:8080" \
+        --network host \
         -e SPRING_DATASOURCE_URL="${DB_URL}" \
         -e SPRING_DATASOURCE_USERNAME="${DB_USERNAME}" \
         -e SPRING_DATASOURCE_PASSWORD="${DB_PASSWORD}" \
@@ -86,7 +84,7 @@ health_check() {
     sleep 3
     if docker ps --filter "name=${CONTAINER_NAME}" --filter "status=running" --format "{{.Names}}" | grep -q "${CONTAINER_NAME}"; then
         echo "OK: ${CONTAINER_NAME} is running"
-        curl -s -o /dev/null -w "HTTP %{http_code}" http://localhost:${HOST_PORT}/api/v1/schedules || echo " (API not ready yet)"
+        curl -s -o /dev/null -w "HTTP %{http_code}" http://localhost:8080/api/v1/schedules || echo " (API not ready yet)"
         echo ""
     else
         echo "FAIL: ${CONTAINER_NAME} is not running"
