@@ -4,13 +4,13 @@ set -eu
 # ============================================================
 # secretary — HTTPSでアプリを起動するスクリプト
 #
-# 使い方（初回のみ setup-server.sh を先に実行）:
+# 使い方:
 #   bash run-https.sh
 #
 # やること:
 #   1. keystoreがなければ自動生成
-#   2. iptables 443→8443 転送ルール（なければ追加）
-#   3. 古いプロセスを停止
+#   2. nftablesに443番ポートの許可ルールを追加
+#   3. socatで443→8443のTCP転送を開始
 #   4. アプリをHTTPS(8443)で起動
 # ============================================================
 
@@ -18,13 +18,12 @@ APP_JAR="target/secretary-0.0.1-SNAPSHOT.jar"
 KEYSTORE_DIR="/etc/secretary"
 KEYSTORE_FILE="${KEYSTORE_DIR}/keystore.p12"
 PASSWORD_FILE="${KEYSTORE_DIR}/keystore-password.txt"
-REDIRECT_PORT=8443
+APP_PORT=8443
+HTTPS_PORT=443
 
-# ---------- 色表示 ----------
 red()   { echo -e "\033[31m$1\033[0m"; }
 green() { echo -e "\033[32m$1\033[0m"; }
 
-# ---------- 前提チェック ----------
 check_prerequisites() {
     if [ ! -f "$APP_JAR" ]; then
         red "ERROR: ${APP_JAR} が見つかりません。"
@@ -33,74 +32,84 @@ check_prerequisites() {
     fi
 }
 
-# ---------- keystore生成 ----------
 setup_keystore() {
-    if [ -f "$KEYSTORE_FILE" ]; then
-        green "Keystore OK: ${KEYSTORE_FILE}"
-        return
+    if [ ! -f "$KEYSTORE_FILE" ]; then
+        echo "=== Generating self-signed keystore ==="
+        sudo mkdir -p "$KEYSTORE_DIR"
+
+        local password
+        password=$(openssl rand -base64 32)
+        echo "$password" | sudo tee "$PASSWORD_FILE" > /dev/null
+
+        sudo keytool -genkeypair \
+            -alias secretary \
+            -keyalg RSA -keysize 2048 \
+            -storetype PKCS12 \
+            -keystore "$KEYSTORE_FILE" \
+            -storepass "$password" \
+            -dname "CN=secretary.local,O=secretary,C=JP" \
+            -validity 3650
+
+        green "Keystore generated: ${KEYSTORE_FILE}"
+        red "!!! 自己証明書です。ブラウザで警告が出ます。"
     fi
 
-    echo "=== Generating self-signed keystore ==="
-    sudo mkdir -p "$KEYSTORE_DIR"
-
-    local password
-    password=$(openssl rand -base64 32)
-    echo "$password" | sudo tee "$PASSWORD_FILE" > /dev/null
-    sudo chown "$(whoami):$(whoami)" "$PASSWORD_FILE"
-    chmod 600 "$PASSWORD_FILE"
-
-    sudo keytool -genkeypair \
-        -alias secretary \
-        -keyalg RSA -keysize 2048 \
-        -storetype PKCS12 \
-        -keystore "$KEYSTORE_FILE" \
-        -storepass "$password" \
-        -dname "CN=secretary.local,O=secretary,C=JP" \
-        -validity 3650
-
-    sudo chown "$(whoami):$(whoami)" "$KEYSTORE_FILE"
-    green "Keystore generated: ${KEYSTORE_FILE}"
-    red "!!! 自己証明書です。ブラウザで警告が出ます。"
+    sudo chown "$(whoami):$(whoami)" "$KEYSTORE_FILE" "$PASSWORD_FILE" 2>/dev/null || true
+    chmod 600 "$PASSWORD_FILE" 2>/dev/null || true
+    green "Keystore OK: ${KEYSTORE_FILE}"
 }
 
-# ---------- iptables転送ルール ----------
-setup_iptables() {
-    # 443→8443 の転送ルールがあればスキップ
-    if sudo iptables -t nat -C PREROUTING -p tcp --dport 443 -j REDIRECT --to-port ${REDIRECT_PORT} 2>/dev/null; then
-        green "iptables rule OK: 443 → ${REDIRECT_PORT}"
-        return
-    fi
+setup_firewall() {
+    local handles
+    handles=$(sudo nft -a list chain ip filter INPUT 2>/dev/null \
+        | grep "tcp dport ${HTTPS_PORT} accept" \
+        | grep -oP 'handle \d+' | grep -oP '\d+') || true
+    for h in $handles; do
+        sudo nft delete rule ip filter INPUT handle "$h" 2>/dev/null || true
+    done
 
-    echo "=== Adding iptables rule: 443 → ${REDIRECT_PORT} ==="
-    sudo iptables -t nat -A PREROUTING -p tcp --dport 443 -j REDIRECT --to-port ${REDIRECT_PORT}
-
-    # iptables-services がなければインストールして永続化
-    if ! systemctl is-enabled iptables 2>/dev/null | grep -q enabled; then
-        sudo dnf install -y iptables-services
-        sudo systemctl enable --now iptables
-    fi
-    sudo service iptables save
-    green "iptables rule saved."
+    echo "=== Adding nftables rule: allow port ${HTTPS_PORT} ==="
+    sudo nft insert rule ip filter INPUT tcp dport ${HTTPS_PORT} accept
+    green "nftables rule added."
 }
 
-# ---------- アプリ起動 ----------
+setup_socat() {
+    if ! command -v socat &>/dev/null; then
+        echo "=== Installing socat ==="
+        sudo dnf install -y socat
+    fi
+
+    if pgrep -f "socat.*LISTEN:${HTTPS_PORT}" > /dev/null; then
+        echo "=== Stopping old socat ==="
+        sudo pkill -f "socat.*LISTEN:${HTTPS_PORT}" 2>/dev/null || true
+        sleep 1
+    fi
+
+    echo "=== Starting socat: ${HTTPS_PORT} → ${APP_PORT} ==="
+    sudo nohup socat TCP-LISTEN:${HTTPS_PORT},fork,reuseaddr TCP:localhost:${APP_PORT} > /dev/null 2>&1 &
+    echo "socat PID: $!"
+    green "socat running."
+}
+
 start_app() {
     local password
     password=$(cat "$PASSWORD_FILE")
 
-    # 古いプロセスを停止
     if pgrep -f "secretary.*SNAPSHOT" > /dev/null; then
         echo "=== Stopping old process ==="
         pkill -f "secretary.*SNAPSHOT" 2>/dev/null || true
         sleep 2
     fi
 
-    echo "=== Starting application on port ${REDIRECT_PORT} (HTTPS) ==="
-    echo "    https://$(curl -s ifconfig.me)/"
+    local public_ip
+    public_ip=$(curl -s ifconfig.me)
+
+    echo "=== Starting application on port ${APP_PORT} (HTTPS) ==="
+    echo "    https://${public_ip}/"
 
     nohup java -jar "$APP_JAR" \
         --spring.profiles.active=product \
-        --server.port=${REDIRECT_PORT} \
+        --server.port=${APP_PORT} \
         --server.ssl.key-store=file:${KEYSTORE_FILE} \
         --server.ssl.key-store-password="${password}" \
         --server.ssl.key-store-type=PKCS12 \
@@ -111,26 +120,27 @@ start_app() {
     green "Started! Waiting for ready..."
     sleep 5
 
-    # ヘルスチェック
-    if curl -sk -o /dev/null -w "HTTP %{http_code}\n" https://localhost:${REDIRECT_PORT}/api/v1/schedules; then
-        green "Application is running!"
+    local http_code
+    http_code=$(curl -sk -o /dev/null -w "%{http_code}" https://localhost:${APP_PORT}/api/v1/schedules) || true
+    if [ "$http_code" = "200" ]; then
+        green "Application is running! (HTTP ${http_code})"
+        echo ""
+        echo "  Access: https://${public_ip}/"
     else
-        red "Something went wrong. Check app.log"
+        red "Something went wrong (HTTP ${http_code:-N/A}). Check app.log"
         tail -30 app.log
     fi
 }
 
-# ---------- メイン ----------
 main() {
     echo "============================================"
     echo " Secretary - HTTPS Startup"
     echo "============================================"
     check_prerequisites
     setup_keystore
-    setup_iptables
+    setup_firewall
+    setup_socat
     start_app
-    echo "============================================"
-    echo " Access: https://$(curl -s ifconfig.me)/"
     echo "============================================"
 }
 
