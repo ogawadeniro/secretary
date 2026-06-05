@@ -1,25 +1,34 @@
 # secretary — スケジュール管理・リマインダーアプリ
 
-Spring Boot 3.4.3 + Vaadin 24.6.6 + PostgreSQL。
+Spring Boot 3.4.3 (REST API) + React (Vite + TypeScript) + PostgreSQL。
+Vaadin から React に移行済み。
 
 ## ビルド & 実行
 
 ```bash
-mvn clean package -Dvaadin.ignoreVersionChecks=true
-java -jar target/secretary-0.0.1-SNAPSHOT.jar
+# フルビルド（React → Spring Boot JAR）
+bash build.sh
+
+# 開発サーバー起動（Spring Boot + Vite を同時起動）
+bash dev.sh
+
+# 個別起動
+SPRING_PROFILES_ACTIVE=develop java -jar target/secretary-0.0.1-SNAPSHOT.jar  # API:8080
+cd frontend && npm run dev                                                     # UI:5173
 ```
 
 プロファイルは環境変数 `SPRING_PROFILES_ACTIVE` で選択:
+
 - 開発: `export SPRING_PROFILES_ACTIVE=develop`
 - 本番: Dockerコンテナ起動時は `deploy.sh` が自動設定
 - テスト: JUnit実行時は自動検出
 
-`npm` が古い環境では `-Dvaadin.ignoreVersionChecks=true` が必要。
+## アーキテクチャ
 
-## アーキテクチャ（クリーンアーキテクチャ）
+### バックエンド（クリーンアーキテクチャ）
 
 ```
-domain/ → application/ → infrastructure/ ← interface_adapter/
+domain/ → application/ → infrastructure/ ← frontend/ (React)
 ```
 
 依存関係は外側→内側。内側（domain）はどのフレームワークにも依存しない。
@@ -29,13 +38,23 @@ domain/ → application/ → infrastructure/ ← interface_adapter/
 | `domain/` | エンティティ、リポジトリポート | `Schedule`, `ScheduleRepository` |
 | `application/` | ユースケース（アプリケーションサービス） | `ScheduleUseCase`, `ScheduleService` |
 | `infrastructure/` | JPA永続化、RESTエンドポイント | `JpaSchedule`, `SchedulePersistenceAdapter`, `ScheduleController`, `ScheduleDto` |
-| `interface_adapter/` | Vaadin UI、色生成ユーティリティ | `MainView`, `ScheduleForm`, `Calender`, `OwnerColorUtil` |
 
-### 補足
+### フロントエンド（React + Vite + TypeScript）
 
-- Vaadin Flow によるJavaベースWeb UI（`/` ルート）と REST API（`/api/v1/schedules`）の二面性。
-- カレンダーは42コマ（6週×7日）の固定グリッド。各日付は `DateCard` コンポーネント。
-- `domain/model/Schedule.java` は pure POJO（JPA/Jacksonアノテーションなし）。JPAエンティティは `infrastructure/persistence/JpaSchedule.java` が別途保持。
+```
+frontend/src/
+├── main.tsx                     # エントリーポイント
+├── App.tsx                      # ルートコンポーネント
+├── index.css                    # ダークテーマCSS
+├── types/schedule.ts            # Schedule型定義
+├── api/scheduleApi.ts           # REST APIクライアント
+├── utils/dateUtils.ts           # 日付ユーティリティ
+└── components/
+    ├── InfiniteCalendar.tsx     # 無限スクロールカレンダー（IntersectionObserver）
+    ├── WeekRow.tsx              # 週単位の行
+    ├── DayCell.tsx              # 日付セル
+    └── ScheduleDialog.tsx       # 予定CRUDダイアログ
+```
 
 ### 主要エントリーポイント
 
@@ -46,9 +65,18 @@ domain/ → application/ → infrastructure/ ← interface_adapter/
 | JPAエンティティ | `infrastructure/persistence/JpaSchedule.java`（テーブル: `schedules`） |
 | ドメインモデル | `domain/model/Schedule.java` |
 | アプリケーションサービス | `application/service/ScheduleService.java` |
-| Vaadinルート画面 | `interface_adapter/vaadin/MainView.java` |
-| 予定CRUDフォーム | `interface_adapter/vaadin/ScheduleForm.java`（Dialog） |
-| 日付クリック詳細 | `interface_adapter/vaadin/calendar/ScheduleEditor.java`（Dialog） |
+
+## 無限スクロールカレンダー
+
+`InfiniteCalendar.tsx` がコアコンポーネント。
+
+- IntersectionObserver で上下のセンチネル要素を監視
+- 端に達したら週を追加（12週ずつ）
+- 初期表示は104週（約2年分）で今日を中央に配置
+- アクティブ月は画面中央付近に写っている日付の月にする
+- アクティブ月に含まれる日付テキストはアクティブ月に含まれない日付テキストより明るい色で表示する
+- 予定の日付比較は `toEpochDay()` で時刻を正規化
+- 予定を保存したらすぐにカレンダー画面に戻る
 
 ## プロファイル戦略
 
@@ -61,14 +89,7 @@ domain/ → application/ → infrastructure/ ← interface_adapter/
 `application.properties` にはデフォルトプロファイルの指定がない。
 必ず `SPRING_PROFILES_ACTIVE` で明示的に指定すること。
 
-## HTTPS対応
-
-本番サーバでは自己署名証明書によるHTTPSが使える。
-初回セットアップ時に `setup-server.sh` が `/etc/secretary/keystore.p12` を生成し、
-パスワードは `/etc/secretary/keystore-password.txt` に保存される。
-
-`deploy.sh` に `SSL_KEYSTORE_PASSWORD` を渡すと、
-自動的にHTTPS（デフォルト8443）で起動する。
+## HTTPS対応（本番）
 
 ```bash
 export SSL_KEYSTORE_PASSWORD=$(sudo cat /etc/secretary/keystore-password.txt)
@@ -76,18 +97,27 @@ export SSL_PORT=8443
 bash deploy.sh
 ```
 
-本番用の正式な証明書を使いたい場合は、
-`/etc/secretary/keystore.p12` を差し替えてからコンテナを再起動すればOK。
+初回セットアップ時に `setup-server.sh` が `/etc/secretary/keystore.p12` を生成。
+詳しくは `deploy.sh` と `setup-server.sh` を参照。
 
 ## 開発の注意点
 
-- **Java 21必須**。Vaadin Maven Pluginがフロントエンドを自動生成する（`prepare-frontend` + `build-frontend`）。
-- `src/main/frontend/generated/` は自動生成＋gitignore対象。手動編集禁止。
-- 日付フォーマットは `yyyy/MM/dd-HH:mm`（Jacksonの `@JsonFormat`）。REST DTOの `ScheduleDto` にのみ適用。
+- **Java 21必須**。Node.js 18+。
+- 日付フォーマットは `yyyy/MM/dd-HH:mm`（Jacksonの `@JsonFormat`）。REST DTOの `ScheduleDto` に適用。
+- `updateTime` はサーバー側（`ScheduleService`）で自動設定。フロントエンドから送信不要。
 - Lombok（`@Data`）使用。IDEで注釈処理を有効にすること。
-- テストは JUnit 5 + Mockito + H2。`mvn test -Dvaadin.ignoreVersionChecks=true` で実行（テスト用プロファイル `test` を自動適用）。
+- テストは JUnit 5 + Mockito + H2。`mvn test` で実行。
 - CI/CDは GitHub Actions（`.github/workflows/ci.yml`）。mainブランチにpushで自動テスト→Dockerイメージを `ghcr.io/ogawadeniro/secretary:latest` にpush。
 - Dockerデプロイは `Dockerfile` + `deploy.sh` を参照。Rocky Linux 9.4 で動作確認。
+
+## プロジェクトスクリプト
+
+| スクリプト | 用途 |
+|-----------|------|
+| `build.sh` | Reactビルド → Spring Bootのstaticにコピー → JARパッケージ |
+| `dev.sh` | Spring Boot + Vite を同時起動（Ctrl+Cで終了） |
+| `deploy.sh` | リモートサーバーにデプロイ（JAR転送 → Dockerビルド → 起動） |
+| `setup-server.sh` | 初回サーバーセットアップ（Docker/DB/キーストア） |
 
 ## APIテスト
 
@@ -95,7 +125,7 @@ bash deploy.sh
 curl -X GET http://localhost:8080/api/v1/schedules
 curl -X POST http://localhost:8080/api/v1/schedules \
   -H "Content-Type:application/json" \
-  -d '{"title":"test","datetime":"2025/03/07-12:30","owner":"rogawa","description":"test schedule"}'
+  -d '{"title":"test","isAllDay":false,"startDatetime":"2026/06/05-12:30","endDatetime":"2026/06/05-13:30","owner":"rogawa","description":"test schedule"}'
 curl -X PATCH http://localhost:8080/api/v1/schedules/1 \
   -H "Content-Type:application/json" \
   -d '{"title":"test2"}'
@@ -118,8 +148,8 @@ psql -U rogawa -d secretary;
         is_all_day boolean not null,
         start_datetime timestamptz not null,
         end_datetime timestamptz not null,
-    owner text not null,
-    description text,
-    update_time timestamptz not null
+        owner text not null,
+        description text,
+        update_time timestamptz not null
 );
 ```
