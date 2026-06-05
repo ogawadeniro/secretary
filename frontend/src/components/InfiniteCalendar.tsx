@@ -3,20 +3,17 @@ import { Schedule } from "../types/schedule";
 import { fetchSchedules } from "../api/scheduleApi";
 import WeekRow from "./WeekRow";
 import ScheduleDialog from "./ScheduleDialog";
-import {
-  addDays,
-  getWeekStart,
-  formatDateKey,
-} from "../utils/dateUtils";
+import { addDays, getWeekStart, formatDateKey, toEpochDay } from "../utils/dateUtils";
 
+/** 初期表示する週数（約2年分） */
 const INITIAL_WEEKS = 104;
+/** スクロール端到達時に追加読み込みする週数 */
 const LOAD_MORE_WEEKS = 12;
+/** 週の開始曜日（0=日曜） */
 const FIRST_DAY_OF_WEEK = 0;
 
-function generateWeeks(
-  centerDate: Date,
-  halfWeeks: number
-): Date[][] {
+/** 基準日を中心に指定した週数のグリッドを生成 */
+function generateWeeks(centerDate: Date, halfWeeks: number): Date[][] {
   const weekStart = getWeekStart(centerDate, FIRST_DAY_OF_WEEK);
   const start = addDays(weekStart, -halfWeeks * 7);
   const weeks: Date[][] = [];
@@ -30,6 +27,7 @@ function generateWeeks(
   return weeks;
 }
 
+/** オーナーごとに色を割り当て */
 function generateOwnerColors(schedules: Schedule[]): Map<string, string> {
   const owners = [...new Set(schedules.map((s) => s.owner))];
   const colors = [
@@ -56,17 +54,19 @@ export default function InfiniteCalendar() {
   const topSentinelRef = useRef<HTMLDivElement>(null);
   const bottomSentinelRef = useRef<HTMLDivElement>(null);
 
+  /** 予定一覧を再取得 */
   const reloadSchedules = useCallback(async () => {
     const data = await fetchSchedules();
     setSchedules(data);
     setOwnerColors(generateOwnerColors(data));
   }, []);
 
+  // 初回読み込み
   useEffect(() => {
     reloadSchedules();
   }, [reloadSchedules]);
 
-  // IntersectionObserver for infinite scroll
+  // IntersectionObserver による無限スクロール
   useEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
@@ -75,6 +75,8 @@ export default function InfiniteCalendar() {
       (entries) => {
         for (const entry of entries) {
           if (!entry.isIntersecting) continue;
+
+          // 上端到達 → 過去方向に週を追加
           if (entry.target === topSentinelRef.current) {
             const prevScrollHeight = el.scrollHeight;
             setWeeks((prev) => {
@@ -89,10 +91,13 @@ export default function InfiniteCalendar() {
               }
               return [...newWeeks, ...prev];
             });
+            // 追加後にスクロール位置を維持
             requestAnimationFrame(() => {
               el.scrollTop = el.scrollHeight - prevScrollHeight;
             });
           }
+
+          // 下端到達 → 未来方向に週を追加
           if (entry.target === bottomSentinelRef.current) {
             setWeeks((prev) => {
               const lastDate = prev[prev.length - 1][6];
@@ -120,24 +125,51 @@ export default function InfiniteCalendar() {
     return () => observer.disconnect();
   }, []);
 
-  // Centering on today
+  // 初期表示を今日の週を中心にスクロール
   useEffect(() => {
     const el = scrollRef.current;
     if (!el || weeks.length === 0) return;
     const centerIndex = Math.floor(INITIAL_WEEKS / 2);
     const rowHeight = 120;
-    el.scrollTop = centerIndex * rowHeight - el.clientHeight / 2 + rowHeight / 2;
+    el.scrollTop =
+      centerIndex * rowHeight - el.clientHeight / 2 + rowHeight / 2;
   }, []);
 
-  // Update current month based on scroll position
+  /**
+   * スクロール位置からアクティブ月を決定。
+   * 画面内に最も多く日付が含まれている月を選ぶ（中央行の最初の日付ではない）。
+   */
   const handleScroll = useCallback(() => {
     const el = scrollRef.current;
     if (!el || weeks.length === 0) return;
     const rowHeight = 120;
-    const centerScrollTop = el.scrollTop + el.clientHeight / 2;
-    const rowIndex = Math.floor(centerScrollTop / rowHeight);
-    const idx = Math.max(0, Math.min(rowIndex, weeks.length - 1));
-    setCurrentMonth(weeks[idx][0].getMonth());
+    const firstIdx = Math.max(0, Math.floor(el.scrollTop / rowHeight));
+    const lastIdx = Math.min(
+      weeks.length - 1,
+      Math.ceil((el.scrollTop + el.clientHeight) / rowHeight)
+    );
+
+    // 可視範囲の各月の日付数をカウント
+    const monthCount = new Map<number, number>();
+    for (let i = firstIdx; i <= lastIdx; i++) {
+      for (const date of weeks[i]) {
+        const m = date.getMonth();
+        monthCount.set(m, (monthCount.get(m) ?? 0) + 1);
+      }
+    }
+
+    // 最も多く表示されている月をアクティブ月に
+    let bestMonth = -1;
+    let bestCount = 0;
+    for (const [month, count] of monthCount) {
+      if (count > bestCount) {
+        bestCount = count;
+        bestMonth = month;
+      }
+    }
+    if (bestMonth >= 0) {
+      setCurrentMonth(bestMonth);
+    }
   }, [weeks]);
 
   const handleDateClick = (date: Date) => {
@@ -148,25 +180,21 @@ export default function InfiniteCalendar() {
     setSelectedDate(null);
   };
 
+  // 選択された日付に紐づく予定をフィルタ（エポック日で比較して時刻の影響を排除）
   const selectedSchedules = selectedDate
     ? schedules.filter((s) => {
         const startMatch = s.startDatetime.match(
           /^(\d{4})\/(\d{2})\/(\d{2})/
         );
         if (!startMatch) return false;
-        const sy = +startMatch[1],
-          sm = +startMatch[2],
-          sd = +startMatch[3];
-        const startD = new Date(sy, sm - 1, sd);
+        const startD = new Date(+startMatch[1], +startMatch[2] - 1, +startMatch[3]);
 
         const endMatch = s.endDatetime.match(/^(\d{4})\/(\d{2})\/(\d{2})/);
         if (!endMatch) return false;
-        const ey = +endMatch[1],
-          em = +endMatch[2],
-          ed = +endMatch[3];
-        const endD = new Date(ey, em - 1, ed);
+        const endD = new Date(+endMatch[1], +endMatch[2] - 1, +endMatch[3]);
 
-        return selectedDate >= startD && selectedDate <= endD;
+        const day = toEpochDay(selectedDate);
+        return day >= toEpochDay(startD) && day <= toEpochDay(endD);
       })
     : [];
 
@@ -184,7 +212,12 @@ export default function InfiniteCalendar() {
             key={d}
             className="day-label"
             style={{
-              color: i === 0 ? "var(--color-sun)" : i === 6 ? "var(--color-sat)" : "inherit",
+              color:
+                i === 0
+                  ? "var(--color-sun)"
+                  : i === 6
+                    ? "var(--color-sat)"
+                    : "inherit",
             }}
           >
             {d}
