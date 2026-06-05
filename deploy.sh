@@ -1,95 +1,143 @@
 #!/bin/bash
 set -eu
 
-# ============================================================
-# secretary — デプロイスクリプト
-#
-# 使い方（開発マシンで実行）:
-#   export DB_PASSWORD=your-db-password
-#   bash deploy.sh
-#
-# やること:
-#   1. JARをビルド
-#   2. Docker関連ファイルを本番サーバに転送
-#   3. 本番サーバでDockerイメージをビルド
-#   4. コンテナを起動
-# ============================================================
-
-PROD_HOST="${PROD_HOST:-160.16.206.42}"
+PROD_HOST="${PROD_HOST:-tk2-245-32038.vs.sakura.ne.jp}"
 PROD_USER="${PROD_USER:-rocky}"
 IMAGE_NAME="${IMAGE_NAME:-secretary}"
 JAR_FILE="target/secretary-0.0.1-SNAPSHOT.jar"
 
-red()   { echo -e "\033[31m$1\033[0m"; }
+red() { echo -e "\033[31m$1\033[0m"; }
 green() { echo -e "\033[32m$1\033[0m"; }
+yellow() { echo -e "\033[33m$1\033[0m"; }
+cyan() { echo -e "\033[36m$1\033[0m"; }
+bold() { echo -e "\033[1m$1\033[0m"; }
+
+step() {
+    echo ""
+    cyan "◆ $1"
+}
+ok() { echo "$(green "[OK]") $1"; }
+warn() { echo "$(yellow "[WARN]") $1"; }
+fail() { echo "$(red "[ERR]") $1"; }
+info() { echo "[info] $1"; }
+
+calc_width() {
+    local url="https://${PROD_HOST}/"
+    # "  Access: " + url = 10 + url_len, plus 6 for borders and breathing room
+    local w=$((${#url} + 16))
+    [ $w -lt 44 ] && w=44
+    echo $w
+}
+
+header() {
+    local width=$1
+    local text="Secretary - Deploy"
+    local left_pad=$(( (width - 2 - ${#text}) / 2 ))
+    local right_pad=$(( width - 2 - ${#text} - left_pad ))
+    local border
+    printf -v border '%*s' "$((width - 2))" ''
+    border="${border// /═}"
+    echo ""
+    echo "$(cyan "╔${border}╗")"
+    printf "$(cyan '║')%*s%s%*s$(cyan '║')\n" $left_pad "" "$text" $right_pad ""
+    echo "$(cyan "╚${border}╝")"
+}
+
+footer() {
+    local width=$1
+    local url="https://${PROD_HOST}/"
+    # │ + 2spaces + "Access: " + url + pad + │ = 12 + url + pad
+    local pad=$(( width - 12 - ${#url} ))
+    [ $pad -lt 2 ] && pad=2
+    local border
+    printf -v border '%*s' "$((width - 2))" ''
+    border="${border// /─}"
+    echo ""
+    echo "$(cyan "┌${border}┐")"
+    printf "$(cyan '│')  $(bold 'Access:') %s%*s$(cyan '│')\n" "${url}" $pad ""
+    echo "$(cyan "└${border}┘")"
+    echo ""
+}
 
 load_keystore_password() {
     if [ -n "${SSL_KEYSTORE_PASSWORD:-}" ]; then
         return
     fi
-    echo "=== Reading keystore password from server ==="
-    SSL_KEYSTORE_PASSWORD=$(ssh "${PROD_USER}@${PROD_HOST}" "cat /etc/secretary/keystore-password.txt 2>/dev/null" 2>/dev/null || true)
+    step "Reading keystore password from server..."
+    SSL_KEYSTORE_PASSWORD=$(ssh "${PROD_USER}@${PROD_HOST}" "sudo cat /etc/secretary/keystore-password.txt 2>/dev/null" 2>/dev/null || true)
     if [ -z "$SSL_KEYSTORE_PASSWORD" ]; then
-        echo "  WARNING: keystore password not found. HTTPS will be disabled."
+        warn "keystore not found. HTTPS will be disabled."
     else
-        green "  Keystore password loaded."
+        ok "keystore password loaded."
     fi
 }
 
 check_prerequisites() {
     if [ -z "${DB_PASSWORD:-}" ]; then
-        red "ERROR: DB_PASSWORD が設定されていません。"
-        echo "  export DB_PASSWORD=your-db-password"
+        fail "DB_PASSWORD not set."
+        info "  export DB_PASSWORD=your-password"
         exit 1
     fi
     if [ ! -f "$JAR_FILE" ]; then
-        echo "=== Building JAR ==="
+        step "Building JAR..."
         mvn package -DskipTests -Dvaadin.ignoreVersionChecks=true
+        ok "JAR built."
     fi
 }
 
 transfer_files() {
-    echo "=== Transferring files to ${PROD_USER}@${PROD_HOST} ==="
-    # JARとDockerfileを本番サーバの ~/secretary/ に送る
+    step "Transferring files to $(bold "${PROD_USER}@${PROD_HOST}")..."
     ssh "${PROD_USER}@${PROD_HOST}" "mkdir -p ~/secretary/target"
     scp "$JAR_FILE" "${PROD_USER}@${PROD_HOST}:~/secretary/target/"
     scp Dockerfile .dockerignore "${PROD_USER}@${PROD_HOST}:~/secretary/"
-    green "Transfer complete."
+    ok "transfer complete."
 }
 
 build_and_run_remote() {
-    echo "=== Building image and starting container on remote ==="
+    step "Building image and starting container on remote..."
 
-    # SSHでリモートサーバ上でDockerビルド＆起動
-    ssh "${PROD_USER}@${PROD_HOST}" "DB_PASSWORD='${DB_PASSWORD}' SSL_KEYSTORE_PASSWORD='${SSL_KEYSTORE_PASSWORD:-}' bash -s" << 'REMOTE'
+    ssh "${PROD_USER}@${PROD_HOST}" "DB_PASSWORD='${DB_PASSWORD}' SSL_KEYSTORE_PASSWORD='${SSL_KEYSTORE_PASSWORD:-}' bash -s" <<'REMOTE'
         set -eu
         IMAGE_NAME="secretary"
         CONTAINER_NAME="secretary"
 
+        remote_info()  { echo "[INFO] $1"; }
+        remote_ok()    { echo -e "\033[32m[OK]\033[0m $1"; }
+        remote_warn()  { echo -e "\033[33m[WARN]\033[0m $1"; }
+        remote_step()  { echo ""; echo -e "\033[36m◇ $1\033[0m"; }
+
         cd ~/secretary
 
-        # 古いJavaプロセス（直接起動）を停止
         if pgrep -f "secretary.*SNAPSHOT" > /dev/null; then
-            echo "=== Stopping old Java process ==="
+            remote_step "Stopping old Java process..."
             pkill -f "secretary.*SNAPSHOT" 2>/dev/null || true
             sleep 2
+            remote_ok "stopped."
         fi
 
-        echo "=== Building Docker image ==="
+        remote_step "Building Docker image..."
         docker build -t "${IMAGE_NAME}:latest" .
-        echo "Image built."
+        remote_ok "image built."
 
-        echo "=== Stopping old container ==="
+        remote_step "Stopping old container..."
         docker stop "${CONTAINER_NAME}" 2>/dev/null || true
         docker rm "${CONTAINER_NAME}" 2>/dev/null || true
+        remote_ok "stopped."
 
-        # socat（443→8443）がなければ起動
-        if ! pgrep -f "socat.*LISTEN:443" > /dev/null; then
-            echo "=== Starting socat (443→8443) ==="
-            sudo nohup socat TCP-LISTEN:443,fork,reuseaddr TCP:localhost:8443 > /dev/null 2>&1 &
+        # nftables で port 443 を許可（なければ追加）
+        if ! sudo nft list chain ip filter INPUT 2>/dev/null | grep -q "tcp dport 443"; then
+            remote_step "Adding nftables rule for port 443..."
+            sudo nft insert rule ip filter INPUT ip protocol tcp tcp dport 443 counter accept
+            remote_ok "nftables rule added."
         fi
 
-        echo "=== Starting container ==="
+        if ! pgrep -f "socat.*LISTEN:443" > /dev/null; then
+            remote_step "Starting socat (443 → 8443)..."
+            sudo nohup socat TCP-LISTEN:443,fork,reuseaddr TCP:localhost:8443 > /dev/null 2>&1 &
+            remote_ok "socat started."
+        fi
+
+        remote_step "Starting container..."
         docker run -d \
             --name "${CONTAINER_NAME}" \
             --restart unless-stopped \
@@ -106,31 +154,42 @@ build_and_run_remote() {
             -v /etc/secretary:/etc/secretary:ro \
             "${IMAGE_NAME}:latest"
 
-        echo "=== Container started ==="
+        remote_ok "container started."
         sleep 3
 
-        # ヘルスチェック
+        remote_step "Health check..."
         if curl -sk -o /dev/null -w "HTTP %{http_code}" https://localhost:8443/api/v1/schedules; then
             echo ""
-            echo "OK: Application is running!"
+            remote_ok "Application is running!"
         else
             echo ""
-            echo "WARNING: Health check failed. Check: docker logs ${CONTAINER_NAME}"
+            remote_warn "Health check failed. Check: docker logs ${CONTAINER_NAME}"
         fi
 REMOTE
 }
 
+internet_health_check() {
+    step "Internet health check..."
+    sleep 2
+    local http_code
+    http_code=$(curl -sk -o /dev/null -w "%{http_code}" --connect-timeout 10 "https://${PROD_HOST}/api/v1/schedules" 2>/dev/null || true)
+    if [ "$http_code" = "200" ]; then
+        ok "https://${PROD_HOST}/ answered with HTTP 200"
+    else
+        warn "https://${PROD_HOST}/ returned HTTP ${http_code:-"connection failed"}"
+    fi
+}
+
 main() {
-    echo "============================================"
-    echo " Secretary - Deploy"
-    echo "============================================"
+    local width
+    width=$(calc_width)
+    header $width
     check_prerequisites
     load_keystore_password
     transfer_files
     build_and_run_remote
-    echo "============================================"
-    echo " Access: https://${PROD_HOST}/"
-    echo "============================================"
+    internet_health_check
+    footer $width
 }
 
 main "$@"
