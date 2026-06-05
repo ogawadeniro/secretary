@@ -42,8 +42,10 @@ mvn clean package -Dvaadin.ignoreVersionChecks=true
 java -jar target/secretary-0.0.1-SNAPSHOT.jar
 ```
 
-`application.properties` で `spring.profiles.active=develop` が固定。
-DB接続先は `application-develop.properties` を参照（開発環境IP直書き）。
+プロファイルは環境変数 `SPRING_PROFILES_ACTIVE` で選択:
+- 開発: `export SPRING_PROFILES_ACTIVE=develop`
+- 本番: `deploy.sh` が自動設定
+- テスト: JUnit実行時は自動検出
 
 `npm` が古い環境では `-Dvaadin.ignoreVersionChecks=true` が必要。
 
@@ -71,12 +73,21 @@ mvn test -Dvaadin.ignoreVersionChecks=true
 | トリガー | 動作 |
 |---------|------|
 | mainブランチへのpush / PR | `mvn test` 実行 |
-| mainブランチへのpush（テスト通過後） | Dockerイメージをビルドし **GHCR** にpush |
 
-- Dockerイメージは `ghcr.io/ogawadeniro/secretary:latest` として公開。
-- GitHub Secretsの `GITHUB_TOKEN` は自動設定済み。追加の設定は不要。
+## デプロイ（本番サーバー）
 
-## Dockerデプロイ
+### アーキテクチャ
+
+```
+開発マシン                         本番サーバ（160.16.206.42）
+  │                                  │
+  │ mvn package → JAR                │ Dockerコンテナ
+  │ docker build → イメージ作る      │   secretary:latest
+  │ scpでJAR+ Dockerfile送信 ──────→ │   --network host
+  │ sshで remote build & run ──────→ │   8443: Spring Boot (HTTPS)
+  │                                  │   443 → socat → 8443
+  │                                  │   localhost:5432 (PostgreSQL)
+```
 
 ### サーバー要件
 
@@ -84,9 +95,11 @@ mvn test -Dvaadin.ignoreVersionChecks=true
 |------|------|
 | OS | Rocky Linux 9.4 |
 | ランタイム | Docker（インストール手順は `setup-server.sh` 参照） |
-| DB | PostgreSQL（別サーバー推奨） |
+| DB | PostgreSQL（同一サーバー、`localhost:5432`） |
 
 ### 初回セットアップ
+
+本番サーバーで一度だけ実行:
 
 ```bash
 # リポジトリをクローン
@@ -100,35 +113,26 @@ bash setup-server.sh
 `setup-server.sh` は以下を自動実行する：
 1. Dockerのインストール（dnf）
 2. PostgreSQLのロール・DB・テーブル作成
+3. HTTPS用の自己署名証明書（keystore）を `/etc/secretary/` に生成
 
-### デプロイ
+### デプロイ（開発マシンから実行）
 
 ```bash
-# 環境変数を設定
-export GHCR_USER=ogawadeniro
-export GHCR_TOKEN=your-github-pat  # プライベートリポジトリの場合
-export DB_PASSWORD=your-db-password
+# 1. JARをビルド（まだなら）
+mvn package -DskipTests -Dvaadin.ignoreVersionChecks=true
 
-# デプロイ実行
+# 2. デプロイ実行
+export DB_PASSWORD=your-db-password
 bash deploy.sh
 ```
 
-### 手動デプロイ
-
-```bash
-# イメージをpull
-docker pull ghcr.io/ogawadeniro/secretary:latest
-
-# コンテナを起動
-docker run -d \
-    --name secretary \
-    --restart unless-stopped \
-    -p 8080:8080 \
-    -e SPRING_DATASOURCE_URL=jdbc:postgresql://<DB_HOST>:5432/secretary \
-    -e SPRING_DATASOURCE_USERNAME=rogawa \
-    -e SPRING_DATASOURCE_PASSWORD=your-password \
-    ghcr.io/ogawadeniro/secretary:latest
-```
+`deploy.sh` が自動で以下を行う：
+1. JAR + Dockerfile を本番サーバーに転送
+2. SSHで本番サーバーにログイン
+3. `docker build -t secretary:latest`（JARをコピーするだけ、数秒）
+4. 古いコンテナを停止・削除
+5. 新しいコンテナを起動（`--network host`、HTTPS有効）
+6. ヘルスチェック（HTTP 200 を確認）
 
 ## 開発の注意点
 
@@ -179,7 +183,7 @@ create table schedules (
 
 ## API
 
-ベースURL: `http://localhost:8080/api/v1/schedules`
+ベースURL: `https://localhost:8443/api/v1/schedules`
 
 | メソッド | エンドポイント | 説明 |
 |----------|---------------|------|
