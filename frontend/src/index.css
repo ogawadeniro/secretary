@@ -170,6 +170,7 @@ body {
 
 /* 複数日またぎ予定の空きスロット（可視位置を維持する透明プレースホルダー） */
 .schedule-placeholder {
+  font-size: 0.6rem;
   height: calc(1.3em + 4px);
   visibility: hidden;
 }

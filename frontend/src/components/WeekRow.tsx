@@ -24,30 +24,18 @@ export interface SlotInfo {
 }
 
 /**
- * 週に出現する全複数日またぎ予定に固定ランクを割り振り、
  * 各日の表示スロットを計算する。
  *
- * 複数日またぎ予定 → 週単位の固定ランク（0,1,2,...）
+ * 複数日またぎ予定 → 全データでのグローバルランク（0,1,2,...）を割り当て
  * 単日予定        → 複数日またぎスロットの後ろに詰める
  * 空きスロット    → プレースホルダーで埋める（可視位置を維持）
  */
-function computeWeekDaySlots(
+function computeDaySlots(
   dates: Date[],
   allSchedules: Schedule[],
+  globalMultiDaySorted: Schedule[],
 ): Map<string, { slots: SlotInfo[]; overflowCount: number }> {
-  // 今週に出現する全複数日またぎ予定（重複排除・開始日順）
-  const multiDayMap = new Map<number, Schedule>();
-  dates.forEach((date) => {
-    schedulesForDate(allSchedules, date).forEach((s) => {
-      if (isMultiDay(s) && s.id !== null) {
-        multiDayMap.set(s.id, s);
-      }
-    });
-  });
-  const multiDaySorted = Array.from(multiDayMap.values()).sort((a, b) =>
-    a.startDatetime.localeCompare(b.startDatetime),
-  );
-  const multiDayCount = multiDaySorted.length;
+  const multiDayCount = globalMultiDaySorted.length;
 
   const result = new Map<
     string,
@@ -77,7 +65,7 @@ function computeWeekDaySlots(
 
     // 複数日またぎスロット（空きはプレースホルダー）
     for (let i = 0; i < multiDayCount && slots.length < MAX_VISIBLE; i++) {
-      const s = dayMultiMap.get(multiDaySorted[i].id!);
+      const s = dayMultiMap.get(globalMultiDaySorted[i].id!);
       slots.push(s ? { schedule: s, slotIndex: i } : { slotIndex: i });
     }
 
@@ -107,9 +95,23 @@ export default function WeekRow({
   onDateClick,
 }: WeekRowProps) {
   const today = new Date();
+
+  // 全スケジュールから複数日またぎ予定を開始日順に並べたグローバルリスト
+  const globalMultiDaySorted = useMemo(() => {
+    const map = new Map<number, Schedule>();
+    schedules.forEach((s) => {
+      if (isMultiDay(s) && s.id !== null) {
+        map.set(s.id, s);
+      }
+    });
+    return Array.from(map.values()).sort((a, b) =>
+      a.startDatetime.localeCompare(b.startDatetime),
+    );
+  }, [schedules]);
+
   const weekDaySlots = useMemo(
-    () => computeWeekDaySlots(dates, schedules),
-    [dates, schedules],
+    () => computeDaySlots(dates, schedules, globalMultiDaySorted),
+    [dates, schedules, globalMultiDaySorted],
   );
 
   return (
