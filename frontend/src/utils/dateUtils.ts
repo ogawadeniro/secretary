@@ -240,53 +240,51 @@ export function filterMultiDayInRange(
 /**
  * 各日の表示スロットを計算する。
  *
- * 複数日またぎ予定 → グローバルランク（0,1,2,...）の固定スロット
- * 単日予定        → 複数日またぎスロットの後ろに詰める
- * 空きスロット    → プレースホルダーで埋める（可視位置を維持）
+ * その日アクティブな複数日またぎ予定 → 開始日順で先頭スロット
+ * 単日予定 → 複数日またぎの後ろに詰める
+ * 終了した複数日またぎ予定の余白は残さない
  */
 export function computeDaySlots(
   dates: Date[],
   allSchedules: Schedule[],
-  globalMultiDaySorted: Schedule[],
 ): Map<string, DaySlotResult> {
-  const multiDayCount = globalMultiDaySorted.length;
-
   const result = new Map<string, DaySlotResult>();
 
   dates.forEach((date) => {
     const key = formatDateKey(date);
     const daySchedules = schedulesForDate(allSchedules, date);
 
-    const dayMultiMap = new Map<number, Schedule>();
+    const dayMulti: Schedule[] = [];
     const daySingle: Schedule[] = [];
     daySchedules.forEach((s) => {
-      if (isMultiDay(s) && s.id !== null) {
-        dayMultiMap.set(s.id, s);
+      if (isMultiDay(s)) {
+        dayMulti.push(s);
       } else {
         daySingle.push(s);
       }
     });
+
+    dayMulti.sort((a, b) =>
+      a.startDatetime.localeCompare(b.startDatetime),
+    );
     daySingle.sort((a, b) =>
       a.startDatetime.localeCompare(b.startDatetime),
     );
 
     const slots: SlotInfo[] = [];
+    let idx = 0;
 
-    // 複数日またぎスロット（空きはプレースホルダー）
-    for (let i = 0; i < multiDayCount && slots.length < MAX_VISIBLE_SLOTS; i++) {
-      const s = dayMultiMap.get(globalMultiDaySorted[i].id!);
-      slots.push(s ? { schedule: s, slotIndex: i } : { slotIndex: i });
+    for (const s of dayMulti) {
+      if (slots.length >= MAX_VISIBLE_SLOTS) break;
+      slots.push({ schedule: s, slotIndex: idx++ });
     }
-
-    // 単日予定を残りスロットに
     for (const s of daySingle) {
       if (slots.length >= MAX_VISIBLE_SLOTS) break;
-      slots.push({ schedule: s, slotIndex: slots.length });
+      slots.push({ schedule: s, slotIndex: idx++ });
     }
 
-    const totalOnDay = dayMultiMap.size + daySingle.length;
-    const nonPlaceholder = slots.filter((sl) => sl.schedule).length;
-    const overflowCount = Math.max(0, totalOnDay - nonPlaceholder);
+    const totalOnDay = dayMulti.length + daySingle.length;
+    const overflowCount = Math.max(0, totalOnDay - slots.length);
 
     result.set(key, { slots, overflowCount });
   });

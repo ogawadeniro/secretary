@@ -40,28 +40,19 @@ export default function DayCell({
       </span>
       <div className="day-schedules">
         {slotInfos.map((si) => {
-          if (si.schedule) {
-            const s = si.schedule;
-            const pos = getSchedulePosition(s, date);
-            const showTitle = shouldShowTitle(s, date);
-            return (
-              <div
-                key={s.id}
-                className={`schedule-chip schedule-${pos}`}
-                style={{
-                  backgroundColor: ownerColors.get(s.owner) ?? "#888",
-                }}
-              >
-                {showTitle ? s.title : ""}
-              </div>
-            );
-          }
-          // 空きスロットは非表示のプレースホルダー（可視位置を維持）
+          const s = si.schedule!;
+          const pos = getSchedulePosition(s, date);
+          const showTitle = shouldShowTitle(s, date);
           return (
             <div
-              key={`ph-${si.slotIndex}`}
-              className="schedule-placeholder"
-            />
+              key={s.id}
+              className={`schedule-chip schedule-${pos}`}
+              style={{
+                backgroundColor: ownerColors.get(s.owner) ?? "#888",
+              }}
+            >
+              {showTitle ? s.title : ""}
+            </div>
           );
         })}
         {overflowCount > 0 && (

@@ -126,13 +126,11 @@ body {
 }
 
 .day-schedules {
-  display: grid;
-  grid-template-columns: 1fr;
-  grid-auto-rows: auto;
+  display: flex;
+  flex-direction: column;
   gap: 1px;
   overflow: hidden;
   flex: 1;
-  align-content: start;
 }
 
 .schedule-chip {
@@ -176,13 +174,6 @@ body {
   font-size: 0.6rem;
   color: var(--color-text-muted);
   padding: 0 2px;
-}
-
-/* 複数日またぎ予定の空きスロット（可視位置を維持する透明プレースホルダー） */
-.schedule-placeholder {
-  font-size: 0.6rem;
-  height: calc(1.3em + 4px);
-  visibility: hidden;
 }
 
 /* Dialog */

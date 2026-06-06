@@ -222,8 +222,6 @@ export default function InfiniteCalendar() {
             currentMonth={currentMonth}
             ownerColors={ownerColors}
             onDateClick={handleDateClick}
-            calendarStart={weeks[0][0]}
-            calendarEnd={weeks[weeks.length - 1][6]}
           />
         ))}
         <div ref={bottomSentinelRef} className="sentinel" />

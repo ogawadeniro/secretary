@@ -1,10 +1,8 @@
 import { useMemo } from "react";
 import { Schedule } from "../types/schedule";
 import {
-  schedulesForDate,
   formatDateKey,
   isSameDay,
-  filterMultiDayInRange,
   computeDaySlots,
 } from "../utils/dateUtils";
 import DayCell from "./DayCell";
@@ -15,8 +13,6 @@ interface WeekRowProps {
   currentMonth: number;
   ownerColors: Map<string, string>;
   onDateClick: (date: Date) => void;
-  calendarStart: Date;
-  calendarEnd: Date;
 }
 
 /** 1週間分（7日）の行を表示 */
@@ -26,19 +22,12 @@ export default function WeekRow({
   currentMonth,
   ownerColors,
   onDateClick,
-  calendarStart,
-  calendarEnd,
 }: WeekRowProps) {
   const today = new Date();
 
-  const globalMultiDaySorted = useMemo(
-    () => filterMultiDayInRange(schedules, calendarStart, calendarEnd),
-    [schedules, calendarStart, calendarEnd],
-  );
-
   const weekDaySlots = useMemo(
-    () => computeDaySlots(dates, schedules, globalMultiDaySorted),
-    [dates, schedules, globalMultiDaySorted],
+    () => computeDaySlots(dates, schedules),
+    [dates, schedules],
   );
 
   return (
