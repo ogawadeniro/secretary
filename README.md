@@ -226,3 +226,10 @@ curl -X DELETE http://localhost:8080/api/v1/schedules/2
 | owner | text | NOT NULL | 所有者 |
 | description | text | | 説明 |
 | update_time | timestamptz | NOT NULL | 更新日時 |
+
+## 既知の問題
+
+### ホーム画面アイコンが反映されない（iOS）
+iOSで「ホーム画面に追加」したときのアイコンが、サーバー側を更新しても変わらない場合がある。
+WebClip（ホーム画面アイコン）のキャッシュがiOS側で強固に保持されるため。
+**回避策**: ホーム画面から削除 → Safariの履歴とWebサイトデータを消去 → iPhone再起動 → 再追加
