@@ -151,10 +151,12 @@ body {
 /* 複数日またぎ予定: つながって見えるように */
 .schedule-chip.schedule-start {
   border-radius: 2px 0 0 2px;
+  padding-right: 0;
 }
 
 .schedule-chip.schedule-end {
   border-radius: 0 2px 2px 0;
+  padding-left: 0;
 }
 
 .schedule-chip.schedule-middle {
