@@ -126,8 +126,9 @@ body {
 }
 
 .day-schedules {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-auto-rows: auto;
   gap: 1px;
   overflow: hidden;
   flex: 1;
@@ -165,6 +166,12 @@ body {
   font-size: 0.6rem;
   color: var(--color-text-muted);
   padding: 0 2px;
+}
+
+/* 複数日またぎ予定の空きスロット（可視位置を維持する透明プレースホルダー） */
+.schedule-placeholder {
+  height: calc(1.3em + 4px);
+  visibility: hidden;
 }
 
 /* Dialog */

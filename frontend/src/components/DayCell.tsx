@@ -1,9 +1,11 @@
 import { Schedule } from "../types/schedule";
 import { getSchedulePosition, shouldShowTitle } from "../utils/dateUtils";
+import type { SlotInfo } from "./WeekRow";
 
 interface DayCellProps {
   date: Date;
-  schedules: Schedule[];
+  slotInfos: SlotInfo[];
+  overflowCount: number;
   isToday: boolean;
   isCurrentMonth: boolean;
   ownerColors: Map<string, string>;
@@ -13,7 +15,8 @@ interface DayCellProps {
 /** 1日分のセル（日付番号 + 予定チップ） */
 export default function DayCell({
   date,
-  schedules,
+  slotInfos,
+  overflowCount,
   isToday,
   isCurrentMonth,
   ownerColors,
@@ -36,23 +39,33 @@ export default function DayCell({
         {date.getDate()}
       </span>
       <div className="day-schedules">
-        {schedules.slice(0, 3).map((s) => {
-          const pos = getSchedulePosition(s, date);
-          const showTitle = shouldShowTitle(s, date);
+        {slotInfos.map((si) => {
+          if (si.schedule) {
+            const s = si.schedule;
+            const pos = getSchedulePosition(s, date);
+            const showTitle = shouldShowTitle(s, date);
+            return (
+              <div
+                key={s.id}
+                className={`schedule-chip schedule-${pos}`}
+                style={{
+                  backgroundColor: ownerColors.get(s.owner) ?? "#888",
+                }}
+              >
+                {showTitle ? s.title : ""}
+              </div>
+            );
+          }
+          // 空きスロットは非表示のプレースホルダー（可視位置を維持）
           return (
             <div
-              key={s.id}
-              className={`schedule-chip schedule-${pos}`}
-              style={{
-                backgroundColor: ownerColors.get(s.owner) ?? "#888",
-              }}
-            >
-              {showTitle ? s.title : ""}
-            </div>
+              key={`ph-${si.slotIndex}`}
+              className="schedule-placeholder"
+            />
           );
         })}
-        {schedules.length > 3 && (
-          <div className="schedule-more">+{schedules.length - 3}</div>
+        {overflowCount > 0 && (
+          <div className="schedule-more">+{overflowCount}</div>
         )}
       </div>
     </div>
