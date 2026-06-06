@@ -176,6 +176,8 @@ main() {
     get_certificate
     convert_to_pkcs12
     setup_auto_renew
+    # Docker再起動で新しい証明書を読み込む
+    sudo docker restart secretary 2>/dev/null && echo "Dockerコンテナを再起動しました" || true
     cleanup_ports
     print_summary
 }
