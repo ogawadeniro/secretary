@@ -6,9 +6,10 @@ import {
   shouldShowTitle,
   isMultiDay,
   rangesOverlap,
-  filterMultiDayInRange,
   computeDaySlots,
   MAX_VISIBLE_SLOTS,
+  parseScheduleDate,
+  toEpochDay,
 } from "./dateUtils";
 import { Schedule } from "../types/schedule";
 
@@ -210,51 +211,34 @@ function weekDates(year: number, month: number, startDay: number): Date[] {
   return Array.from({ length: 7 }, (_, i) => new Date(year, month, startDay + i));
 }
 
-// ========== filterMultiDayInRange ==========
-describe("filterMultiDayInRange", () => {
-  const calStart = new Date(2026, 5, 7);  // 2026/6/7
-  const calEnd = new Date(2026, 5, 13);   // 2026/6/13
-
-  it("範囲内の複数日またぎ予定を含める", () => {
-    const s1 = makeSched(1, "2026/06/06-10:00", "2026/06/10-11:00");
-    const result = filterMultiDayInRange([s1], calStart, calEnd);
-    expect(result).toHaveLength(1);
-    expect(result[0].id).toBe(s1.id);
-  });
-
-  it("範囲外の複数日またぎ予定を除外する", () => {
-    const s1 = makeSched(1, "2025/06/06-10:00", "2025/06/08-11:00");
-    const result = filterMultiDayInRange([s1], calStart, calEnd);
-    expect(result).toHaveLength(0);
-  });
-
-  it("単日予定は除外する", () => {
-    const s1 = makeSched(1, "2026/06/08-10:00", "2026/06/08-11:00");
-    const result = filterMultiDayInRange([s1], calStart, calEnd);
-    expect(result).toHaveLength(0);
-  });
-
-  it("開始日順にソートする", () => {
-    const s1 = makeSched(1, "2026/06/09-10:00", "2026/06/15-11:00");
-    const s2 = makeSched(2, "2026/06/07-10:00", "2026/06/12-11:00");
-    const result = filterMultiDayInRange([s1, s2], calStart, calEnd);
-    expect(result[0].id).toBe(2);
-    expect(result[1].id).toBe(1);
-  });
-
-  it("範囲の境界で重なる予定を含める", () => {
-    const s1 = makeSched(1, "2026/06/07-10:00", "2026/06/13-11:00");
-    const result = filterMultiDayInRange([s1], calStart, calEnd);
-    expect(result).toHaveLength(1);
-  });
-});
-
 // ========== computeDaySlots ==========
 describe("computeDaySlots", () => {
-  it("単一の複数日またぎ予定: 全日にわたって先頭スロット", () => {
+  function findActiveRange(schedules: Schedule[]) {
+    const multiDay = schedules.filter((s) => {
+      const start = s.startDatetime.slice(0, 10);
+      const end = s.endDatetime.slice(0, 10);
+      return start !== end;
+    });
+    if (multiDay.length === 0) return null;
+    let minStart = Infinity;
+    let maxEnd = -Infinity;
+    for (const s of multiDay) {
+      const start = parseScheduleDate(s.startDatetime);
+      const end = parseScheduleDate(s.endDatetime);
+      if (!start || !end) continue;
+      const d1 = toEpochDay(start.date);
+      const d2 = toEpochDay(end.date);
+      if (d1 < minStart) minStart = d1;
+      if (d2 > maxEnd) maxEnd = d2;
+    }
+    return { minStartEpoch: minStart, maxEndEpoch: maxEnd };
+  }
+
+  it("単一の複数日またぎ予定: 全日固定スロット", () => {
     const s = makeSched(1, "2026/06/08-10:00", "2026/06/15-11:00");
     const dates = weekDates(2026, 5, 7);
-    const result = computeDaySlots(dates, [s]);
+    const range = findActiveRange([s]);
+    const result = computeDaySlots(dates, [s], [s], range);
 
     for (let d = 8; d <= 13; d++) {
       const key = `2026-06-${String(d).padStart(2, "0")}`;
@@ -262,14 +246,32 @@ describe("computeDaySlots", () => {
       expect(day.slots).toHaveLength(1);
       expect(day.slots[0].schedule!.id).toBe(1);
     }
+    // 期間外（6/7）: 予定なし
+    expect(result.get("2026-06-07")!.slots).toHaveLength(0);
   });
 
-  it("複数の複数日またぎ予定: 両方アクティブな日は開始日順", () => {
+  it("複数の複数日またぎ予定: 開始前はプレースホルダーなし", () => {
+    // s1: 6/7-6/10, s2: 6/9-6/17
+    // アクティブ期間: 6/7〜6/17
+    // 6/7-8: s1のみ（s2未開始→プレースホルダーなし）
+    // 6/9-10: 両方アクティブ
+    // 6/11-13: s2のみ（s1終了→プレースホルダーあり）
     const s1 = makeSched(1, "2026/06/07-10:00", "2026/06/10-11:00");
     const s2 = makeSched(2, "2026/06/09-10:00", "2026/06/17-11:00");
     const dates = weekDates(2026, 5, 7);
-    const result = computeDaySlots(dates, [s1, s2]);
+    const range = findActiveRange([s1, s2]);
+    const multiSorted = [s1, s2];
+    const result = computeDaySlots(dates, [s1, s2], multiSorted, range);
 
+    // 6/7-8: s1のみ、s2は未開始なのでスロットなし
+    for (let d = 7; d <= 8; d++) {
+      const key = `2026-06-${String(d).padStart(2, "0")}`;
+      const day = result.get(key)!;
+      expect(day.slots).toHaveLength(1);
+      expect(day.slots[0].schedule!.id).toBe(1);
+    }
+
+    // 6/9-10: 両方アクティブ
     for (let d = 9; d <= 10; d++) {
       const key = `2026-06-${String(d).padStart(2, "0")}`;
       const day = result.get(key)!;
@@ -277,12 +279,50 @@ describe("computeDaySlots", () => {
       expect(day.slots[1].schedule!.id).toBe(2);
     }
 
-    // s1終了後: s2のみ（先頭に来る、プレースホルダーなし）
+    // 6/11-13: s2のみ（s1終了済み）、s1は開始済みなのでプレースホルダー維持
     for (let d = 11; d <= 13; d++) {
       const key = `2026-06-${String(d).padStart(2, "0")}`;
       const day = result.get(key)!;
+      expect(day.slots[0].schedule).toBeUndefined(); // placeholder for s1
+      expect(day.slots[1].schedule!.id).toBe(2); // s2 at slot 1
+    }
+  });
+
+  it("入れ違いの複数日またぎ: s2が後から開始 → 開始前は空き", () => {
+    // s1: 6/7-6/10, s2: 6/12-6/17
+    // アクティブ期間: 6/7〜6/17
+    // 6/7-10: s1のみ、s2は6/12開始→プレースホルダーなし
+    // 6/11: 両方不活性→s1 placeholder, s2未開始→スキップ
+    // 6/12-13: s2のみ、s1 placeholderあり
+    const s1 = makeSched(1, "2026/06/07-10:00", "2026/06/10-11:00");
+    const s2 = makeSched(2, "2026/06/12-10:00", "2026/06/17-11:00");
+    const dates = weekDates(2026, 5, 7);
+    const range = findActiveRange([s1, s2]);
+    const multiSorted = [s1, s2];
+    const result = computeDaySlots(dates, [s1, s2], multiSorted, range);
+
+    // 6/7-10: s1のみ
+    for (let d = 7; d <= 10; d++) {
+      const key = `2026-06-${String(d).padStart(2, "0")}`;
+      const day = result.get(key)!;
       expect(day.slots).toHaveLength(1);
-      expect(day.slots[0].schedule!.id).toBe(2);
+      expect(day.slots[0].schedule!.id).toBe(1);
+    }
+
+    // 6/11: s1終了済み→placeholder, s2未開始→スキップ
+    {
+      const day = result.get("2026-06-11")!;
+      expect(day.slots).toHaveLength(1);
+      expect(day.slots[0].schedule).toBeUndefined(); // placeholder for s1
+    }
+
+    // 6/12-13: s2のみ、s1 placeholderあり
+    for (let d = 12; d <= 13; d++) {
+      const key = `2026-06-${String(d).padStart(2, "0")}`;
+      const day = result.get(key)!;
+      expect(day.slots).toHaveLength(2);
+      expect(day.slots[0].schedule).toBeUndefined(); // placeholder for s1
+      expect(day.slots[1].schedule!.id).toBe(2); // s2 at slot 1
     }
   });
 
@@ -290,57 +330,167 @@ describe("computeDaySlots", () => {
     const s1 = makeSched(1, "2026/06/10-10:00", "2026/06/15-11:00");
     const s2 = makeSched(2, "2026/06/11-09:00", "2026/06/11-10:00");
     const dates = weekDates(2026, 5, 7);
-    const result = computeDaySlots(dates, [s1, s2]);
+    const range = findActiveRange([s1]);
+    const result = computeDaySlots(dates, [s1, s2], [s1], range);
 
     const day = result.get("2026-06-11")!;
-    expect(day.slots).toHaveLength(2);
     expect(day.slots[0].schedule!.id).toBe(1);
     expect(day.slots[1].schedule!.id).toBe(2);
   });
 
-  it("単日予定のみ: 開始日順に表示", () => {
+  it("アクティブ期間外: プレースホルダーなし", () => {
+    // s1(6/8-10) のアクティブ期間は 6/8〜6/10
+    // 週の日付は 6/7(日)〜6/13(土) → 6/7, 6/11-13 は期間外
+    const s1 = makeSched(1, "2026/06/08-10:00", "2026/06/10-11:00");
+    const dates = weekDates(2026, 5, 7);
+    const range = findActiveRange([s1]);
+    const result = computeDaySlots(dates, [s1], [s1], range);
+
+    expect(result.get("2026-06-07")!.slots).toHaveLength(0);
+    expect(result.get("2026-06-08")!.slots[0].schedule!.id).toBe(1);
+    for (let d = 11; d <= 13; d++) {
+      const key = `2026-06-${String(d).padStart(2, "0")}`;
+      expect(result.get(key)!.slots).toHaveLength(0);
+    }
+  });
+
+  it("複数日またぎがない: 単純に単日のみ", () => {
     const s1 = makeSched(1, "2026/06/10-10:00", "2026/06/10-11:00");
     const s2 = makeSched(2, "2026/06/11-09:00", "2026/06/11-10:00");
     const dates = weekDates(2026, 5, 7);
-    const result = computeDaySlots(dates, [s1, s2]);
+    const result = computeDaySlots(dates, [s1, s2], [], null);
 
     expect(result.get("2026-06-10")!.slots[0].schedule!.id).toBe(1);
     expect(result.get("2026-06-11")!.slots[0].schedule!.id).toBe(2);
   });
 
-  it("日付に予定がない: 空のスロット配列", () => {
+  it("日付に予定がない: 空配列", () => {
     const dates = weekDates(2026, 5, 7);
-    const result = computeDaySlots(dates, []);
-
+    const result = computeDaySlots(dates, [], [], null);
     expect(result.get("2026-06-07")!.slots).toHaveLength(0);
-    expect(result.get("2026-06-13")!.slots).toHaveLength(0);
   });
 
-  it("overflow: MAX_VISIBLEを超えた予定はカウントされる", () => {
+  it("overflow: 超過分をカウント", () => {
     const schedules = [1, 2, 3, 4].map((i) =>
       makeSched(i, "2026/06/10-10:00", "2026/06/10-11:00"),
     );
     const dates = weekDates(2026, 5, 7);
-    const result = computeDaySlots(dates, schedules);
+    const result = computeDaySlots(dates, schedules, [], null);
 
-    const key = "2026-06-10";
-    const day = result.get(key)!;
+    const day = result.get("2026-06-10")!;
     expect(day.slots).toHaveLength(MAX_VISIBLE_SLOTS);
     expect(day.overflowCount).toBe(1);
   });
 
-  it("複数日またぎ + 単日でスロット超過: 正しくoverflow", () => {
-    const s1 = makeSched(1, "2026/06/10-10:00", "2026/06/12-11:00"); // multi
+  it("アクティブ期間内で複数日またぎ + 単日でオーバーフロー", () => {
+    const s1 = makeSched(1, "2026/06/10-10:00", "2026/06/12-11:00");
     const singles = [2, 3, 4].map((i) =>
       makeSched(i, "2026/06/11-10:00", "2026/06/11-11:00"),
     );
     const dates = weekDates(2026, 5, 7);
-    const result = computeDaySlots(dates, [s1, ...singles]);
+    const allSchedules = [s1, ...singles];
+    const range = findActiveRange([s1]);
+    const result = computeDaySlots(dates, allSchedules, [s1], range);
 
     const day = result.get("2026-06-11")!;
-    // s1 + 3 singles = 4 total → MAX_VISIBLE=3
     expect(day.slots).toHaveLength(MAX_VISIBLE_SLOTS);
-    expect(day.slots[0].schedule!.id).toBe(1); // multi first
+    expect(day.slots[0].schedule!.id).toBe(1);
     expect(day.overflowCount).toBe(1);
+  });
+
+  it("開始前の複数日またぎ: プレースホルダーを表示しない", () => {
+    // s1: 6/10-6/15, s2: 6/7-6/9
+    // アクティブ期間: 6/7〜6/15
+    // 6/7-9: s2のみ（s1未開始→スキップ）
+    // 6/10-13: s1のみ（s2終了→placeholderあり）
+    const s1 = makeSched(1, "2026/06/10-10:00", "2026/06/15-11:00");
+    const s2 = makeSched(2, "2026/06/07-10:00", "2026/06/09-11:00");
+    const dates = weekDates(2026, 5, 7);
+    const range = findActiveRange([s1, s2]);
+    // 開始日順ソート: s2(6/7), s1(6/10)
+    const multiSorted = [s2, s1];
+    const result = computeDaySlots(dates, [s1, s2], multiSorted, range);
+
+    // 6/7-9: s2のみ、s1未開始→スキップ
+    for (let d = 7; d <= 9; d++) {
+      const key = `2026-06-${String(d).padStart(2, "0")}`;
+      const day = result.get(key)!;
+      expect(day.slots).toHaveLength(1);
+      expect(day.slots[0].schedule!.id).toBe(2); // s2 at slot 0
+    }
+
+    // 6/10-13: s1のみ、s2終了→placeholder at slot 0, s1 at slot 1
+    for (let d = 10; d <= 13; d++) {
+      const key = `2026-06-${String(d).padStart(2, "0")}`;
+      const day = result.get(key)!;
+      expect(day.slots).toHaveLength(2);
+      expect(day.slots[0].schedule).toBeUndefined(); // placeholder for s2
+      expect(day.slots[1].schedule!.id).toBe(1); // s1 at slot 1
+    }
+  });
+
+  it("アクティブ期間内のオーバーフロー: プレースホルダーがスロットを消費", () => {
+    // s1: 6/7-6/10, s2: 6/9-6/17
+    // アクティブ期間: 6/7〜6/17
+    // MAX_VISIBLE_SLOTS=3
+    // 3つの単日予定を6/11に追加→s1 placeholder + s2 + 単日1つ → overflow 1
+    const s1 = makeSched(1, "2026/06/07-10:00", "2026/06/10-11:00");
+    const s2 = makeSched(2, "2026/06/09-10:00", "2026/06/17-11:00");
+    const singles = [3, 4, 5].map((i) =>
+      makeSched(i, "2026/06/11-10:00", "2026/06/11-11:00"),
+    );
+    const dates = weekDates(2026, 5, 7);
+    const allSchedules = [s1, s2, ...singles];
+    const range = findActiveRange([s1, s2]);
+    const multiSorted = [s1, s2];
+    const result = computeDaySlots(dates, allSchedules, multiSorted, range);
+
+    // 6/11: placeholder + s2 = 2 slots → 単日は1つだけ入る
+    const day = result.get("2026-06-11")!;
+    expect(day.slots).toHaveLength(MAX_VISIBLE_SLOTS);
+    expect(day.slots[0].schedule).toBeUndefined(); // placeholder for s1
+    expect(day.slots[1].schedule!.id).toBe(2);
+    expect(day.slots[2].schedule!.id).toBe(3);
+    expect(day.overflowCount).toBe(2); // 2 singles overflow
+  });
+
+  it("今週より前に終了した予定: プレースホルダーを表示しない", () => {
+    // s1(古い): 6/1-6/5, 週: 6/7-6/13
+    // s1は週の開始(6/7)より前に終了 → アクティブ期間内でもプレースホルダーなし
+    const s1 = makeSched(1, "2026/06/01-10:00", "2026/06/05-11:00");
+    const dates = weekDates(2026, 5, 7);
+    const range = findActiveRange([s1]);
+    const result = computeDaySlots(dates, [], [s1], range);
+
+    for (let d = 7; d <= 13; d++) {
+      const key = `2026-06-${String(d).padStart(2, "0")}`;
+      expect(result.get(key)!.slots).toHaveLength(0);
+    }
+  });
+
+  it("今週より前に終了した予定 + アクティブな予定: 古い予定のプレースホルダーなし", () => {
+    // s1(古い): 6/1-6/5, s2: 6/10-6/15
+    // アクティブ期間: 6/1〜6/15、週: 6/7-6/13
+    // 6/10-13: s2のみ、s1は今週より前に終了→placeholderなし
+    const s1 = makeSched(1, "2026/06/01-10:00", "2026/06/05-11:00");
+    const s2 = makeSched(2, "2026/06/10-10:00", "2026/06/15-11:00");
+    const dates = weekDates(2026, 5, 7);
+    const range = findActiveRange([s1, s2]);
+    const multiSorted = [s1, s2];
+    const result = computeDaySlots(dates, [s2], multiSorted, range);
+
+    // 6/7-9: 予定なし（s2未開始）
+    for (let d = 7; d <= 9; d++) {
+      const key = `2026-06-${String(d).padStart(2, "0")}`;
+      expect(result.get(key)!.slots).toHaveLength(0);
+    }
+
+    // 6/10-13: s2のみ（s1のプレースホルダーなし）
+    for (let d = 10; d <= 13; d++) {
+      const key = `2026-06-${String(d).padStart(2, "0")}`;
+      const day = result.get(key)!;
+      expect(day.slots).toHaveLength(1);
+      expect(day.slots[0].schedule!.id).toBe(2);
+    }
   });
 });

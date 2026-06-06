@@ -40,7 +40,11 @@ export default function DayCell({
       </span>
       <div className="day-schedules">
         {slotInfos.map((si) => {
-          const s = si.schedule!;
+          const s = si.schedule;
+          // プレースホルダー（空きスロット）
+          if (!s) {
+            return <div key={`ph-${si.slotIndex}`} className="schedule-placeholder" />;
+          }
           const pos = getSchedulePosition(s, date);
           const showTitle = shouldShowTitle(s, date);
           return (

@@ -4,6 +4,7 @@ import {
   formatDateKey,
   isSameDay,
   computeDaySlots,
+  buildGlobalMultiDayInfo,
 } from "../utils/dateUtils";
 import DayCell from "./DayCell";
 
@@ -25,9 +26,14 @@ export default function WeekRow({
 }: WeekRowProps) {
   const today = new Date();
 
+  const { globalMultiDaySorted, activeRange } = useMemo(
+    () => buildGlobalMultiDayInfo(schedules),
+    [schedules],
+  );
+
   const weekDaySlots = useMemo(
-    () => computeDaySlots(dates, schedules),
-    [dates, schedules],
+    () => computeDaySlots(dates, schedules, globalMultiDaySorted, activeRange),
+    [dates, schedules, globalMultiDaySorted, activeRange],
   );
 
   return (
