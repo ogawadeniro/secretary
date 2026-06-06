@@ -243,6 +243,7 @@ export default function InfiniteCalendar() {
         <ScheduleDialog
           date={selectedDate}
           schedules={selectedSchedules}
+          holidayName={holidays.get(formatDateKey(selectedDate)) ?? null}
           onClose={handleDialogClose}
           onSchedulesChanged={reloadSchedules}
         />

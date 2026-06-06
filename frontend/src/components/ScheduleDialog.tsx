@@ -1,14 +1,17 @@
 import { useState, useEffect, useRef } from "react";
 import { Schedule } from "../types/schedule";
-import { createSchedule,
+import {
+  createSchedule,
   updateSchedule,
   deleteSchedule,
 } from "../api/scheduleApi";
 import { adjustEndByStart, adjustStartByEnd } from "../utils/dateUtils";
+import { PartyPopper } from "lucide-react";
 
 interface ScheduleDialogProps {
   date: Date;
   schedules: Schedule[];
+  holidayName: string | null;
   onClose: () => void;
   onSchedulesChanged: () => void;
 }
@@ -17,6 +20,7 @@ interface ScheduleDialogProps {
 export default function ScheduleDialog({
   date,
   schedules: initialSchedules,
+  holidayName,
   onClose,
   onSchedulesChanged,
 }: ScheduleDialogProps) {
@@ -83,6 +87,12 @@ export default function ScheduleDialog({
         <div className="dialog-header">
           <h2>
             {date.getMonth() + 1}月{date.getDate()}日の予定
+            {holidayName && (
+              <span className="dialog-holiday-name">
+                <PartyPopper size={12} />
+                {holidayName}
+              </span>
+            )}
           </h2>
           <button className="close-btn" onClick={handleClose}>
             ✕

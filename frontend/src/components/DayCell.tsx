@@ -42,9 +42,6 @@ export default function DayCell({
       <span className="day-number" style={{ color: dateColor }}>
         {date.getDate()}
       </span>
-      {holidayName && (
-        <span className="holiday-label">{holidayName}</span>
-      )}
       <div className="day-schedules">
         {slotInfos.map((si) => {
           const s = si.schedule;

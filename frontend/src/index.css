@@ -127,17 +127,6 @@ body {
   flex-shrink: 0;
 }
 
-.holiday-label {
-  font-size: 0.55rem;
-  color: var(--color-holiday);
-  padding: 0 2px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  flex-shrink: 0;
-  line-height: 1.2;
-}
-
 .day-schedules {
   display: flex;
   flex-direction: column;
@@ -266,6 +255,19 @@ body {
 .dialog-header h2 {
   font-size: 1rem;
   font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.dialog-holiday-name {
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: var(--color-holiday);
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
 }
 
 .close-btn {
