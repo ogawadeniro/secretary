@@ -1,6 +1,12 @@
 import { useMemo } from "react";
 import { Schedule } from "../types/schedule";
-import { schedulesForDate, formatDateKey, isSameDay } from "../utils/dateUtils";
+import {
+  schedulesForDate,
+  formatDateKey,
+  isSameDay,
+  parseScheduleDate,
+  toEpochDay,
+} from "../utils/dateUtils";
 import DayCell from "./DayCell";
 
 interface WeekRowProps {
@@ -9,6 +15,8 @@ interface WeekRowProps {
   currentMonth: number;
   ownerColors: Map<string, string>;
   onDateClick: (date: Date) => void;
+  calendarStart: Date;
+  calendarEnd: Date;
 }
 
 const MAX_VISIBLE = 3;
@@ -24,9 +32,21 @@ export interface SlotInfo {
 }
 
 /**
+ * 2つの日付範囲が重なるか判定
+ */
+function rangesOverlap(
+  start1: number,
+  end1: number,
+  start2: number,
+  end2: number,
+): boolean {
+  return start1 <= end2 && end1 >= start2;
+}
+
+/**
  * 各日の表示スロットを計算する。
  *
- * 複数日またぎ予定 → 全データでのグローバルランク（0,1,2,...）を割り当て
+ * 複数日またぎ予定 → カレンダー表示範囲の全複数日またぎ予定でグローバルランク
  * 単日予定        → 複数日またぎスロットの後ろに詰める
  * 空きスロット    → プレースホルダーで埋める（可視位置を維持）
  */
@@ -46,7 +66,6 @@ function computeDaySlots(
     const key = formatDateKey(date);
     const daySchedules = schedulesForDate(allSchedules, date);
 
-    // 当日の複数日またぎ予定と単日予定に分ける
     const dayMultiMap = new Map<number, Schedule>();
     const daySingle: Schedule[] = [];
     daySchedules.forEach((s) => {
@@ -60,7 +79,6 @@ function computeDaySlots(
       a.startDatetime.localeCompare(b.startDatetime),
     );
 
-    // スロットを構築（複数日またぎ → 単日 の順）
     const slots: SlotInfo[] = [];
 
     // 複数日またぎスロット（空きはプレースホルダー）
@@ -75,7 +93,6 @@ function computeDaySlots(
       slots.push({ schedule: s, slotIndex: slots.length });
     }
 
-    // overflow: 当日の全予定 - スロット中のプレースホルダーでないもの
     const totalOnDay = dayMultiMap.size + daySingle.length;
     const nonPlaceholder = slots.filter((sl) => sl.schedule).length;
     const overflowCount = Math.max(0, totalOnDay - nonPlaceholder);
@@ -93,21 +110,36 @@ export default function WeekRow({
   currentMonth,
   ownerColors,
   onDateClick,
+  calendarStart,
+  calendarEnd,
 }: WeekRowProps) {
   const today = new Date();
 
-  // 全スケジュールから複数日またぎ予定を開始日順に並べたグローバルリスト
+  // カレンダー表示範囲に登場する複数日またぎ予定のみを抽出し、開始日順に並べる
   const globalMultiDaySorted = useMemo(() => {
+    const calStartDay = toEpochDay(calendarStart);
+    const calEndDay = toEpochDay(calendarEnd);
+
     const map = new Map<number, Schedule>();
     schedules.forEach((s) => {
-      if (isMultiDay(s) && s.id !== null) {
+      if (!isMultiDay(s) || s.id === null) return;
+      const start = parseScheduleDate(s.startDatetime);
+      const end = parseScheduleDate(s.endDatetime);
+      if (!start || !end) return;
+
+      const startDay = toEpochDay(start.date);
+      const endDay = toEpochDay(end.date);
+
+      // 表示範囲と重なる予定のみ含める
+      if (rangesOverlap(startDay, endDay, calStartDay, calEndDay)) {
         map.set(s.id, s);
       }
     });
+
     return Array.from(map.values()).sort((a, b) =>
       a.startDatetime.localeCompare(b.startDatetime),
     );
-  }, [schedules]);
+  }, [schedules, calendarStart, calendarEnd]);
 
   const weekDaySlots = useMemo(
     () => computeDaySlots(dates, schedules, globalMultiDaySorted),

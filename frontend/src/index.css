@@ -132,6 +132,7 @@ body {
   gap: 1px;
   overflow: hidden;
   flex: 1;
+  align-content: start;
 }
 
 .schedule-chip {
