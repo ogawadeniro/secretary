@@ -3,6 +3,7 @@ package com.rogawa.secretary.infrastructure.rest;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -14,6 +15,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -30,6 +32,7 @@ public class ScheduleControllerTest {
     private ScheduleUseCase scheduleUseCase;
 
     @Test
+    @WithMockUser
     public void testGetSchedules() throws Exception {
         Schedule schedule = new Schedule();
         schedule.setId(1L);
@@ -49,6 +52,7 @@ public class ScheduleControllerTest {
     }
 
     @Test
+    @WithMockUser
     public void testGetSchedule() throws Exception {
         Schedule schedule = new Schedule();
         schedule.setId(1L);
@@ -66,6 +70,7 @@ public class ScheduleControllerTest {
     }
 
     @Test
+    @WithMockUser
     public void testCreateSchedule() throws Exception {
         ScheduleDto request = new ScheduleDto();
         request.setTitle("new-schedule");
@@ -81,6 +86,7 @@ public class ScheduleControllerTest {
         when(scheduleUseCase.createSchedule(any(Schedule.class))).thenReturn(created);
 
         mockMvc.perform(post("/api/v1/schedules")
+                        .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
@@ -88,8 +94,10 @@ public class ScheduleControllerTest {
     }
 
     @Test
+    @WithMockUser
     public void testDeleteSchedule() throws Exception {
-        mockMvc.perform(delete("/api/v1/schedules/1"))
+        mockMvc.perform(delete("/api/v1/schedules/1")
+                        .with(csrf()))
                 .andExpect(status().isNoContent());
     }
 }
