@@ -378,11 +378,11 @@ describe("computeDaySlots", () => {
     const result = computeDaySlots(dates, schedules, [], null);
 
     const day = result.get("2026-06-10")!;
-    expect(day.slots).toHaveLength(MAX_VISIBLE_SLOTS);
-    expect(day.overflowCount).toBe(1);
+    expect(day.slots).toHaveLength(4);
+    expect(day.overflowCount).toBe(0);
   });
 
-  it("アクティブ期間内で複数日またぎ + 単日でオーバーフロー", () => {
+  it("アクティブ期間内で複数日またぎ + 単日で収まる", () => {
     const s1 = makeSched(1, "2026/06/10-10:00", "2026/06/12-11:00");
     const singles = [2, 3, 4].map((i) =>
       makeSched(i, "2026/06/11-10:00", "2026/06/11-11:00"),
@@ -393,9 +393,9 @@ describe("computeDaySlots", () => {
     const result = computeDaySlots(dates, allSchedules, [s1], range);
 
     const day = result.get("2026-06-11")!;
-    expect(day.slots).toHaveLength(MAX_VISIBLE_SLOTS);
+    expect(day.slots).toHaveLength(4);
     expect(day.slots[0].schedule!.id).toBe(1);
-    expect(day.overflowCount).toBe(1);
+    expect(day.overflowCount).toBe(0);
   });
 
   it("開始前の複数日またぎ: プレースホルダーを表示しない", () => {
@@ -432,8 +432,8 @@ describe("computeDaySlots", () => {
   it("アクティブ期間内のオーバーフロー: プレースホルダーがスロットを消費", () => {
     // s1: 6/7-6/10, s2: 6/9-6/17
     // アクティブ期間: 6/7〜6/17
-    // MAX_VISIBLE_SLOTS=3
-    // 3つの単日予定を6/11に追加→s1 placeholder + s2 + 単日1つ → overflow 1
+    // MAX_VISIBLE_SLOTS=5
+    // 3つの単日予定を6/11に追加→s1 placeholder + s2 + 単日3つ = 5 slotsで収まる
     const s1 = makeSched(1, "2026/06/07-10:00", "2026/06/10-11:00");
     const s2 = makeSched(2, "2026/06/09-10:00", "2026/06/17-11:00");
     const singles = [3, 4, 5].map((i) =>
@@ -445,13 +445,15 @@ describe("computeDaySlots", () => {
     const multiSorted = [s1, s2];
     const result = computeDaySlots(dates, allSchedules, multiSorted, range);
 
-    // 6/11: placeholder + s2 = 2 slots → 単日は1つだけ入る
+    // 6/11: placeholder + s2 + 単日3つ = 5 slots
     const day = result.get("2026-06-11")!;
     expect(day.slots).toHaveLength(MAX_VISIBLE_SLOTS);
     expect(day.slots[0].schedule).toBeUndefined(); // placeholder for s1
     expect(day.slots[1].schedule!.id).toBe(2);
     expect(day.slots[2].schedule!.id).toBe(3);
-    expect(day.overflowCount).toBe(2); // 2 singles overflow
+    expect(day.slots[3].schedule!.id).toBe(4);
+    expect(day.slots[4].schedule!.id).toBe(5);
+    expect(day.overflowCount).toBe(0);
   });
 
   it("今週より前に終了した予定: プレースホルダーを表示しない", () => {

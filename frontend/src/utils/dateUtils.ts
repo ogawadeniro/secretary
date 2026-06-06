@@ -213,7 +213,7 @@ export function rangesOverlap(
 }
 
 /** 最大表示スロット数 */
-export const MAX_VISIBLE_SLOTS = 3;
+export const MAX_VISIBLE_SLOTS = 5;
 
 /**
  * 全複数日またぎ予定を開始日順にソートし、
