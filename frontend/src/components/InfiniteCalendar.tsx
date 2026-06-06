@@ -6,6 +6,7 @@ import ScheduleDialog from "./ScheduleDialog";
 import { addDays, getWeekStart, formatDateKey, toEpochDay } from "../utils/dateUtils";
 import { getHolidaysInRange } from "../utils/holidayUtils";
 import type { HolidayMap } from "../utils/holidayUtils";
+import { useAuth } from "../context/AuthContext";
 
 /** 初期表示する週数（約2年分） */
 const INITIAL_WEEKS = 104;
@@ -43,6 +44,7 @@ function generateOwnerColors(schedules: Schedule[]): Map<string, string> {
 }
 
 export default function InfiniteCalendar() {
+  const { user, logout } = useAuth();
   const [weeks, setWeeks] = useState<Date[][]>(() =>
     generateWeeks(new Date(), INITIAL_WEEKS / 2)
   );
@@ -202,6 +204,10 @@ export default function InfiniteCalendar() {
     <div className="calendar-container">
       <div className="calendar-header">
         <h1>{monthLabel}</h1>
+        <div className="calendar-header-right">
+          <span className="header-user">{user?.displayName ?? user?.username}</span>
+          <button className="logout-btn" onClick={logout}>ログアウト</button>
+        </div>
       </div>
 
       <div className="day-labels">

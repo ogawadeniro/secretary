@@ -24,7 +24,6 @@ public class ScheduleDto {
     @JsonFormat(pattern = "yyyy/MM/dd-HH:mm")
     private LocalDateTime endDatetime;
 
-    @NotBlank
     private String owner;
 
     @NotNull
