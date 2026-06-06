@@ -67,6 +67,12 @@ convert_to_pkcs12() {
     echo "=== Converting to PKCS12 ==="
     local cert_dir="${ACME_HOME}/${DOMAIN}"
     local password
+
+    # ECC版の証明書ディレクトリを優先（--issue 時にキータイプ未指定だとECCになる）
+    if [ -d "${cert_dir}_ecc" ]; then
+        cert_dir="${cert_dir}_ecc"
+    fi
+
     password=$(openssl rand -base64 32)
     echo "$password" | sudo tee "${PASSWORD_FILE}" > /dev/null
     sudo chmod 600 "${PASSWORD_FILE}"
@@ -101,6 +107,9 @@ KEYSTORE_FILE="${KEYSTORE_FILE}"
 PASSWORD_FILE="${PASSWORD_FILE}"
 DOMAIN="${DOMAIN}"
 CERT_DIR="${ACME_HOME}/\${DOMAIN}"
+if [ -d "\${CERT_DIR}_ecc" ]; then
+    CERT_DIR="\${CERT_DIR}_ecc"
+fi
 
 PASSWORD=\$(openssl rand -base64 32)
 echo "\$PASSWORD" | sudo tee "\$PASSWORD_FILE" > /dev/null
