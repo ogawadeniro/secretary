@@ -193,8 +193,17 @@ function ScheduleFormComponent({
   onSave: (data: ScheduleFormData) => Promise<void>;
   onCancel: () => void;
 }) {
+  const pad = (n: number) => String(n).padStart(2, "0");
+  const dateStr = `${date.getFullYear()}/${pad(date.getMonth() + 1)}/${pad(date.getDate())}`;
+
   const [title, setTitle] = useState(initial?.title ?? "");
   const [isAllDay, setIsAllDay] = useState(initial?.isAllDay ?? false);
+  const [startDate, setStartDate] = useState(
+    initial ? initial.startDatetime.slice(0, 10).replace(/\//g, "-") : dateStr.replace(/\//g, "-")
+  );
+  const [endDate, setEndDate] = useState(
+    initial ? initial.endDatetime.slice(0, 10).replace(/\//g, "-") : dateStr.replace(/\//g, "-")
+  );
   const [startTime, setStartTime] = useState(
     initial?.startDatetime?.slice(11) ?? "09:00"
   );
@@ -205,8 +214,7 @@ function ScheduleFormComponent({
   const [description, setDescription] = useState(initial?.description ?? "");
   const [saving, setSaving] = useState(false);
 
-  const pad = (n: number) => String(n).padStart(2, "0");
-  const dateStr = `${date.getFullYear()}/${pad(date.getMonth() + 1)}/${pad(date.getDate())}`;
+  const isEditing = initial !== null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -216,11 +224,11 @@ function ScheduleFormComponent({
         title,
         isAllDay,
         startDatetime: isAllDay
-          ? `${dateStr}-00:00`
-          : `${dateStr}-${startTime}`,
+          ? `${startDate.replace(/-/g, "/")}-00:00`
+          : `${startDate.replace(/-/g, "/")}-${startTime}`,
         endDatetime: isAllDay
-          ? `${dateStr}-00:00`
-          : `${dateStr}-${endTime}`,
+          ? `${endDate.replace(/-/g, "/")}-00:00`
+          : `${endDate.replace(/-/g, "/")}-${endTime}`,
         owner,
         description,
       });
@@ -257,6 +265,26 @@ function ScheduleFormComponent({
           onChange={(e) => setIsAllDay(e.target.checked)}
         />
       </label>
+      {isEditing && (
+        <div className="date-fields">
+          <label>
+            開始日
+            <input
+              type="date"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+            />
+          </label>
+          <label>
+            終了日
+            <input
+              type="date"
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+            />
+          </label>
+        </div>
+      )}
       {!isAllDay && (
         <div className="time-fields">
           <label>
