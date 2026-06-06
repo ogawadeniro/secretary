@@ -49,8 +49,8 @@ cd ..
 
 echo ""
 echo "================================"
-echo "  Spring Boot: http://localhost:8080"
-echo "  Vite:        http://localhost:5173"
+echo "  Spring Boot: http://localhost:8080  (PID: ${SPRING_PID})"
+echo "  Vite:        http://localhost:5173  (PID: ${VITE_PID})"
 echo "================================"
 echo "  Press Ctrl+C to stop all servers"
 echo "================================"
