@@ -39,6 +39,9 @@ get_certificate() {
 
     echo "=== Obtaining certificate for ${DOMAIN} ==="
 
+    # Let's Encrypt を明示的に指定（デフォルトはZeroSSLで登録が必要なため）
+    ~/.acme.sh/acme.sh --set-default-ca --server letsencrypt
+
     # nftables でポート80を許可（なければ追加）
     if ! sudo nft list chain ip filter INPUT 2>/dev/null | grep -q "tcp dport 80"; then
         sudo nft insert rule ip filter INPUT ip protocol tcp tcp dport 80 counter accept
