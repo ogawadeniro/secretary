@@ -1,8 +1,11 @@
 import { useState, useEffect, useRef, useCallback, useLayoutEffect, useMemo } from "react";
-import { Schedule } from "../types/schedule";
+import type { UserSettings } from "../types/settings";
+import type { Schedule } from "../types/schedule";
 import { fetchSchedules } from "../api/scheduleApi";
+import { fetchSettings } from "../api/settingsApi";
 import WeekRow from "./WeekRow";
 import ScheduleDialog from "./ScheduleDialog";
+import SettingsDialog from "./SettingsDialog";
 import { addDays, getWeekStart, formatDateKey, toEpochDay } from "../utils/dateUtils";
 import { getHolidaysInRange } from "../utils/holidayUtils";
 import type { HolidayMap } from "../utils/holidayUtils";
@@ -12,12 +15,10 @@ import { useAuth } from "../context/AuthContext";
 const INITIAL_WEEKS = 104;
 /** スクロール端到達時に追加読み込みする週数 */
 const LOAD_MORE_WEEKS = 12;
-/** 週の開始曜日（0=日曜） */
-const FIRST_DAY_OF_WEEK = 0;
 
 /** 基準日を中心に指定した週数のグリッドを生成 */
-function generateWeeks(centerDate: Date, halfWeeks: number): Date[][] {
-  const weekStart = getWeekStart(centerDate, FIRST_DAY_OF_WEEK);
+function generateWeeks(centerDate: Date, halfWeeks: number, firstDayOfWeek: number): Date[][] {
+  const weekStart = getWeekStart(centerDate, firstDayOfWeek);
   const start = addDays(weekStart, -halfWeeks * 7);
   const weeks: Date[][] = [];
   for (let i = 0; i < halfWeeks * 2; i++) {
@@ -30,46 +31,59 @@ function generateWeeks(centerDate: Date, halfWeeks: number): Date[][] {
   return weeks;
 }
 
-/** オーナーごとに色を割り当て */
-function generateOwnerColors(schedules: Schedule[]): Map<string, string> {
-  const owners = [...new Set(schedules.map((s) => s.owner))];
-  const colors = [
-    "#4a90d9", "#e05a5a", "#50b86c", "#d4a030",
-    "#8b5cf6", "#ec4899", "#06b6d4", "#f97316",
-    "#14b8a6", "#a855f7",
-  ];
-  const map = new Map<string, string>();
-  owners.forEach((o, i) => map.set(o, colors[i % colors.length]));
-  return map;
-}
+/** デフォルト設定 */
+const DEFAULT_SETTINGS: UserSettings = {
+  chipBgColor: "#4a90d9",
+  firstDayOfWeek: 0,
+};
 
 export default function InfiniteCalendar() {
   const { user, logout } = useAuth();
+  const [settings, setSettings] = useState<UserSettings>(DEFAULT_SETTINGS);
   const [weeks, setWeeks] = useState<Date[][]>(() =>
-    generateWeeks(new Date(), INITIAL_WEEKS / 2)
+    generateWeeks(new Date(), INITIAL_WEEKS / 2, DEFAULT_SETTINGS.firstDayOfWeek)
   );
   const [schedules, setSchedules] = useState<Schedule[]>([]);
-  const [ownerColors, setOwnerColors] = useState<Map<string, string>>(new Map());
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [showSettings, setShowSettings] = useState(false);
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
-  const [loading, setLoading] = useState(false);
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const topSentinelRef = useRef<HTMLDivElement>(null);
   const bottomSentinelRef = useRef<HTMLDivElement>(null);
 
+  /** 設定を読み込んで適用 */
+  const reloadSettings = useCallback(async () => {
+    try {
+      const s = await fetchSettings();
+      setSettings(s);
+    } catch {
+      // デフォルト設定を使い続ける
+    }
+  }, []);
+
   /** 予定一覧を再取得 */
   const reloadSchedules = useCallback(async () => {
     const data = await fetchSchedules();
     setSchedules(data);
-    setOwnerColors(generateOwnerColors(data));
   }, []);
 
   // 初回読み込み
   useEffect(() => {
+    reloadSettings();
     reloadSchedules();
-  }, [reloadSchedules]);
+  }, [reloadSettings, reloadSchedules]);
+
+  // firstDayOfWeek が変わったら週を再生成
+  useEffect(() => {
+    setWeeks(generateWeeks(new Date(), INITIAL_WEEKS / 2, settings.firstDayOfWeek));
+  }, [settings.firstDayOfWeek]);
+
+  // チップ色を CSS 変数に反映
+  useEffect(() => {
+    document.documentElement.style.setProperty("--color-chip-bg", settings.chipBgColor);
+  }, [settings.chipBgColor]);
 
   // IntersectionObserver による無限スクロール
   useEffect(() => {
@@ -171,8 +185,11 @@ export default function InfiniteCalendar() {
     setSelectedDate(null);
   };
 
+  const handleSettingsSaved = (s: UserSettings) => {
+    setSettings(s);
+  };
+
   // 選択された日付に紐づく予定をフィルタ
-  // schedulesForDate と同じ epoch日比較だが、ここでは引数として受け取る schedules に対して直接行う
   const selectedSchedules = selectedDate
     ? schedules.filter((s) => {
         const startMatch = s.startDatetime.match(
@@ -206,27 +223,41 @@ export default function InfiniteCalendar() {
         <h1>{monthLabel}</h1>
         <div className="calendar-header-right">
           <span className="header-user">{user?.displayName ?? user?.username}</span>
+          <button
+            className="settings-btn"
+            onClick={() => setShowSettings(true)}
+            title="設定"
+          >
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="12" cy="12" r="3"/>
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+            </svg>
+          </button>
           <button className="logout-btn" onClick={logout}>ログアウト</button>
         </div>
       </div>
 
       <div className="day-labels">
-        {["日", "月", "火", "水", "木", "金", "土"].map((d, i) => (
-          <div
-            key={d}
-            className="day-label"
-            style={{
-              color:
-                i === 0
-                  ? "var(--color-sun)"
-                  : i === 6
-                    ? "var(--color-sat)"
-                    : "inherit",
-            }}
-          >
-            {d}
-          </div>
-        ))}
+        {Array.from({ length: 7 }, (_, i) => {
+          const dayIndex = (settings.firstDayOfWeek + i) % 7;
+          const labels = ["日", "月", "火", "水", "木", "金", "土"];
+          return (
+            <div
+              key={labels[dayIndex]}
+              className="day-label"
+              style={{
+                color:
+                  dayIndex === 0
+                    ? "var(--color-sun)"
+                    : dayIndex === 6
+                      ? "var(--color-sat)"
+                      : "inherit",
+              }}
+            >
+              {labels[dayIndex]}
+            </div>
+          );
+        })}
       </div>
 
       <div className="scroll-container" ref={scrollRef} onScroll={handleScroll}>
@@ -237,13 +268,21 @@ export default function InfiniteCalendar() {
             dates={dates}
             schedules={schedules}
             currentMonth={currentMonth}
-            ownerColors={ownerColors}
+            chipBgColor={settings.chipBgColor}
             holidays={holidays}
             onDateClick={handleDateClick}
           />
         ))}
         <div ref={bottomSentinelRef} className="sentinel" />
       </div>
+
+      {showSettings && (
+        <SettingsDialog
+          settings={settings}
+          onClose={() => setShowSettings(false)}
+          onSaved={handleSettingsSaved}
+        />
+      )}
 
       {selectedDate && (
         <ScheduleDialog

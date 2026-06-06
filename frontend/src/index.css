@@ -171,7 +171,6 @@ body {
   padding: 0 2px;
   margin: 0 2px;
   border-radius: 2px;
-  color: #fff;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -534,16 +533,19 @@ body {
   border: none;
 }
 
-.form-actions button[type="submit"] {
+.form-actions button[type="submit"],
+.save-btn {
   background: var(--color-accent);
   color: #fff;
 }
 
-.form-actions button[type="submit"]:disabled {
+.form-actions button[type="submit"]:disabled,
+.save-btn:disabled {
   opacity: 0.6;
 }
 
-.form-actions button[type="button"] {
+.form-actions button[type="button"],
+.cancel-btn {
   background: var(--color-surface2);
   color: var(--color-text);
   border: 1px solid var(--color-border);
@@ -652,4 +654,118 @@ body {
   align-items: center;
   justify-content: center;
   color: var(--color-text-muted);
+}
+
+/* 設定ボタン（歯車アイコン） */
+.settings-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  padding: 4px;
+  opacity: 0.8;
+  transition: opacity 0.2s;
+}
+
+.settings-btn:hover {
+  opacity: 1;
+}
+
+/* 設定フォーム */
+.settings-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.settings-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 0.85rem;
+  color: var(--color-text);
+}
+
+.settings-form select {
+  background: var(--color-surface2);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+  padding: 8px;
+  border-radius: 4px;
+  font-size: 0.85rem;
+}
+
+/* カラーピッカー行 */
+.color-picker-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.color-picker-row input[type="color"] {
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  cursor: pointer;
+  padding: 0;
+  background: none;
+}
+
+.color-preview {
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  line-height: 1.5;
+}
+
+/* 設定セクション */
+.settings-section {
+  border-bottom: 1px solid var(--color-border);
+  padding-bottom: 12px;
+}
+
+.settings-section:last-of-type {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.settings-section-title {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--color-dialog-text, var(--color-text));
+  margin-bottom: 10px;
+  opacity: 0.7;
+}
+
+/* 設定フォームのテキスト入力 */
+.settings-form input[type="text"] {
+  background: var(--color-surface2);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+  padding: 8px;
+  border-radius: 4px;
+  font-size: 0.85rem;
+}
+
+/* デフォルトに戻すボタン */
+.reset-btn {
+  width: 100%;
+  padding: 10px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  border: 1px solid var(--color-sun);
+  background: transparent;
+  color: var(--color-sun);
+  transition: background 0.2s;
+}
+
+.reset-btn:hover {
+  background: rgba(224, 90, 90, 0.1);
+}
+
+.reset-btn:disabled {
+  opacity: 0.6;
 }
