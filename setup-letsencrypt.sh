@@ -47,8 +47,17 @@ get_certificate() {
         sudo nft insert rule ip filter INPUT ip protocol tcp tcp dport 80 counter accept
     fi
 
-    # acme.sh standalone で証明書取得
-    ~/.acme.sh/acme.sh --issue --standalone -d "${DOMAIN}"
+    # socat で 80 → 8888 をフォワード（権限の問題でstandaloneが直接80を使えない場合の対策）
+    sudo nohup socat TCP-LISTEN:80,fork,reuseaddr TCP:localhost:8888 > /dev/null 2>&1 &
+    SOCAT_PID=$!
+    # 起動を待つ
+    sleep 1
+
+    # acme.sh standalone をポート8888で起動
+    ~/.acme.sh/acme.sh --issue --standalone --httpport 8888 -d "${DOMAIN}"
+
+    # socat を停止
+    kill "$SOCAT_PID" 2>/dev/null || true
 
     echo "=== Certificate obtained ==="
 }
