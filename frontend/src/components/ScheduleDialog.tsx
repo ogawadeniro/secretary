@@ -295,26 +295,24 @@ function ScheduleFormComponent({
           onChange={(e) => setIsAllDay(e.target.checked)}
         />
       </label>
-      {isEditing && (
-        <div className="date-fields">
-          <label>
-            開始日
-            <input
-              type="date"
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-            />
-          </label>
-          <label>
-            終了日
-            <input
-              type="date"
-              value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
-            />
-          </label>
-        </div>
-      )}
+      <div className="date-fields">
+        <label>
+          開始日
+          <input
+            type="date"
+            value={startDate}
+            onChange={(e) => setStartDate(e.target.value)}
+          />
+        </label>
+        <label>
+          終了日
+          <input
+            type="date"
+            value={endDate}
+            onChange={(e) => setEndDate(e.target.value)}
+          />
+        </label>
+      </div>
       {!isAllDay && (
         <div className="time-fields">
           <label>
