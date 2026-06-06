@@ -132,8 +132,13 @@ frontend/src/
 ### デプロイ
 
 ```bash
+bash deploy.sh    # パスワードを対話式で入力（または環境変数で事前設定）
+```
+
+または環境変数で事前設定:
+
+```bash
 export SECRETARY_DB_PASSWORD=your-password
-export SSL_KEYSTORE_PASSWORD=$(sudo cat /etc/secretary/keystore-password.txt)
 bash deploy.sh
 ```
 
