@@ -181,3 +181,115 @@ export function schedulesForDate(
     return day >= toEpochDay(start.date) && day <= toEpochDay(end.date);
   });
 }
+
+// ─── スロット計算（連続する複数日またぎ表示用） ───
+
+/** 複数日またぎかどうか（開始日と終了日が異なる） */
+export function isMultiDay(s: Schedule): boolean {
+  return s.startDatetime.slice(0, 10) !== s.endDatetime.slice(0, 10);
+}
+
+export interface SlotInfo {
+  schedule?: Schedule; // undefined = 空きスロット（プレースホルダー）
+  slotIndex: number;   // グリッド内の行位置（0始まり）
+}
+
+export interface DaySlotResult {
+  slots: SlotInfo[];
+  overflowCount: number;
+}
+
+/** 2つの日付範囲が重なるか判定 */
+export function rangesOverlap(
+  start1: number, end1: number,
+  start2: number, end2: number,
+): boolean {
+  return start1 <= end2 && end1 >= start2;
+}
+
+/** 最大表示スロット数 */
+export const MAX_VISIBLE_SLOTS = 3;
+
+/**
+ * カレンダー表示範囲に登場する複数日またぎ予定のみを抽出し、開始日順に並べる
+ */
+export function filterMultiDayInRange(
+  schedules: Schedule[],
+  calendarStart: Date,
+  calendarEnd: Date,
+): Schedule[] {
+  const calStartDay = toEpochDay(calendarStart);
+  const calEndDay = toEpochDay(calendarEnd);
+  const map = new Map<number, Schedule>();
+  schedules.forEach((s) => {
+    if (!isMultiDay(s) || s.id === null) return;
+    const start = parseScheduleDate(s.startDatetime);
+    const end = parseScheduleDate(s.endDatetime);
+    if (!start || !end) return;
+    const startDay = toEpochDay(start.date);
+    const endDay = toEpochDay(end.date);
+    if (rangesOverlap(startDay, endDay, calStartDay, calEndDay)) {
+      map.set(s.id, s);
+    }
+  });
+  return Array.from(map.values()).sort((a, b) =>
+    a.startDatetime.localeCompare(b.startDatetime),
+  );
+}
+
+/**
+ * 各日の表示スロットを計算する。
+ *
+ * 複数日またぎ予定 → グローバルランク（0,1,2,...）の固定スロット
+ * 単日予定        → 複数日またぎスロットの後ろに詰める
+ * 空きスロット    → プレースホルダーで埋める（可視位置を維持）
+ */
+export function computeDaySlots(
+  dates: Date[],
+  allSchedules: Schedule[],
+  globalMultiDaySorted: Schedule[],
+): Map<string, DaySlotResult> {
+  const multiDayCount = globalMultiDaySorted.length;
+
+  const result = new Map<string, DaySlotResult>();
+
+  dates.forEach((date) => {
+    const key = formatDateKey(date);
+    const daySchedules = schedulesForDate(allSchedules, date);
+
+    const dayMultiMap = new Map<number, Schedule>();
+    const daySingle: Schedule[] = [];
+    daySchedules.forEach((s) => {
+      if (isMultiDay(s) && s.id !== null) {
+        dayMultiMap.set(s.id, s);
+      } else {
+        daySingle.push(s);
+      }
+    });
+    daySingle.sort((a, b) =>
+      a.startDatetime.localeCompare(b.startDatetime),
+    );
+
+    const slots: SlotInfo[] = [];
+
+    // 複数日またぎスロット（空きはプレースホルダー）
+    for (let i = 0; i < multiDayCount && slots.length < MAX_VISIBLE_SLOTS; i++) {
+      const s = dayMultiMap.get(globalMultiDaySorted[i].id!);
+      slots.push(s ? { schedule: s, slotIndex: i } : { slotIndex: i });
+    }
+
+    // 単日予定を残りスロットに
+    for (const s of daySingle) {
+      if (slots.length >= MAX_VISIBLE_SLOTS) break;
+      slots.push({ schedule: s, slotIndex: slots.length });
+    }
+
+    const totalOnDay = dayMultiMap.size + daySingle.length;
+    const nonPlaceholder = slots.filter((sl) => sl.schedule).length;
+    const overflowCount = Math.max(0, totalOnDay - nonPlaceholder);
+
+    result.set(key, { slots, overflowCount });
+  });
+
+  return result;
+}

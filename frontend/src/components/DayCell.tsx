@@ -1,6 +1,6 @@
 import { Schedule } from "../types/schedule";
 import { getSchedulePosition, shouldShowTitle } from "../utils/dateUtils";
-import type { SlotInfo } from "./WeekRow";
+import type { SlotInfo } from "../utils/dateUtils";
 
 interface DayCellProps {
   date: Date;
