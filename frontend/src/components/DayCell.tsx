@@ -1,5 +1,6 @@
 import { Schedule } from "../types/schedule";
 import { getSchedulePosition, shouldShowTitle } from "../utils/dateUtils";
+import { textColorFromBg } from "../utils/colorUtils";
 import type { SlotInfo } from "../utils/dateUtils";
 
 interface DayCellProps {
@@ -8,7 +9,7 @@ interface DayCellProps {
   overflowCount: number;
   isToday: boolean;
   isCurrentMonth: boolean;
-  ownerColors: Map<string, string>;
+  chipBgColor: string;
   holidayName: string | null;
   onDateClick: (date: Date) => void;
 }
@@ -20,7 +21,7 @@ export default function DayCell({
   overflowCount,
   isToday,
   isCurrentMonth,
-  ownerColors,
+  chipBgColor,
   holidayName,
   onDateClick,
 }: DayCellProps) {
@@ -56,7 +57,8 @@ export default function DayCell({
               key={s.id}
               className={`schedule-chip schedule-${pos}`}
               style={{
-                backgroundColor: ownerColors.get(s.owner) ?? "#888",
+                backgroundColor: chipBgColor,
+                color: textColorFromBg(chipBgColor),
               }}
             >
               {showTitle ? s.title : ""}
