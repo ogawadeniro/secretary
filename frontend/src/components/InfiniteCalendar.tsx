@@ -38,7 +38,7 @@ const DEFAULT_SETTINGS: UserSettings = {
 };
 
 export default function InfiniteCalendar() {
-  const { user, logout } = useAuth();
+  const { user, logout, updateUser } = useAuth();
   const [settings, setSettings] = useState<UserSettings>(DEFAULT_SETTINGS);
   const [weeks, setWeeks] = useState<Date[][]>(() =>
     generateWeeks(new Date(), INITIAL_WEEKS / 2, DEFAULT_SETTINGS.firstDayOfWeek)
@@ -187,6 +187,9 @@ export default function InfiniteCalendar() {
 
   const handleSettingsSaved = (s: UserSettings) => {
     setSettings(s);
+    if (s.displayName && s.displayName !== user?.displayName) {
+      updateUser({ displayName: s.displayName });
+    }
   };
 
   // 選択された日付に紐づく予定をフィルタ
