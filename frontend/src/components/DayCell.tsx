@@ -36,7 +36,7 @@ export default function DayCell({
 
   return (
     <div
-      className={`day-cell ${isToday ? "today" : ""} ${!isCurrentMonth ? "other-month" : ""} ${holidayName ? "holiday" : ""}`}
+      className={`day-cell ${isToday ? "today" : ""} ${!isCurrentMonth ? "other-month" : ""}`}
       onClick={() => onDateClick(date)}
     >
       <span className="day-number" style={{ color: dateColor }}>
