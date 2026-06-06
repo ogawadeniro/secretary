@@ -1,6 +1,7 @@
 package com.rogawa.secretary.infrastructure.rest;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
@@ -43,7 +44,7 @@ public class ScheduleControllerTest {
         schedule.setOwner("rogawa");
         schedule.setDescription("desc");
 
-        when(scheduleUseCase.getSchedules()).thenReturn(List.of(schedule));
+        when(scheduleUseCase.getSchedules(anyString())).thenReturn(List.of(schedule));
 
         mockMvc.perform(get("/api/v1/schedules"))
                 .andExpect(status().isOk())
@@ -83,7 +84,7 @@ public class ScheduleControllerTest {
         Schedule created = request.toDomain();
         created.setId(1L);
 
-        when(scheduleUseCase.createSchedule(any(Schedule.class))).thenReturn(created);
+        when(scheduleUseCase.createSchedule(any(Schedule.class), anyString())).thenReturn(created);
 
         mockMvc.perform(post("/api/v1/schedules")
                         .with(csrf())

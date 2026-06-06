@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -24,8 +25,8 @@ public class ScheduleController {
     }
 
     @GetMapping("/api/v1/schedules")
-    public ResponseEntity<List<ScheduleDto>> getSchedules() {
-        List<ScheduleDto> dtos = scheduleUseCase.getSchedules().stream()
+    public ResponseEntity<List<ScheduleDto>> getSchedules(Authentication authentication) {
+        List<ScheduleDto> dtos = scheduleUseCase.getSchedules(authentication.getName()).stream()
                 .map(ScheduleDto::fromDomain)
                 .collect(Collectors.toList());
         return ResponseEntity.ok(dtos);
@@ -38,13 +39,17 @@ public class ScheduleController {
     }
 
     @PostMapping("/api/v1/schedules")
-    public ResponseEntity<ScheduleDto> createSchedule(@Validated @RequestBody ScheduleDto request) {
-        var created = scheduleUseCase.createSchedule(request.toDomain());
+    public ResponseEntity<ScheduleDto> createSchedule(
+            @Validated @RequestBody ScheduleDto request,
+            Authentication authentication) {
+        var created = scheduleUseCase.createSchedule(request.toDomain(), authentication.getName());
         return ResponseEntity.status(HttpStatus.CREATED).body(ScheduleDto.fromDomain(created));
     }
 
     @PatchMapping("/api/v1/schedules/{id}")
-    public ResponseEntity<ScheduleDto> updateSchedule(@RequestBody ScheduleDto request, @PathVariable Long id) {
+    public ResponseEntity<ScheduleDto> updateSchedule(
+            @RequestBody ScheduleDto request,
+            @PathVariable Long id) {
         var updated = scheduleUseCase.updateSchedule(id, request.toDomain());
         return ResponseEntity.status(HttpStatus.CREATED).body(ScheduleDto.fromDomain(updated));
     }

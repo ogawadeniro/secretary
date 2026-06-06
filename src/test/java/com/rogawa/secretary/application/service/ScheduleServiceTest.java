@@ -41,8 +41,8 @@ public class ScheduleServiceTest {
 
     @Test
     public void testGetSchedules() {
-        when(scheduleRepository.findAll()).thenReturn(List.of(testSchedule));
-        List<Schedule> result = scheduleService.getSchedules();
+        when(scheduleRepository.findByOwner("rogawa")).thenReturn(List.of(testSchedule));
+        List<Schedule> result = scheduleService.getSchedules("rogawa");
         assertEquals(1, result.size());
         assertEquals("test", result.get(0).getTitle());
     }
@@ -63,9 +63,10 @@ public class ScheduleServiceTest {
     @Test
     public void testCreateSchedule() {
         when(scheduleRepository.save(any(Schedule.class))).thenAnswer(inv -> inv.getArgument(0));
-        Schedule result = scheduleService.createSchedule(testSchedule);
+        Schedule result = scheduleService.createSchedule(testSchedule, "rogawa");
         assertNotNull(result.getUpdateTime());
         assertEquals("test", result.getTitle());
+        assertEquals("rogawa", result.getOwner());
     }
 
     @Test

@@ -64,13 +64,14 @@ export default function ScheduleDialog({
         await updateSchedule(editing.id, form);
       } else {
         // updateTime はサーバー側で自動設定されるため送らない
+        // owner はサーバー側でログインユーザーから自動設定される
         await createSchedule({
           id: null,
           title: form.title ?? "",
           isAllDay: form.isAllDay ?? false,
           startDatetime: form.startDatetime ?? "",
           endDatetime: form.endDatetime ?? "",
-          owner: form.owner ?? "",
+          owner: "",
           description: form.description ?? "",
         });
       }
@@ -187,7 +188,6 @@ interface ScheduleFormData {
   isAllDay?: boolean;
   startDatetime?: string;
   endDatetime?: string;
-  owner?: string;
   description?: string;
 }
 
@@ -220,7 +220,6 @@ function ScheduleFormComponent({
   const [endTime, setEndTime] = useState(
     initial?.endDatetime?.slice(11) ?? "10:00"
   );
-  const [owner, setOwner] = useState(initial?.owner ?? "");
   const [description, setDescription] = useState(initial?.description ?? "");
   const [saving, setSaving] = useState(false);
 
@@ -270,7 +269,6 @@ function ScheduleFormComponent({
         endDatetime: isAllDay
           ? `${endDate.replace(/-/g, "/")}-00:00`
           : `${endDate.replace(/-/g, "/")}-${endTime}`,
-        owner,
         description,
       });
     } finally {
@@ -286,15 +284,6 @@ function ScheduleFormComponent({
           type="text"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          required
-        />
-      </label>
-      <label>
-        作成者
-        <input
-          type="text"
-          value={owner}
-          onChange={(e) => setOwner(e.target.value)}
           required
         />
       </label>

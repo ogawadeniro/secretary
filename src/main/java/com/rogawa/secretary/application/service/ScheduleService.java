@@ -19,8 +19,8 @@ public class ScheduleService implements ScheduleUseCase {
     }
 
     @Override
-    public List<Schedule> getSchedules() {
-        return scheduleRepository.findAll();
+    public List<Schedule> getSchedules(String owner) {
+        return scheduleRepository.findByOwner(owner);
     }
 
     @Override
@@ -31,7 +31,8 @@ public class ScheduleService implements ScheduleUseCase {
 
     @Override
     @Transactional
-    public Schedule createSchedule(Schedule schedule) {
+    public Schedule createSchedule(Schedule schedule, String owner) {
+        schedule.setOwner(owner);
         schedule.setUpdateTime(LocalDateTime.now());
         return scheduleRepository.save(schedule);
     }
@@ -52,9 +53,6 @@ public class ScheduleService implements ScheduleUseCase {
         }
         if (requestBody.getEndDatetime() != null) {
             schedule.setEndDatetime(requestBody.getEndDatetime());
-        }
-        if (requestBody.getOwner() != null) {
-            schedule.setOwner(requestBody.getOwner());
         }
         if (requestBody.getDescription() != null) {
             schedule.setDescription(requestBody.getDescription());
