@@ -216,7 +216,8 @@ function ScheduleFormComponent({
 
   const isEditing = initial !== null;
 
-  // プログラムによる補正中かどうか（無限ループ防止）
+  // adjustingRef: プログラムによる補正中はフラグを立てて相互発火を防止
+  // startTime→endTime の補正が endTime→startTime の補正を呼び、無限ループになるのを防ぐ
   const adjustingRef = useRef(false);
 
   // 開始を変更 → 終了を補正

@@ -26,11 +26,13 @@ export default function WeekRow({
 }: WeekRowProps) {
   const today = new Date();
 
+  // 週に含まれる複数日またぎ予定のグローバルランクとアクティブ期間を事前計算
   const { globalMultiDaySorted, activeRange } = useMemo(
     () => buildGlobalMultiDayInfo(schedules),
     [schedules],
   );
 
+  // 週の全日についてスロット配置を一括計算
   const weekDaySlots = useMemo(
     () => computeDaySlots(dates, schedules, globalMultiDaySorted, activeRange),
     [dates, schedules, globalMultiDaySorted, activeRange],

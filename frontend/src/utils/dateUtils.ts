@@ -126,6 +126,11 @@ export function toEpochDay(d: Date): number {
  */
 export type SchedulePosition = "single" | "start" | "middle" | "end";
 
+/**
+ * 指定日の予定の位置を返す。
+ * - single: 単日予定またはパース失敗
+ * - start/middle/end: 複数日またぎの開始/中間/最終日
+ */
 export function getSchedulePosition(schedule: Schedule, date: Date): SchedulePosition {
   const start = parseScheduleDate(schedule.startDatetime);
   const end = parseScheduleDate(schedule.endDatetime);
@@ -211,7 +216,10 @@ export function rangesOverlap(
 export const MAX_VISIBLE_SLOTS = 3;
 
 /**
- * 全複数日またぎ予定を開始日順に並べ、アクティブ期間を計算する。
+ * 全複数日またぎ予定を開始日順にソートし、
+ * 全予定をカバーするアクティブ期間（最小開始日〜最大終了日）を計算する。
+ * @returns globalMultiDaySorted — 開始日順の複数日またぎ予定リスト
+ *          activeRange     — 全予定を包む期間、複数日またぎがなければnull
  */
 export function buildGlobalMultiDayInfo(schedules: Schedule[]): {
   globalMultiDaySorted: Schedule[];

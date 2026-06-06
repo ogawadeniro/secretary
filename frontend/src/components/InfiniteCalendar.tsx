@@ -167,7 +167,8 @@ export default function InfiniteCalendar() {
     setSelectedDate(null);
   };
 
-  // 選択された日付に紐づく予定をフィルタ（エポック日で比較して時刻の影響を排除）
+  // 選択された日付に紐づく予定をフィルタ
+  // schedulesForDate と同じ epoch日比較だが、ここでは引数として受け取る schedules に対して直接行う
   const selectedSchedules = selectedDate
     ? schedules.filter((s) => {
         const startMatch = s.startDatetime.match(
