@@ -51,6 +51,67 @@ export function normalizeDate(d: Date): Date {
   return new Date(d.getFullYear(), d.getMonth(), d.getDate());
 }
 
+/** Date → "yyyy-MM-dd" */
+function formatDate(d: Date): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
+/** Date → "HH:mm" */
+function formatTime(d: Date): string {
+  const h = String(d.getHours()).padStart(2, "0");
+  const m = String(d.getMinutes()).padStart(2, "0");
+  return `${h}:${m}`;
+}
+
+/**
+ * 開始を変更したとき、終了 ≦ 開始 なら終了を開始+1時間に補正する
+ */
+export function adjustEndByStart(
+  startDate: string,
+  startTime: string,
+  endDate: string,
+  endTime: string,
+): { endDate: string; endTime: string } {
+  const start = new Date(`${startDate}T${startTime}:00`);
+  const end = new Date(`${endDate}T${endTime}:00`);
+
+  if (end > start) {
+    return { endDate, endTime };
+  }
+
+  const corrected = new Date(start.getTime() + 60 * 60 * 1000);
+  return {
+    endDate: formatDate(corrected),
+    endTime: formatTime(corrected),
+  };
+}
+
+/**
+ * 終了を変更したとき、終了 ≦ 開始 なら開始を終了-1時間に補正する
+ */
+export function adjustStartByEnd(
+  startDate: string,
+  startTime: string,
+  endDate: string,
+  endTime: string,
+): { startDate: string; startTime: string } {
+  const start = new Date(`${startDate}T${startTime}:00`);
+  const end = new Date(`${endDate}T${endTime}:00`);
+
+  if (end > start) {
+    return { startDate, startTime };
+  }
+
+  const corrected = new Date(end.getTime() - 60 * 60 * 1000);
+  return {
+    startDate: formatDate(corrected),
+    startTime: formatTime(corrected),
+  };
+}
+
 /** 日付をエポック日（ローカルタイム基準）に変換、時刻の影響を排除 */
 export function toEpochDay(d: Date): number {
   return Math.floor(normalizeDate(d).getTime() / 86400000);

@@ -1,10 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Schedule } from "../types/schedule";
-import {
-  createSchedule,
+import { createSchedule,
   updateSchedule,
   deleteSchedule,
 } from "../api/scheduleApi";
+import { adjustEndByStart, adjustStartByEnd } from "../utils/dateUtils";
 
 interface ScheduleDialogProps {
   date: Date;
@@ -215,6 +215,36 @@ function ScheduleFormComponent({
   const [saving, setSaving] = useState(false);
 
   const isEditing = initial !== null;
+
+  // プログラムによる補正中かどうか（無限ループ防止）
+  const adjustingRef = useRef(false);
+
+  // 開始を変更 → 終了を補正
+  useEffect(() => {
+    if (adjustingRef.current) return;
+    const adjusted = adjustEndByStart(startDate, startTime, endDate, endTime);
+    if (adjusted.endDate !== endDate || adjusted.endTime !== endTime) {
+      adjustingRef.current = true;
+      setEndDate(adjusted.endDate);
+      setEndTime(adjusted.endTime);
+    }
+  }, [startDate, startTime]);
+
+  // 終了を変更 → 開始を補正
+  useEffect(() => {
+    if (adjustingRef.current) return;
+    const adjusted = adjustStartByEnd(startDate, startTime, endDate, endTime);
+    if (adjusted.startDate !== startDate || adjusted.startTime !== startTime) {
+      adjustingRef.current = true;
+      setStartDate(adjusted.startDate);
+      setStartTime(adjusted.startTime);
+    }
+  }, [endDate, endTime]);
+
+  // 補正フラグをリセット
+  useEffect(() => {
+    adjustingRef.current = false;
+  });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
