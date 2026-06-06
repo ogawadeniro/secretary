@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback, useLayoutEffect, useMemo } from "react";
+import { CircleUser, Settings, LogOut } from "lucide-react";
 import type { UserSettings } from "../types/settings";
 import type { Schedule } from "../types/schedule";
 import { fetchSchedules } from "../api/scheduleApi";
@@ -46,12 +47,15 @@ export default function InfiniteCalendar() {
   const [schedules, setSchedules] = useState<Schedule[]>([]);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [showSettings, setShowSettings] = useState(false);
+  const [showAccountMenu, setShowAccountMenu] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const topSentinelRef = useRef<HTMLDivElement>(null);
   const bottomSentinelRef = useRef<HTMLDivElement>(null);
+  const accountMenuRef = useRef<HTMLDivElement>(null);
 
   /** 設定を読み込んで適用 */
   const reloadSettings = useCallback(async () => {
@@ -84,6 +88,18 @@ export default function InfiniteCalendar() {
   useEffect(() => {
     document.documentElement.style.setProperty("--color-chip-bg", settings.chipBgColor);
   }, [settings.chipBgColor]);
+
+  // アカウントメニューの外側クリックで閉じる
+  useEffect(() => {
+    if (!showAccountMenu) return;
+    const handleClick = (e: MouseEvent) => {
+      if (accountMenuRef.current && !accountMenuRef.current.contains(e.target as Node)) {
+        setShowAccountMenu(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [showAccountMenu]);
 
   // IntersectionObserver による無限スクロール
   useEffect(() => {
@@ -192,6 +208,12 @@ export default function InfiniteCalendar() {
     }
   };
 
+  const handleLogoutConfirm = async () => {
+    setShowLogoutConfirm(false);
+    setShowAccountMenu(false);
+    await logout();
+  };
+
   // 選択された日付に紐づく予定をフィルタ
   const selectedSchedules = selectedDate
     ? schedules.filter((s) => {
@@ -226,17 +248,36 @@ export default function InfiniteCalendar() {
         <h1>{monthLabel}</h1>
         <div className="calendar-header-right">
           <span className="header-user">{user?.displayName ?? user?.username}</span>
-          <button
-            className="settings-btn"
-            onClick={() => setShowSettings(true)}
-            title="設定"
-          >
-            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2">
-              <circle cx="12" cy="12" r="3"/>
-              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
-            </svg>
-          </button>
-          <button className="logout-btn" onClick={logout}>ログアウト</button>
+          <div className="account-menu-container" ref={accountMenuRef}>
+            <button
+              className="account-icon-btn"
+              onClick={() => setShowAccountMenu(!showAccountMenu)}
+              title="アカウント"
+            >
+              <CircleUser size={22} />
+            </button>
+            {showAccountMenu && (
+              <div className="account-dropdown">
+                <button
+                  className="account-dropdown-item"
+                  onClick={() => {
+                    setShowAccountMenu(false);
+                    setShowSettings(true);
+                  }}
+                >
+                  <Settings size={16} />
+                  <span>設定</span>
+                </button>
+                <button
+                  className="account-dropdown-item"
+                  onClick={() => setShowLogoutConfirm(true)}
+                >
+                  <LogOut size={16} />
+                  <span>ログアウト</span>
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
@@ -285,6 +326,18 @@ export default function InfiniteCalendar() {
           onClose={() => setShowSettings(false)}
           onSaved={handleSettingsSaved}
         />
+      )}
+
+      {showLogoutConfirm && (
+        <div className="dialog-overlay" onClick={() => setShowLogoutConfirm(false)}>
+          <div className="confirm-dialog" onClick={(e) => e.stopPropagation()}>
+            <p>ログアウトしますか？</p>
+            <div className="confirm-actions">
+              <button className="confirm-btn-yes" onClick={handleLogoutConfirm}>する</button>
+              <button className="confirm-btn-no" onClick={() => setShowLogoutConfirm(false)}>しない</button>
+            </div>
+          </div>
+        </div>
       )}
 
       {selectedDate && (
