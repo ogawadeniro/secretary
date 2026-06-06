@@ -1,9 +1,11 @@
-import { useState, useEffect, useRef, useCallback, useLayoutEffect } from "react";
+import { useState, useEffect, useRef, useCallback, useLayoutEffect, useMemo } from "react";
 import { Schedule } from "../types/schedule";
 import { fetchSchedules } from "../api/scheduleApi";
 import WeekRow from "./WeekRow";
 import ScheduleDialog from "./ScheduleDialog";
 import { addDays, getWeekStart, formatDateKey, toEpochDay } from "../utils/dateUtils";
+import { getHolidaysInRange } from "../utils/holidayUtils";
+import type { HolidayMap } from "../utils/holidayUtils";
 
 /** 初期表示する週数（約2年分） */
 const INITIAL_WEEKS = 104;
@@ -186,6 +188,14 @@ export default function InfiniteCalendar() {
       })
     : [];
 
+  /** 可視範囲の祝日を計算 */
+  const holidays: HolidayMap = useMemo(() => {
+    if (weeks.length === 0) return new Map();
+    const firstDate = weeks[0][0];
+    const lastDate = weeks[weeks.length - 1][6];
+    return getHolidaysInRange(firstDate, lastDate);
+  }, [weeks]);
+
   const monthLabel = `${currentYear}年 ${currentMonth + 1}月`;
 
   return (
@@ -222,6 +232,7 @@ export default function InfiniteCalendar() {
             schedules={schedules}
             currentMonth={currentMonth}
             ownerColors={ownerColors}
+            holidays={holidays}
             onDateClick={handleDateClick}
           />
         ))}

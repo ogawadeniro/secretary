@@ -7,12 +7,14 @@ import {
   buildGlobalMultiDayInfo,
 } from "../utils/dateUtils";
 import DayCell from "./DayCell";
+import type { HolidayMap } from "../utils/holidayUtils";
 
 interface WeekRowProps {
   dates: Date[];
   schedules: Schedule[];
   currentMonth: number;
   ownerColors: Map<string, string>;
+  holidays: HolidayMap;
   onDateClick: (date: Date) => void;
 }
 
@@ -22,6 +24,7 @@ export default function WeekRow({
   schedules,
   currentMonth,
   ownerColors,
+  holidays,
   onDateClick,
 }: WeekRowProps) {
   const today = new Date();
@@ -52,6 +55,7 @@ export default function WeekRow({
             isToday={isSameDay(date, today)}
             isCurrentMonth={date.getMonth() === currentMonth}
             ownerColors={ownerColors}
+            holidayName={holidays.get(key) ?? null}
             onDateClick={onDateClick}
           />
         );

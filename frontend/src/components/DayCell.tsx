@@ -9,10 +9,11 @@ interface DayCellProps {
   isToday: boolean;
   isCurrentMonth: boolean;
   ownerColors: Map<string, string>;
+  holidayName: string | null;
   onDateClick: (date: Date) => void;
 }
 
-/** 1日分のセル（日付番号 + 予定チップ） */
+/** 1日分のセル（日付番号 + 祝日ラベル + 予定チップ） */
 export default function DayCell({
   date,
   slotInfos,
@@ -20,11 +21,14 @@ export default function DayCell({
   isToday,
   isCurrentMonth,
   ownerColors,
+  holidayName,
   onDateClick,
 }: DayCellProps) {
   const dayOfWeek = date.getDay();
-  const dateColor =
-    dayOfWeek === 0
+  // 日曜=ピンク、祝日=赤（祝日が優先）
+  const dateColor = holidayName
+    ? "var(--color-holiday)"
+    : dayOfWeek === 0
       ? "var(--color-sun)"
       : dayOfWeek === 6
         ? "var(--color-sat)"
@@ -32,12 +36,15 @@ export default function DayCell({
 
   return (
     <div
-      className={`day-cell ${isToday ? "today" : ""} ${!isCurrentMonth ? "other-month" : ""}`}
+      className={`day-cell ${isToday ? "today" : ""} ${!isCurrentMonth ? "other-month" : ""} ${holidayName ? "holiday" : ""}`}
       onClick={() => onDateClick(date)}
     >
       <span className="day-number" style={{ color: dateColor }}>
         {date.getDate()}
       </span>
+      {holidayName && (
+        <span className="holiday-label">{holidayName}</span>
+      )}
       <div className="day-schedules">
         {slotInfos.map((si) => {
           const s = si.schedule;
