@@ -141,6 +141,33 @@ export function getSchedulePosition(schedule: Schedule, date: Date): SchedulePos
   return "middle";
 }
 
+/**
+ * 複数日またぎ予定のタイトルを表示するか判定する
+ * - その日が予定の開始日 → 表示
+ * - その日が日曜（週の初め）で、予定が前週から継続中 → 表示
+ * - 上記以外かつsingle以外 → 非表示
+ */
+export function shouldShowTitle(schedule: Schedule, date: Date): boolean {
+  const start = parseScheduleDate(schedule.startDatetime);
+  const end = parseScheduleDate(schedule.endDatetime);
+  if (!start || !end) return true;
+
+  const day = toEpochDay(date);
+  const startDay = toEpochDay(start.date);
+  const endDay = toEpochDay(end.date);
+
+  // 同日のみの予定: 常に表示
+  if (startDay === endDay) return true;
+
+  // 予定の開始日: 表示
+  if (day === startDay) return true;
+
+  // 日曜（週の初め）で、予定が前週から継続中: 表示
+  if (date.getDay() === 0 && day > startDay && day <= endDay) return true;
+
+  return false;
+}
+
 /** 指定した日付に該当する予定をフィルタ（複数日またぎ対応） */
 export function schedulesForDate(
   schedules: Schedule[],

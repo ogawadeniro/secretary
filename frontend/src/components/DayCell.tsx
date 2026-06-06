@@ -1,5 +1,5 @@
 import { Schedule } from "../types/schedule";
-import { getSchedulePosition } from "../utils/dateUtils";
+import { getSchedulePosition, shouldShowTitle } from "../utils/dateUtils";
 
 interface DayCellProps {
   date: Date;
@@ -38,6 +38,7 @@ export default function DayCell({
       <div className="day-schedules">
         {schedules.slice(0, 3).map((s) => {
           const pos = getSchedulePosition(s, date);
+          const showTitle = shouldShowTitle(s, date);
           return (
             <div
               key={s.id}
@@ -46,7 +47,7 @@ export default function DayCell({
                 backgroundColor: ownerColors.get(s.owner) ?? "#888",
               }}
             >
-              {(pos === "single" || pos === "start") && s.title}
+              {showTitle ? s.title : ""}
             </div>
           );
         })}

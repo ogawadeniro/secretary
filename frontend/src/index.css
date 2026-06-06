@@ -142,6 +142,8 @@ body {
   overflow: hidden;
   text-overflow: ellipsis;
   line-height: 1.3;
+  height: calc(1.3em + 2px);
+  box-sizing: content-box;
 }
 
 /* 複数日またぎ予定: つながって見えるように */
@@ -155,6 +157,8 @@ body {
 
 .schedule-chip.schedule-middle {
   border-radius: 0;
+  padding-left: 0;
+  padding-right: 0;
 }
 
 .schedule-more {

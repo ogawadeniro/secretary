@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { adjustEndByStart, adjustStartByEnd, getSchedulePosition } from "./dateUtils";
+import { adjustEndByStart, adjustStartByEnd, getSchedulePosition, shouldShowTitle } from "./dateUtils";
 import { Schedule } from "../types/schedule";
 
 // ========== adjustEndByStart（開始変更 → 終了を補正） ==========
@@ -105,5 +105,40 @@ describe("getSchedulePosition", () => {
   it("範囲外の日はmiddle扱い（schedulesForDateで呼ばれないことが前提）", () => {
     const s = makeSchedule("2026/06/06-10:00", "2026/06/08-11:00");
     expect(getSchedulePosition(s, new Date(2026, 5, 9))).toBe("middle");
+  });
+});
+
+// ========== shouldShowTitle ==========
+describe("shouldShowTitle", () => {
+  it("同日のみ: 常に表示", () => {
+    const s = makeSchedule("2026/06/06-10:00", "2026/06/06-11:00");
+    expect(shouldShowTitle(s, new Date(2026, 5, 6))).toBe(true);
+  });
+
+  it("複数日またぎの初日: 表示", () => {
+    const s = makeSchedule("2026/06/06-10:00", "2026/06/08-11:00");
+    expect(shouldShowTitle(s, new Date(2026, 5, 6))).toBe(true);
+  });
+
+  it("複数日またぎの中間日（平日）: 非表示", () => {
+    const s = makeSchedule("2026/06/01-10:00", "2026/06/05-11:00");
+    expect(shouldShowTitle(s, new Date(2026, 5, 3))).toBe(false); // 6/3 水曜
+  });
+
+  it("週をまたいだ場合、日曜（週初め）なら表示", () => {
+    // 2026/5/31(日) ~ 2026/6/7(日) の週
+    // 水曜 6/3 から始まる予定 → 日曜 6/7 は週をまたいで継続中
+    const s = makeSchedule("2026/06/03-10:00", "2026/06/10-11:00");
+    expect(shouldShowTitle(s, new Date(2026, 5, 7))).toBe(true); // 6/7 日曜
+  });
+
+  it("週をまたいだが、予定終了後の日曜: false", () => {
+    const s = makeSchedule("2026/06/03-10:00", "2026/06/05-11:00");
+    expect(shouldShowTitle(s, new Date(2026, 5, 7))).toBe(false); // 6/7 日曜 → 予定は6/5まで
+  });
+
+  it("予定開始日が日曜の場合: 表示（開始日として）", () => {
+    const s = makeSchedule("2026/06/07-10:00", "2026/06/09-11:00");
+    expect(shouldShowTitle(s, new Date(2026, 5, 7))).toBe(true); // 6/7 日曜 = 開始日
   });
 });
