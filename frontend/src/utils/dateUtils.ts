@@ -117,6 +117,30 @@ export function toEpochDay(d: Date): number {
   return Math.floor(normalizeDate(d).getTime() / 86400000);
 }
 
+/**
+ * スケジュールが指定日の範囲内か判定し、位置情報を返す
+ * - 'single': その日のみ
+ * - 'start':  複数日またぎの初日
+ * - 'middle': 複数日またぎの中間日
+ * - 'end':    複数日またぎの最終日
+ */
+export type SchedulePosition = "single" | "start" | "middle" | "end";
+
+export function getSchedulePosition(schedule: Schedule, date: Date): SchedulePosition {
+  const start = parseScheduleDate(schedule.startDatetime);
+  const end = parseScheduleDate(schedule.endDatetime);
+  if (!start || !end) return "single";
+
+  const day = toEpochDay(date);
+  const startDay = toEpochDay(start.date);
+  const endDay = toEpochDay(end.date);
+
+  if (startDay === endDay) return "single";
+  if (day === startDay) return "start";
+  if (day === endDay) return "end";
+  return "middle";
+}
+
 /** 指定した日付に該当する予定をフィルタ（複数日またぎ対応） */
 export function schedulesForDate(
   schedules: Schedule[],

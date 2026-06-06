@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { adjustEndByStart, adjustStartByEnd } from "./dateUtils";
+import { adjustEndByStart, adjustStartByEnd, getSchedulePosition } from "./dateUtils";
+import { Schedule } from "../types/schedule";
 
 // ========== adjustEndByStart（開始変更 → 終了を補正） ==========
 describe("adjustEndByStart", () => {
@@ -64,5 +65,45 @@ describe("adjustStartByEnd", () => {
   it("うるう年3/1の0時→2/29の23時に補正", () => {
     expect(adjustStartByEnd("2024-03-01", "00:00", "2024-03-01", "00:00"))
       .toEqual({ startDate: "2024-02-29", startTime: "23:00" });
+  });
+});
+
+// ========== getSchedulePosition ==========
+function makeSchedule(startDatetime: string, endDatetime: string): Schedule {
+  return {
+    id: 1,
+    title: "test",
+    isAllDay: false,
+    startDatetime,
+    endDatetime,
+    owner: "me",
+    description: "",
+  };
+}
+
+describe("getSchedulePosition", () => {
+  it("同日のみ: single", () => {
+    const s = makeSchedule("2026/06/06-10:00", "2026/06/06-11:00");
+    expect(getSchedulePosition(s, new Date(2026, 5, 6))).toBe("single");
+  });
+
+  it("複数日の初日: start", () => {
+    const s = makeSchedule("2026/06/06-10:00", "2026/06/08-11:00");
+    expect(getSchedulePosition(s, new Date(2026, 5, 6))).toBe("start");
+  });
+
+  it("複数日の中間日: middle", () => {
+    const s = makeSchedule("2026/06/06-10:00", "2026/06/08-11:00");
+    expect(getSchedulePosition(s, new Date(2026, 5, 7))).toBe("middle");
+  });
+
+  it("複数日の最終日: end", () => {
+    const s = makeSchedule("2026/06/06-10:00", "2026/06/08-11:00");
+    expect(getSchedulePosition(s, new Date(2026, 5, 8))).toBe("end");
+  });
+
+  it("範囲外の日はmiddle扱い（schedulesForDateで呼ばれないことが前提）", () => {
+    const s = makeSchedule("2026/06/06-10:00", "2026/06/08-11:00");
+    expect(getSchedulePosition(s, new Date(2026, 5, 9))).toBe("middle");
   });
 });

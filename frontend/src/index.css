@@ -144,6 +144,19 @@ body {
   line-height: 1.3;
 }
 
+/* 複数日またぎ予定: つながって見えるように */
+.schedule-chip.schedule-start {
+  border-radius: 2px 0 0 2px;
+}
+
+.schedule-chip.schedule-end {
+  border-radius: 0 2px 2px 0;
+}
+
+.schedule-chip.schedule-middle {
+  border-radius: 0;
+}
+
 .schedule-more {
   font-size: 0.6rem;
   color: var(--color-text-muted);

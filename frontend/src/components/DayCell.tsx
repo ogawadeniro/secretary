@@ -1,4 +1,5 @@
 import { Schedule } from "../types/schedule";
+import { getSchedulePosition } from "../utils/dateUtils";
 
 interface DayCellProps {
   date: Date;
@@ -35,17 +36,20 @@ export default function DayCell({
         {date.getDate()}
       </span>
       <div className="day-schedules">
-        {schedules.slice(0, 3).map((s) => (
-          <div
-            key={s.id}
-            className="schedule-chip"
-            style={{
-              backgroundColor: ownerColors.get(s.owner) ?? "#888",
-            }}
-          >
-            {s.title}
-          </div>
-        ))}
+        {schedules.slice(0, 3).map((s) => {
+          const pos = getSchedulePosition(s, date);
+          return (
+            <div
+              key={s.id}
+              className={`schedule-chip schedule-${pos}`}
+              style={{
+                backgroundColor: ownerColors.get(s.owner) ?? "#888",
+              }}
+            >
+              {(pos === "single" || pos === "start") && s.title}
+            </div>
+          );
+        })}
         {schedules.length > 3 && (
           <div className="schedule-more">+{schedules.length - 3}</div>
         )}
