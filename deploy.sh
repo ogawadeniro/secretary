@@ -74,9 +74,14 @@ load_keystore_password() {
 
 check_prerequisites() {
     if [ -z "${SECRETARY_DB_PASSWORD:-}" ]; then
-        fail "SECRETARY_DB_PASSWORD not set."
-        info "  export SECRETARY_DB_PASSWORD=your-password"
-        exit 1
+        step "SECRETARY_DB_PASSWORD が未設定です"
+        read -r -s -p "DBパスワードを入力してください: " SECRETARY_DB_PASSWORD
+        echo ""
+        if [ -z "${SECRETARY_DB_PASSWORD:-}" ]; then
+            fail "パスワードが入力されていません"
+            exit 1
+        fi
+        ok "パスワードを設定しました"
     fi
     if [ ! -f "$JAR_FILE" ]; then
         step "Building JAR (React + Spring Boot)..."

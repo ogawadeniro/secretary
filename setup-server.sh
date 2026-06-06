@@ -109,7 +109,7 @@ main() {
     echo " 次のステップ:"
     echo "   1. ログアウトして再ログイン（Docker権限反映）"
     echo "   2. 開発マシンで JARビルド: mvn package -DskipTests -Dvaadin.ignoreVersionChecks=true"
-    echo "   3. 開発マシンでデプロイ: export SECRETARY_DB_PASSWORD=your-password && bash deploy.sh"
+    echo "   3. 開発マシンでデプロイ: bash deploy.sh（パスワードを対話式で入力）"
     echo "       ※keystoreパスワードは自動で本番サーバから読み込むよ"
     echo "============================================"
 }
