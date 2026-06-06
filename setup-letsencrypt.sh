@@ -53,8 +53,8 @@ get_certificate() {
     # 起動を待つ
     sleep 1
 
-    # acme.sh standalone をポート8888で起動
-    ~/.acme.sh/acme.sh --issue --standalone --httpport 8888 -d "${DOMAIN}"
+    # acme.sh standalone をポート8888で起動（--force: 既存証明書があっても再取得）
+    ~/.acme.sh/acme.sh --issue --standalone --httpport 8888 --force -d "${DOMAIN}"
 
     # socat を停止
     kill "$SOCAT_PID" 2>/dev/null || true
