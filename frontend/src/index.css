@@ -135,39 +135,47 @@ body {
 
 .schedule-chip {
   font-size: 0.6rem;
-  padding: 1px 3px;
+  padding: 0 2px;
+  margin: 0 2px;
   border-radius: 2px;
   color: #fff;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  line-height: 1.3;
-  height: calc(1.3em + 2px);
+  display: flex;
+  align-items: center;
+  line-height: 1;
+  height: 1.3em;
   box-sizing: content-box;
 }
 
-/* 複数日またぎ予定: つながって見えるように */
+/* 複数日またぎ予定: つながって見えるように（結合部はmargin: 0） */
 .schedule-chip.schedule-start {
   border-radius: 2px 0 0 2px;
-  padding-left: 3px;
+  padding-left: 2px;
   padding-right: 0;
+  margin-left: 2px;
+  margin-right: 0;
 }
 
 .schedule-chip.schedule-end {
   border-radius: 0 2px 2px 0;
   padding-left: 0;
-  padding-right: 3px;
+  padding-right: 2px;
+  margin-left: 0;
+  margin-right: 2px;
 }
 
 .schedule-chip.schedule-middle {
   border-radius: 0;
   padding-left: 0;
   padding-right: 0;
+  margin-left: 0;
+  margin-right: 0;
 }
 
-/* 単日予定は元のスタイルを維持 */
+/* 単日予定は base の padding/margin をそのまま使う */
 .schedule-chip.schedule-single {
-  /* base .schedule-chip の padding: 1px 3px をそのまま使う */
 }
 
 .schedule-more {
@@ -178,10 +186,9 @@ body {
 
 .schedule-placeholder {
   font-size: 0.6rem;
-  height: calc(1.3em + 2px);
+  height: 1.3em;
   box-sizing: content-box;
   visibility: hidden;
-  padding: 1px 0;
 }
 
 /* Dialog */
