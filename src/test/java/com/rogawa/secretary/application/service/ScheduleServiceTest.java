@@ -5,7 +5,9 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 import com.rogawa.secretary.domain.exception.ScheduleAuthorizationException;
 import com.rogawa.secretary.domain.exception.ScheduleNotFoundException;
+import com.rogawa.secretary.domain.model.CalendarShare;
 import com.rogawa.secretary.domain.model.Schedule;
+import com.rogawa.secretary.domain.model.ScheduleMember;
 import com.rogawa.secretary.domain.repository.CalendarShareRepository;
 import com.rogawa.secretary.domain.repository.ScheduleMemberRepository;
 import com.rogawa.secretary.domain.repository.ScheduleRepository;
@@ -175,5 +177,59 @@ public class ScheduleServiceTest {
 
         assertThrows(ScheduleAuthorizationException.class,
                 () -> scheduleService.deleteSchedule(1L, "rogawa"));
+    }
+
+    @Test
+    public void testUpdateScheduleAsMemberWithMutualShare() {
+        Schedule existing = new Schedule();
+        existing.setId(1L);
+        existing.setTitle("original");
+        existing.setIsAllDay(false);
+        existing.setOwner("other_user");
+
+        Schedule request = new Schedule();
+        request.setTitle("updated");
+
+        ScheduleMember member = new ScheduleMember();
+        member.setScheduleId(1L);
+        member.setUsername("rogawa");
+
+        CalendarShare toMember = new CalendarShare();
+        toMember.setSharedWithUsername("other_user");
+        CalendarShare fromMember = new CalendarShare();
+        fromMember.setOwnerUsername("other_user");
+
+        when(scheduleRepository.findById(1L)).thenReturn(Optional.of(existing));
+        when(scheduleMemberRepository.findByScheduleId(1L)).thenReturn(List.of(member));
+        when(calendarShareRepository.findByOwnerUsername("rogawa")).thenReturn(List.of(toMember));
+        when(calendarShareRepository.findSharedOwnerUsernames("rogawa")).thenReturn(List.of("other_user"));
+        when(scheduleRepository.save(any(Schedule.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        Schedule result = scheduleService.updateSchedule(1L, request, "rogawa");
+        assertEquals("updated", result.getTitle());
+    }
+
+    @Test
+    public void testUpdateScheduleAsMemberWithoutMutualShare() {
+        Schedule existing = new Schedule();
+        existing.setId(1L);
+        existing.setTitle("original");
+        existing.setIsAllDay(false);
+        existing.setOwner("other_user");
+
+        Schedule request = new Schedule();
+        request.setTitle("hacked");
+
+        ScheduleMember member = new ScheduleMember();
+        member.setScheduleId(1L);
+        member.setUsername("rogawa");
+
+        when(scheduleRepository.findById(1L)).thenReturn(Optional.of(existing));
+        when(scheduleMemberRepository.findByScheduleId(1L)).thenReturn(List.of(member));
+        when(calendarShareRepository.findByOwnerUsername("rogawa")).thenReturn(Collections.emptyList());
+        when(calendarShareRepository.findSharedOwnerUsernames("rogawa")).thenReturn(Collections.emptyList());
+
+        assertThrows(ScheduleAuthorizationException.class,
+                () -> scheduleService.updateSchedule(1L, request, "rogawa"));
     }
 }
