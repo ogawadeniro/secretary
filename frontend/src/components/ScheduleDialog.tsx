@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { Schedule, ScheduleMember as ScheduleMemberType } from "../types/schedule";
 import {
   createSchedule,
@@ -438,6 +438,11 @@ function ScheduleFormComponent({
 
   // 表示用のメンバー一覧（作成者を先頭に固定 + 既存メンバー + pending）
   const ownerUsername = initial?.owner ?? currentUsername;
+  const memberDisplayNameMap = useMemo(() => {
+    const map = new Map<string, string>();
+    shareCandidates.forEach((c) => map.set(c.username, c.displayName));
+    return map;
+  }, [shareCandidates]);
   const displayMembers = [
     {
       key: "owner",
@@ -453,7 +458,7 @@ function ScheduleFormComponent({
           .map((m) => ({
             key: m.id.toString(),
             username: m.username,
-            displayName: initial?.memberDisplayNames?.[m.username] ?? m.username,
+            displayName: initial?.memberDisplayNames?.[m.username] ?? memberDisplayNameMap.get(m.username) ?? m.username,
             isOwner: false,
             pending: false,
             chipBgColor: initial?.memberChipBgColors?.[m.username],
@@ -463,7 +468,7 @@ function ScheduleFormComponent({
           .map((u) => ({
             key: u,
             username: u,
-            displayName: u,
+            displayName: memberDisplayNameMap.get(u) ?? u,
             isOwner: false,
             pending: true,
             chipBgColor: undefined,
