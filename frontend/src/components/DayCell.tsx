@@ -1,6 +1,6 @@
 import { Schedule } from "../types/schedule";
 import { getSchedulePosition, shouldShowTitle } from "../utils/dateUtils";
-import { textColorFromBg, ownerColor, scheduleColor } from "../utils/colorUtils";
+import { ownerColor, scheduleColor } from "../utils/colorUtils";
 import type { SlotInfo } from "../utils/dateUtils";
 
 interface DayCellProps {
@@ -71,7 +71,7 @@ export default function DayCell({
               className={`schedule-chip schedule-${pos}`}
               style={{
                 backgroundColor: bgColor,
-                color: textColorFromBg(bgColor),
+                color: "#e0e0e0",
               }}
             >
               {showTitle ? s.title : ""}

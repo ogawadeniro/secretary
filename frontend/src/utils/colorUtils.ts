@@ -1,15 +1,16 @@
 /** 低明度ビビッドカラー（個人の予定チップ色パレット）
- *  隣り合う色が別系統になるよう暖色・寒色を交互に配置 */
+ *  隣り合う色が別系統になるよう暖色・寒色を交互に配置
+ *  白文字との視認性を確保するため輝度を0.45以下に調整済み */
 const PERSONAL_COLORS = [
   "#cc3333", // vivid red      (色相 0°)
-  "#22aa88", // vivid teal     (色相165°)
+  "#1f9b7c", // vivid teal     (色相165°)
   "#bb5522", // vivid orange   (色相20°)
   "#2255aa", // vivid blue     (色相218°)
-  "#cc8833", // vivid amber    (色相33°)
+  "#a06a28", // vivid amber    (色相33°)
   "#3355aa", // vivid indigo   (色相223°)
-  "#55aa22", // vivid lime     (色相98°)
+  "#4c971e", // vivid lime     (色相98°)
   "#7722aa", // vivid purple   (色相278°)
-  "#22aa55", // vivid green    (色相143°)
+  "#21a352", // vivid green    (色相143°)
   "#aa2255", // vivid rose     (色相338°)
 ];
 
