@@ -547,56 +547,6 @@ function ScheduleFormComponent({
         {memberError && (
           <p style={{ fontSize: "0.8rem", color: "var(--color-holiday)" }}>{memberError}</p>
         )}
-        {displayMembers.length > 0 && (
-          <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", marginBottom: "8px" }}>
-            {displayMembers.map((m) => (
-              <span
-                key={m.key}
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: "4px",
-                  padding: m.isOwner ? "2px 10px" : "2px 4px 2px 10px",
-                  background: m.isOwner ? "var(--color-surface2)" : (m.chipBgColor ?? "var(--color-surface2)"),
-                  borderRadius: "999px",
-                  fontSize: "0.8rem",
-                }}
-              >
-                {m.displayName}
-                {m.pending && (
-                  <span style={{ fontSize: "0.65rem", color: "var(--color-text-muted)" }}>
-                    未保存
-                  </span>
-                )}
-                {!m.isOwner && (
-                  <button
-                    type="button"
-                    onClick={() => handleRemoveMember(m.username)}
-                    title="メンバーを削除"
-                    style={{
-                      display: "inline-flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      width: "18px",
-                      height: "18px",
-                      padding: 0,
-                      border: "none",
-                      borderRadius: "50%",
-                      background: "var(--color-border)",
-                      color: "var(--color-text-muted)",
-                      cursor: "pointer",
-                      fontSize: "11px",
-                      lineHeight: 1,
-                      flexShrink: 0,
-                    }}
-                  >
-                    ✕
-                  </button>
-                )}
-              </span>
-            ))}
-          </div>
-        )}
         <div style={{ position: "relative" }}>
           <div style={{ display: "flex", gap: "8px" }}>
             <input
@@ -688,6 +638,57 @@ function ScheduleFormComponent({
             </div>
           )}
         </div>
+
+        {displayMembers.length > 0 && (
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
+            {displayMembers.map((m) => (
+              <span
+                key={m.key}
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "4px",
+                  padding: m.isOwner ? "2px 10px" : "2px 4px 2px 10px",
+                  background: m.isOwner ? "var(--color-surface2)" : (m.chipBgColor ?? "var(--color-surface2)"),
+                  borderRadius: "999px",
+                  fontSize: "0.8rem",
+                }}
+              >
+                {m.displayName}
+                {m.pending && (
+                  <span style={{ fontSize: "0.65rem", color: "var(--color-text-muted)" }}>
+                    未保存
+                  </span>
+                )}
+                {!m.isOwner && (
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveMember(m.username)}
+                    title="メンバーを削除"
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      width: "18px",
+                      height: "18px",
+                      padding: 0,
+                      border: "none",
+                      borderRadius: "50%",
+                      background: "var(--color-border)",
+                      color: "var(--color-text-muted)",
+                      cursor: "pointer",
+                      fontSize: "11px",
+                      lineHeight: 1,
+                      flexShrink: 0,
+                    }}
+                  >
+                    ✕
+                  </button>
+                )}
+              </span>
+            ))}
+          </div>
+        )}
       </div>
 
       <label>
