@@ -548,52 +548,33 @@ function ScheduleFormComponent({
           <p style={{ fontSize: "0.8rem", color: "var(--color-holiday)" }}>{memberError}</p>
         )}
         <div style={{ position: "relative" }}>
-          <div style={{ display: "flex", gap: "8px" }}>
-            <input
-              type="text"
-              placeholder="追加するユーザー名..."
-              value={memberInput}
-              onChange={(e) => {
-                setMemberInput(e.target.value);
-                setShowSuggestions(true);
-              }}
-              onFocus={() => setShowSuggestions(true)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  e.preventDefault();
-                  if (filteredSuggestions.length > 0) {
-                    handleAddMember(filteredSuggestions[0].username);
-                  } else {
-                    handleAddMember(memberInput);
-                  }
-                }
-              }}
-              style={{
-                flex: 1,
-                background: "var(--color-surface2)",
-                border: "1px solid var(--color-border)",
-                color: "var(--color-text)",
-                padding: "6px 8px",
-                borderRadius: "6px",
-                fontFamily: "inherit",
-              }}
-            />
-            <button
-              type="button"
-              className="save-btn"
-              style={{ padding: "6px 12px", fontSize: "0.8rem" }}
-              disabled={!memberInput.trim()}
-              onClick={() => {
+          <input
+            type="text"
+            placeholder="追加するユーザー名を入力..."
+            value={memberInput}
+            onChange={(e) => {
+              setMemberInput(e.target.value);
+              setShowSuggestions(true);
+            }}
+            onFocus={() => setShowSuggestions(true)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
                 if (filteredSuggestions.length > 0) {
                   handleAddMember(filteredSuggestions[0].username);
-                } else {
-                  handleAddMember(memberInput);
                 }
-              }}
-            >
-              追加
-            </button>
-          </div>
+              }
+            }}
+            style={{
+              width: "100%",
+              background: "var(--color-surface2)",
+              border: "1px solid var(--color-border)",
+              color: "var(--color-text)",
+              padding: "6px 8px",
+              borderRadius: "6px",
+              fontFamily: "inherit",
+            }}
+          />
           {/* 補完候補ドロップダウン */}
           {showSuggestions && filteredSuggestions.length > 0 && (
             <div
@@ -602,7 +583,7 @@ function ScheduleFormComponent({
                 position: "absolute",
                 top: "100%",
                 left: 0,
-                right: "72px",
+                right: 0,
                 zIndex: 100,
                 background: "var(--color-surface2)",
                 border: "1px solid var(--color-border)",
