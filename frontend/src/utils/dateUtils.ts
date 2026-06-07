@@ -51,14 +51,6 @@ export function normalizeDate(d: Date): Date {
   return new Date(d.getFullYear(), d.getMonth(), d.getDate());
 }
 
-/** Date → "yyyy-MM-dd" */
-function formatDate(d: Date): string {
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  return `${y}-${m}-${day}`;
-}
-
 /** Date → "HH:mm" */
 function formatTime(d: Date): string {
   const h = String(d.getHours()).padStart(2, "0");
@@ -84,7 +76,7 @@ export function adjustEndByStart(
 
   const corrected = new Date(start.getTime() + 60 * 60 * 1000);
   return {
-    endDate: formatDate(corrected),
+    endDate: formatDateKey(corrected),
     endTime: formatTime(corrected),
   };
 }
@@ -107,7 +99,7 @@ export function adjustStartByEnd(
 
   const corrected = new Date(end.getTime() - 60 * 60 * 1000);
   return {
-    startDate: formatDate(corrected),
+    startDate: formatDateKey(corrected),
     startTime: formatTime(corrected),
   };
 }

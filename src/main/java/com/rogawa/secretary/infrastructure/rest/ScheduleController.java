@@ -56,7 +56,7 @@ public class ScheduleController {
             @PathVariable Long id,
             Authentication authentication) {
         var updated = scheduleUseCase.updateSchedule(id, request.toDomain(), authentication.getName());
-        return ResponseEntity.status(HttpStatus.CREATED).body(ScheduleDto.fromDomain(updated));
+        return ResponseEntity.ok(ScheduleDto.fromDomain(updated));
     }
 
     @DeleteMapping("/api/v1/schedules/{id}")

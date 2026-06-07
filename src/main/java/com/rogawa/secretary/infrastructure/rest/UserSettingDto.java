@@ -20,13 +20,4 @@ public class UserSettingDto {
         dto.setFirstDayOfWeek(domain.getFirstDayOfWeek());
         return dto;
     }
-
-    public UserSetting toDomain() {
-        UserSetting setting = new UserSetting();
-        setting.setId(this.id);
-        setting.setUsername(this.username);
-        setting.setChipBgColor(this.chipBgColor);
-        setting.setFirstDayOfWeek(this.firstDayOfWeek);
-        return setting;
-    }
 }

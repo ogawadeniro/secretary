@@ -15,6 +15,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -56,7 +57,7 @@ public class ScheduleService implements ScheduleUseCase {
         List<Schedule> memberSchedules = scheduleRepository.findByIds(memberScheduleIds);
 
         // マージして開始日時順にソート
-        Set<Long> seen = new java.util.HashSet<>();
+        Set<Long> seen = new HashSet<>();
         List<Schedule> all = new ArrayList<>();
         for (Schedule s : ownSchedules) { all.add(s); seen.add(s.getId()); }
         for (Schedule s : sharedSchedules) { if (!seen.contains(s.getId())) { all.add(s); seen.add(s.getId()); } }
