@@ -8,6 +8,7 @@ import com.rogawa.secretary.domain.exception.ScheduleNotFoundException;
 import com.rogawa.secretary.domain.model.Schedule;
 import com.rogawa.secretary.domain.repository.CalendarShareRepository;
 import com.rogawa.secretary.domain.repository.ScheduleRepository;
+import com.rogawa.secretary.domain.repository.UserSettingRepository;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
@@ -27,6 +28,9 @@ public class ScheduleServiceTest {
 
     @Mock
     private CalendarShareRepository calendarShareRepository;
+
+    @Mock
+    private UserSettingRepository userSettingRepository;
 
     @InjectMocks
     private ScheduleService scheduleService;
@@ -49,6 +53,7 @@ public class ScheduleServiceTest {
     public void testGetSchedules() {
         when(calendarShareRepository.findSharedOwnerUsernames("rogawa")).thenReturn(Collections.emptyList());
         when(scheduleRepository.findByOwner("rogawa")).thenReturn(List.of(testSchedule));
+        when(userSettingRepository.findByUsername("rogawa")).thenReturn(Optional.empty());
         List<Schedule> result = scheduleService.getSchedules("rogawa");
         assertEquals(1, result.size());
         assertEquals("test", result.get(0).getTitle());
@@ -67,6 +72,8 @@ public class ScheduleServiceTest {
         when(calendarShareRepository.findSharedOwnerUsernames("rogawa")).thenReturn(List.of("user2"));
         when(scheduleRepository.findByOwner("rogawa")).thenReturn(List.of(testSchedule));
         when(scheduleRepository.findByOwnersShared(List.of("user2"))).thenReturn(List.of(sharedSchedule));
+        when(userSettingRepository.findByUsername("rogawa")).thenReturn(Optional.empty());
+        when(userSettingRepository.findByUsername("user2")).thenReturn(Optional.empty());
 
         List<Schedule> result = scheduleService.getSchedules("rogawa");
         assertEquals(2, result.size());

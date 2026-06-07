@@ -6,10 +6,14 @@ import com.rogawa.secretary.domain.exception.ScheduleNotFoundException;
 import com.rogawa.secretary.domain.model.Schedule;
 import com.rogawa.secretary.domain.repository.CalendarShareRepository;
 import com.rogawa.secretary.domain.repository.ScheduleRepository;
+import com.rogawa.secretary.domain.repository.UserSettingRepository;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,12 +22,15 @@ public class ScheduleService implements ScheduleUseCase {
 
     private final ScheduleRepository scheduleRepository;
     private final CalendarShareRepository calendarShareRepository;
+    private final UserSettingRepository userSettingRepository;
 
     public ScheduleService(
             ScheduleRepository scheduleRepository,
-            CalendarShareRepository calendarShareRepository) {
+            CalendarShareRepository calendarShareRepository,
+            UserSettingRepository userSettingRepository) {
         this.scheduleRepository = scheduleRepository;
         this.calendarShareRepository = calendarShareRepository;
+        this.userSettingRepository = userSettingRepository;
     }
 
     @Override
@@ -38,7 +45,35 @@ public class ScheduleService implements ScheduleUseCase {
         List<Schedule> all = new ArrayList<>(ownSchedules);
         all.addAll(sharedSchedules);
         all.sort(Comparator.comparing(Schedule::getStartDatetime));
+
+        // オーナーのチップ背景色を設定
+        Map<String, String> ownerChipColors = buildOwnerChipColorMap(all);
+        for (Schedule s : all) {
+            String color = ownerChipColors.get(s.getOwner());
+            if (color != null) {
+                s.setOwnerChipBgColor(color);
+            }
+        }
+
         return all;
+    }
+
+    /** 予定リストに含まれる全オーナーのチップ背景色をまとめて取得 */
+    private Map<String, String> buildOwnerChipColorMap(List<Schedule> schedules) {
+        List<String> owners = schedules.stream()
+                .map(Schedule::getOwner)
+                .distinct()
+                .collect(Collectors.toList());
+        Map<String, String> map = new HashMap<>();
+        for (String username : owners) {
+            userSettingRepository.findByUsername(username)
+                    .ifPresent(us -> {
+                        if (us.getChipBgColor() != null) {
+                            map.put(username, us.getChipBgColor());
+                        }
+                    });
+        }
+        return map;
     }
 
     @Override

@@ -1,16 +1,19 @@
-/** オーナーごとのチップ色パレット（10色） */
+/** 低明度パステルカラー（チップ色パレット / オーナー色 fallback） */
 const OWNER_COLORS = [
-  "#4a90d9", // blue
-  "#e87a90", // pink
-  "#50c878", // green
-  "#c9a0dc", // purple
-  "#f0a050", // orange
-  "#5ac8fa", // light blue
-  "#ff6b6b", // red
-  "#a8e6cf", // mint
-  "#ffd93d", // yellow
-  "#6c5ce7", // indigo
+  "#5b7fa5", // dusty blue
+  "#b56a7a", // dusty rose
+  "#5d8a6a", // dusty green
+  "#8a6a9a", // dusty purple
+  "#a58a5a", // dusty gold
+  "#5a8a8a", // dusty teal
+  "#b56a6a", // dusty red
+  "#6a8a5a", // dusty sage
+  "#8a7a6a", // dusty brown
+  "#5a6a8a", // dusty slate
 ];
+
+/** 設定画面で選択可能なチップ色の候補 */
+export const CHIP_COLORS = OWNER_COLORS;
 
 /** ユーザー名から決定論的に色を割り当てる */
 export function ownerColor(owner: string): string {

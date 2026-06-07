@@ -790,24 +790,34 @@ body {
   font-size: 0.85rem;
 }
 
-/* カラーピッカー行 */
-.color-picker-row {
+/* チップ色スウォッチ選択 */
+.chip-color-swatches {
   display: flex;
-  align-items: center;
-  gap: 10px;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
 }
 
-.color-picker-row input[type="color"] {
-  width: 40px;
-  height: 40px;
-  border: 1px solid var(--color-border);
-  border-radius: 4px;
+.chip-color-swatch {
+  width: 36px;
+  height: 36px;
+  border-radius: 6px;
+  border: 2px solid transparent;
   cursor: pointer;
   padding: 0;
-  background: none;
+  transition: transform 0.15s, border-color 0.15s;
+}
+
+.chip-color-swatch:hover {
+  transform: scale(1.1);
+}
+
+.chip-color-swatch.selected {
+  border-color: var(--color-text);
 }
 
 .color-preview {
+  display: inline-block;
   padding: 4px 10px;
   border-radius: 4px;
   font-size: 0.75rem;

@@ -54,8 +54,10 @@ export default function DayCell({
           }
           const pos = getSchedulePosition(s, date);
           const showTitle = shouldShowTitle(s, date);
-          // 自分の予定は chipBgColor、共有予定はオーナー色
-          const bgColor = s.owner === currentUsername ? chipBgColor : ownerColor(s.owner);
+          // 自分の予定は chipBgColor、共有予定はオーナーの設定色（なければ fallback）
+          const bgColor = s.owner === currentUsername
+            ? chipBgColor
+            : (s.ownerChipBgColor ?? ownerColor(s.owner));
           return (
             <div
               key={s.id}

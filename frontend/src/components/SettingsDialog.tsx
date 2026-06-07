@@ -1,7 +1,7 @@
 import { useState } from "react";
 import type { UserSettings } from "../types/settings";
 import { saveSettings, resetSettings } from "../api/settingsApi";
-import { textColorFromBg, dayOfWeekLabel } from "../utils/colorUtils";
+import { textColorFromBg, dayOfWeekLabel, CHIP_COLORS } from "../utils/colorUtils";
 
 interface SettingsDialogProps {
   settings: UserSettings;
@@ -76,22 +76,30 @@ export default function SettingsDialog({
               <h3 className="settings-section-title">色設定</h3>
               <label>
                 予定チップの色
-                <div className="color-picker-row">
-                  <input
-                    type="color"
-                    value={chipBgColor}
-                    onChange={(e) => setChipBgColor(e.target.value)}
-                  />
-                  <span
-                    className="color-preview"
-                    style={{
-                      background: chipBgColor,
-                      color: textColorFromBg(chipBgColor),
-                    }}
-                  >
-                    見本テキスト
-                  </span>
+                <div className="chip-color-swatches">
+                  {CHIP_COLORS.map((color) => (
+                    <button
+                      key={color}
+                      className={`chip-color-swatch${chipBgColor === color ? " selected" : ""}`}
+                      style={{
+                        background: color,
+                        outline: chipBgColor === color ? `2px solid ${textColorFromBg(color)}` : "none",
+                      }}
+                      onClick={() => setChipBgColor(color)}
+                      title={color}
+                    />
+                  ))}
                 </div>
+                <span
+                  className="color-preview"
+                  style={{
+                    background: chipBgColor,
+                    color: textColorFromBg(chipBgColor),
+                    marginTop: "8px",
+                  }}
+                >
+                  見本テキスト
+                </span>
               </label>
             </section>
 

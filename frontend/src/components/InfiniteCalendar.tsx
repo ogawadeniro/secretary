@@ -35,7 +35,7 @@ function generateWeeks(centerDate: Date, halfWeeks: number, firstDayOfWeek: numb
 
 /** デフォルト設定 */
 const DEFAULT_SETTINGS: UserSettings = {
-  chipBgColor: "#4a90d9",
+  chipBgColor: "#5b7fa5",
   firstDayOfWeek: 0,
 };
 

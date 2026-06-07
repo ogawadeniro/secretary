@@ -35,6 +35,9 @@ public class ScheduleDto {
     /** 他のユーザーと共有するかどうか（デフォルト true） */
     private Boolean shared = true;
 
+    /** オーナーのチップ背景色 */
+    private String ownerChipBgColor;
+
     public static ScheduleDto fromDomain(Schedule schedule) {
         ScheduleDto dto = new ScheduleDto();
         dto.setId(schedule.getId());
@@ -46,6 +49,7 @@ public class ScheduleDto {
         dto.setDescription(schedule.getDescription());
         dto.setUpdateTime(schedule.getUpdateTime());
         dto.setShared(schedule.getShared());
+        dto.setOwnerChipBgColor(schedule.getOwnerChipBgColor());
         return dto;
     }
 

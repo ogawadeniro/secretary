@@ -16,6 +16,9 @@ public class Schedule {
     /** 他のユーザーと共有するかどうか（デフォルト true） */
     private Boolean shared = true;
 
+    /** オーナーのチップ背景色（API応答用、永続化しない） */
+    private String ownerChipBgColor;
+
     public Schedule copy() {
         Schedule s = new Schedule();
         s.setId(this.id);
@@ -27,6 +30,7 @@ public class Schedule {
         s.setDescription(this.description);
         s.setUpdateTime(this.updateTime);
         s.setShared(this.shared);
+        s.setOwnerChipBgColor(this.ownerChipBgColor);
         return s;
     }
 
@@ -41,5 +45,6 @@ public class Schedule {
         System.out.println("    description: " + description);
         System.out.println("    updateTime: " + updateTime);
         System.out.println("    shared: " + shared);
+        System.out.println("    ownerChipBgColor: " + ownerChipBgColor);
     }
 }

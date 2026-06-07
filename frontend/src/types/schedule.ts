@@ -11,4 +11,6 @@ export interface Schedule {
   shared: boolean;
   /** 作成/更新日時（サーバー側で自動設定、新規作成時は省略可） */
   updateTime?: string;     // 形式: yyyy/MM/dd-HH:mm:ss
+  /** オーナーのチップ背景色（API応答用） */
+  ownerChipBgColor?: string;
 }
