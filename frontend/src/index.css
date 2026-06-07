@@ -451,7 +451,8 @@ body {
 }
 
 .schedule-time,
-.schedule-owner {
+.schedule-owner,
+.schedule-members {
   font-size: 0.75rem;
   color: var(--color-text-muted);
 }

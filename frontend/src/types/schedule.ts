@@ -16,3 +16,11 @@ export interface Schedule {
   /** メンバーのユーザー名一覧 */
   memberUsernames?: string[];
 }
+
+/** メンバーデータ（GET/POST /api/v1/schedules/{id}/members のレスポンス） */
+export interface ScheduleMember {
+  id: number;
+  scheduleId: number;
+  username: string;
+  createdAt: string;
+}

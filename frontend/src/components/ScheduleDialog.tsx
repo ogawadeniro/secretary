@@ -1,10 +1,11 @@
 import { useState, useEffect, useRef } from "react";
-import { Schedule } from "../types/schedule";
+import { Schedule, ScheduleMember as ScheduleMemberType } from "../types/schedule";
 import {
   createSchedule,
   updateSchedule,
   deleteSchedule,
 } from "../api/scheduleApi";
+import { getMembers, addMember, removeMember } from "../api/memberApi";
 import { adjustEndByStart, adjustStartByEnd } from "../utils/dateUtils";
 import { PartyPopper } from "lucide-react";
 
@@ -46,7 +47,7 @@ export default function ScheduleDialog({
       await deleteSchedule(id);
       setSchedules((prev) => prev.filter((s) => s.id !== id));
       onSchedulesChanged();
-    } catch (e) {
+    } catch {
       setError("削除に失敗しました");
     } finally {
       setDeleteTarget(null);
@@ -58,16 +59,17 @@ export default function ScheduleDialog({
     setDeleteTarget(s);
   };
 
-  /** 予定を保存（新規 or 更新） */
-  const handleSave = async (form: ScheduleFormData) => {
+  /** 予定を保存（新規 or 更新）。保存した予定を返す */
+  const handleSave = async (form: ScheduleFormData): Promise<Schedule | void> => {
     setError(null);
     try {
       if (editing?.id) {
         await updateSchedule(editing.id, form);
+        onSchedulesChanged();
+        handleClose();
+        return;
       } else {
-        // updateTime はサーバー側で自動設定されるため送らない
-        // owner はサーバー側でログインユーザーから自動設定される
-        await createSchedule({
+        const saved = await createSchedule({
           id: null,
           title: form.title ?? "",
           isAllDay: form.isAllDay ?? false,
@@ -77,10 +79,12 @@ export default function ScheduleDialog({
           description: form.description ?? "",
           shared: form.shared ?? true,
         });
+        // 新規作成後は編集モードに切り替え（メンバー追加のため）
+        setEditing(saved);
+        onSchedulesChanged();
+        return saved;
       }
-      onSchedulesChanged();
-      handleClose();
-    } catch (e) {
+    } catch {
       setError("保存に失敗しました");
     }
   };
@@ -121,9 +125,15 @@ export default function ScheduleDialog({
                       : `${s.startDatetime.slice(11)} ~ ${s.endDatetime.slice(11)}`}
                   </span>
                   <span className="schedule-owner">{s.owner}</span>
+                  {/* メンバー表示 */}
+                  {s.memberUsernames && s.memberUsernames.length > 0 && (
+                    <span className="schedule-members">
+                      {s.memberUsernames.map((u) => `@${u}`).join(", ")}
+                    </span>
+                  )}
                 </div>
                 <div className="schedule-card-actions">
-                  {s.owner === currentUsername && (
+                  {(s.owner === currentUsername) && (
                     <>
                       <button
                         className="icon-btn"
@@ -208,7 +218,7 @@ function ScheduleFormComponent({
 }: {
   initial: Schedule | null;
   date: Date;
-  onSave: (data: ScheduleFormData) => Promise<void>;
+  onSave: (data: ScheduleFormData) => Promise<Schedule | void>;
   onCancel: () => void;
 }) {
   const pad = (n: number) => String(n).padStart(2, "0");
@@ -232,11 +242,26 @@ function ScheduleFormComponent({
   const [shared, setShared] = useState(initial?.shared ?? true);
   const [saving, setSaving] = useState(false);
 
+  // メンバー管理 state
+  const [members, setMembers] = useState<ScheduleMemberType[]>([]);
+  const [memberInput, setMemberInput] = useState("");
+  const [memberLoading, setMemberLoading] = useState(false);
+  const [memberError, setMemberError] = useState<string | null>(null);
   const isEditing = initial !== null;
+  const scheduleId = initial?.id;
 
   // adjustingRef: プログラムによる補正中はフラグを立てて相互発火を防止
-  // startTime→endTime の補正が endTime→startTime の補正を呼び、無限ループになるのを防ぐ
   const adjustingRef = useRef(false);
+
+  // 既存予定の編集時はメンバー一覧をロード
+  useEffect(() => {
+    if (!scheduleId) return;
+    setMemberLoading(true);
+    getMembers(scheduleId)
+      .then(setMembers)
+      .catch(() => setMemberError("メンバーの読み込みに失敗しました"))
+      .finally(() => setMemberLoading(false));
+  }, [scheduleId]);
 
   // 開始を変更 → 終了を補正
   useEffect(() => {
@@ -283,6 +308,30 @@ function ScheduleFormComponent({
       });
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleAddMember = async () => {
+    const username = memberInput.trim();
+    if (!username || !scheduleId) return;
+    setMemberError(null);
+    try {
+      const m = await addMember(scheduleId, username);
+      setMembers((prev) => [...prev, m]);
+      setMemberInput("");
+    } catch {
+      setMemberError("メンバーの追加に失敗しました");
+    }
+  };
+
+  const handleRemoveMember = async (username: string) => {
+    if (!scheduleId) return;
+    setMemberError(null);
+    try {
+      await removeMember(scheduleId, username);
+      setMembers((prev) => prev.filter((m) => m.username !== username));
+    } catch {
+      setMemberError("メンバーの削除に失敗しました");
     }
   };
 
@@ -360,6 +409,86 @@ function ScheduleFormComponent({
           onChange={(e) => setDescription(e.target.value)}
         />
       </label>
+
+      {/* メンバー管理（既存予定のみ） */}
+      {scheduleId && (
+        <div className="settings-section">
+          <div className="settings-section-title">メンバー</div>
+          {memberLoading && (
+            <p style={{ fontSize: "0.8rem", color: "var(--color-text-muted)" }}>読み込み中...</p>
+          )}
+          {memberError && (
+            <p style={{ fontSize: "0.8rem", color: "var(--color-holiday)" }}>{memberError}</p>
+          )}
+          {members.length > 0 && (
+            <div style={{ display: "flex", flexDirection: "column", gap: "4px", marginBottom: "8px" }}>
+              {members.map((m) => (
+                <div
+                  key={m.id}
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    padding: "6px 8px",
+                    background: "var(--color-surface2)",
+                    borderRadius: "6px",
+                    fontSize: "0.85rem",
+                  }}
+                >
+                  <span>@{m.username}</span>
+                  <button
+                    type="button"
+                    style={{
+                      background: "none",
+                      border: "none",
+                      cursor: "pointer",
+                      color: "var(--color-sun)",
+                      padding: "2px",
+                      display: "flex",
+                    }}
+                    onClick={() => handleRemoveMember(m.username)}
+                    title="メンバーを削除"
+                  >
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2">
+                      <line x1="18" y1="6" x2="6" y2="18"/>
+                      <line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+          <div style={{ display: "flex", gap: "8px" }}>
+            <input
+              type="text"
+              placeholder="追加するユーザー名..."
+              value={memberInput}
+              onChange={(e) => setMemberInput(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); handleAddMember(); } }}
+              style={{
+                flex: 1,
+                background: "var(--color-surface2)",
+                border: "1px solid var(--color-border)",
+                color: "var(--color-text)",
+                padding: "6px 8px",
+                borderRadius: "6px",
+                fontSize: "0.8rem",
+                fontFamily: "inherit",
+              }}
+            />
+            <button
+              type="button"
+              className="save-btn"
+              style={{ padding: "6px 12px", fontSize: "0.8rem" }}
+              disabled={!memberInput.trim()}
+              onClick={handleAddMember}
+            >
+              追加
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="form-actions">
         <button type="submit" disabled={saving}>
           {saving ? "保存中..." : "保存"}
