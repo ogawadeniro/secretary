@@ -254,6 +254,13 @@ curl -X DELETE http://localhost:8080/api/v1/schedules/2
 - コードを知っている人だけが共有リクエスト可能
 - 実装には `user_settings` テーブルに `share_code` カラム追加が必要
 
+### 共有ブロック機能（検討中）
+
+カレンダーを共有している相手をブロックできる機能。
+ブロックされたユーザーは以後、自分の予定を相手に共有できなくなる。
+管理画面でブロック一覧の表示・解除も可能。ブロック中は既存の共有設定も無効化される。
+実装には `share_blocks` テーブル（blocker_username, blocked_username, created_at）の追加が必要。
+
 ## 既知の問題
 
 ### ホーム画面アイコンが反映されない（iOS）
