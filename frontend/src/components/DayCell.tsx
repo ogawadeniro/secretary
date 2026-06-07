@@ -60,7 +60,7 @@ export default function DayCell({
           const memberColors = (s.memberUsernames ?? []).map(
             (u) => s.memberChipBgColors?.[u] ?? ownerColor(u)
           );
-          const bgColor = memberColors.length > 0
+          const bgColor = memberColors.length > 1
             ? scheduleColor(memberColors)
             : s.owner === currentUsername
               ? chipBgColor

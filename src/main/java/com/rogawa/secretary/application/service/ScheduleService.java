@@ -62,14 +62,22 @@ public class ScheduleService implements ScheduleUseCase {
         Map<String, String> ownerChipColors = buildOwnerChipColorMap(all);
         Map<Long, List<String>> memberUsernamesMap = buildMemberUsernamesMap(all);
         Map<String, String> memberChipColorMap = buildMemberChipColorMap(all, memberUsernamesMap);
+        // オーナーも memberChipColorMap に追加（暗黙のメンバーとして）
+        for (Map.Entry<String, String> e : ownerChipColors.entrySet()) {
+            memberChipColorMap.putIfAbsent(e.getKey(), e.getValue());
+        }
         for (Schedule s : all) {
             String color = ownerChipColors.get(s.getOwner());
             if (color != null) {
                 s.setOwnerChipBgColor(color);
             }
-            List<String> usernames = memberUsernamesMap.getOrDefault(s.getId(), List.of());
+            // オーナーを暗黙のメンバーとして先頭に追加
+            List<String> memberUsernames = memberUsernamesMap.getOrDefault(s.getId(), List.of());
+            List<String> usernames = new ArrayList<>();
+            usernames.add(s.getOwner());
+            usernames.addAll(memberUsernames);
             s.setMemberUsernames(usernames);
-            // メンバーごとのチップ背景色を設定
+            // メンバーごとのチップ背景色を設定（オーナー含む）
             Map<String, String> colors = new HashMap<>();
             for (String username : usernames) {
                 String c = memberChipColorMap.get(username);
