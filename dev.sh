@@ -25,15 +25,9 @@ if [ ! -f "$JAR" ]; then
     bash build.sh
 fi
 
-# ポートチェック
-if lsof -i :8080 > /dev/null 2>&1; then
-    echo "Error: Port 8080 already in use."
-    exit 1
-fi
-if lsof -i :5173 > /dev/null 2>&1; then
-    echo "Error: Port 5173 already in use."
-    exit 1
-fi
+# ポートが使用中なら強制終了
+fuser -k 8080/tcp 2>/dev/null || true
+fuser -k 5173/tcp 2>/dev/null || true
 
 # Spring Boot をバックグラウンド起動
 echo "Starting Spring Boot..."
