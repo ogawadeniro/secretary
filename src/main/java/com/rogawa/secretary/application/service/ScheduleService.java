@@ -256,31 +256,20 @@ public class ScheduleService implements ScheduleUseCase {
         if (schedule.getOwner().equals(username)) {
             return true;
         }
-        // 条件2: 予定のメンバーに自分が含まれている
-        List<ScheduleMember> members = scheduleMemberRepository.findByScheduleId(schedule.getId());
-        if (members.stream().anyMatch(m -> m.getUsername().equals(username))) {
-            return true;
-        }
         // 全メンバー（オーナー含む）のユーザー名一覧
+        List<ScheduleMember> members = scheduleMemberRepository.findByScheduleId(schedule.getId());
         Set<String> allUsernames = members.stream()
                 .map(ScheduleMember::getUsername)
                 .collect(Collectors.toSet());
         allUsernames.add(schedule.getOwner());
-        // 条件3: 予定に含まれるメンバー全員に自分の予定を共有している
+        // 条件2: 全メンバーに共有している AND 全メンバーから共有されている
         Set<String> sharedTo = calendarShareRepository.findByOwnerUsername(username)
                 .stream()
                 .map(CalendarShare::getSharedWithUsername)
                 .collect(Collectors.toSet());
-        if (allUsernames.stream().allMatch(sharedTo::contains)) {
-            return true;
-        }
-        // 条件4: 予定に含まれるメンバー全員から予定を共有されている
         Set<String> sharedFrom = calendarShareRepository.findSharedOwnerUsernames(username)
                 .stream().collect(Collectors.toSet());
-        if (allUsernames.stream().allMatch(sharedFrom::contains)) {
-            return true;
-        }
-        return false;
+        return allUsernames.stream().allMatch(u -> sharedTo.contains(u) && sharedFrom.contains(u));
     }
 
     @Override
