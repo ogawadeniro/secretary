@@ -23,7 +23,15 @@ public class UserPersistenceAdapter implements UserRepository {
 
     @Override
     public List<User> searchByUsername(String query) {
-        return jpaUserRepository.searchByQuery(query)
+        return jpaUserRepository.searchByUsernameOrDisplayName(query)
+                .stream()
+                .map(JpaUser::toDomain)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<User> findByUsernames(List<String> usernames) {
+        return jpaUserRepository.findByUsernameIn(usernames)
                 .stream()
                 .map(JpaUser::toDomain)
                 .collect(Collectors.toList());

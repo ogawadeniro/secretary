@@ -10,5 +10,7 @@ public interface UserRepository {
     /** ユーザー名で部分一致検索（共有追加用） */
     List<User> searchByUsername(String query);
 
+    List<User> findByUsernames(List<String> usernames);
+
     User save(User user);
 }
