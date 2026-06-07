@@ -148,7 +148,7 @@ export default function ScheduleDialog({
                       borderRadius: "4px",
                       padding: "2px 6px",
                       color: "#e0e0e0",
-                      display: "inline-block",
+                      display: "inline",
                     }}
                   >
                     {(s.memberUsernames ?? []).length > 1 && (
