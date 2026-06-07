@@ -3,6 +3,7 @@ package com.rogawa.secretary.application.service;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
+import com.rogawa.secretary.domain.exception.ScheduleAuthorizationException;
 import com.rogawa.secretary.domain.exception.ScheduleNotFoundException;
 import com.rogawa.secretary.domain.model.Schedule;
 import com.rogawa.secretary.domain.repository.CalendarShareRepository;
@@ -108,16 +109,47 @@ public class ScheduleServiceTest {
         when(scheduleRepository.findById(1L)).thenReturn(Optional.of(existing));
         when(scheduleRepository.save(any(Schedule.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        Schedule result = scheduleService.updateSchedule(1L, request);
+        Schedule result = scheduleService.updateSchedule(1L, request, "rogawa");
         assertEquals("updated", result.getTitle());
         assertEquals("rogawa", result.getOwner());
         assertNotNull(result.getUpdateTime());
     }
 
     @Test
+    public void testUpdateScheduleNotOwner() {
+        Schedule existing = new Schedule();
+        existing.setId(1L);
+        existing.setTitle("original");
+        existing.setIsAllDay(false);
+        existing.setOwner("other_user");
+        existing.setDescription("original");
+
+        Schedule request = new Schedule();
+        request.setTitle("hacked");
+
+        when(scheduleRepository.findById(1L)).thenReturn(Optional.of(existing));
+
+        assertThrows(ScheduleAuthorizationException.class,
+                () -> scheduleService.updateSchedule(1L, request, "rogawa"));
+    }
+
+    @Test
     public void testDeleteSchedule() {
         when(scheduleRepository.findById(1L)).thenReturn(Optional.of(testSchedule));
-        scheduleService.deleteSchedule(1L);
+        scheduleService.deleteSchedule(1L, "rogawa");
         verify(scheduleRepository).deleteById(1L);
+    }
+
+    @Test
+    public void testDeleteScheduleNotOwner() {
+        Schedule existing = new Schedule();
+        existing.setId(1L);
+        existing.setTitle("original");
+        existing.setOwner("other_user");
+
+        when(scheduleRepository.findById(1L)).thenReturn(Optional.of(existing));
+
+        assertThrows(ScheduleAuthorizationException.class,
+                () -> scheduleService.deleteSchedule(1L, "rogawa"));
     }
 }

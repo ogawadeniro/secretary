@@ -1,6 +1,7 @@
 package com.rogawa.secretary.application.service;
 
 import com.rogawa.secretary.application.port.ScheduleUseCase;
+import com.rogawa.secretary.domain.exception.ScheduleAuthorizationException;
 import com.rogawa.secretary.domain.exception.ScheduleNotFoundException;
 import com.rogawa.secretary.domain.model.Schedule;
 import com.rogawa.secretary.domain.repository.CalendarShareRepository;
@@ -56,8 +57,11 @@ public class ScheduleService implements ScheduleUseCase {
 
     @Override
     @Transactional
-    public Schedule updateSchedule(Long id, Schedule requestBody) {
+    public Schedule updateSchedule(Long id, Schedule requestBody, String owner) {
         Schedule schedule = getSchedule(id);
+        if (!schedule.getOwner().equals(owner)) {
+            throw new ScheduleAuthorizationException("他のユーザーの予定は編集できません");
+        }
 
         if (requestBody.getTitle() != null) {
             schedule.setTitle(requestBody.getTitle());
@@ -84,8 +88,11 @@ public class ScheduleService implements ScheduleUseCase {
 
     @Override
     @Transactional
-    public void deleteSchedule(Long id) {
-        getSchedule(id);
+    public void deleteSchedule(Long id, String owner) {
+        Schedule schedule = getSchedule(id);
+        if (!schedule.getOwner().equals(owner)) {
+            throw new ScheduleAuthorizationException("他のユーザーの予定は削除できません");
+        }
         scheduleRepository.deleteById(id);
     }
 }
