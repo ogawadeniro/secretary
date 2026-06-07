@@ -249,7 +249,7 @@ export default function InfiniteCalendar() {
       <div className="calendar-header">
         <h1>{monthLabel}</h1>
         <div className="calendar-header-right">
-          <span className="header-user">{user?.displayName ?? user?.username}</span>
+          <span className="header-user" style={{ background: settings.chipBgColor, borderRadius: "4px", padding: "2px 6px", color: "#e0e0e0" }}>{user?.displayName ?? user?.username}</span>
           <div className="account-menu-container" ref={accountMenuRef}>
             <button
               className="account-icon-btn"

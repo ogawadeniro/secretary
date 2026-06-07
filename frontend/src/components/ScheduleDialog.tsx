@@ -9,6 +9,7 @@ import { getMembers, addMember, removeMember } from "../api/memberApi";
 import { fetchMyShares, fetchIncomingShares } from "../api/shareApi";
 import { searchUsers } from "../api/userApi";
 import { adjustEndByStart, adjustStartByEnd } from "../utils/dateUtils";
+import { ownerColor, scheduleColor } from "../utils/colorUtils";
 import { PartyPopper, Users } from "lucide-react";
 
 interface ScheduleDialogProps {
@@ -18,6 +19,18 @@ interface ScheduleDialogProps {
   onClose: () => void;
   onSchedulesChanged: () => void;
   currentUsername: string;
+}
+
+/** 予定のタイトル背景色を計算 */
+function scheduleTitleColor(s: Schedule, currentUsername: string): string {
+  const memberColors = (s.memberUsernames ?? []).map(
+    (u) => s.memberChipBgColors?.[u] ?? ownerColor(u)
+  );
+  return memberColors.length > 1
+    ? scheduleColor(memberColors)
+    : s.owner === currentUsername
+      ? (s.ownerChipBgColor ?? ownerColor(s.owner))
+      : (s.ownerChipBgColor ?? ownerColor(s.owner));
 }
 
 /** 選択した日付の予定一覧を表示し、追加・編集・削除を行うダイアログ */
@@ -129,7 +142,15 @@ export default function ScheduleDialog({
             schedules.map((s) => (
               <div key={s.id} className="schedule-card">
                 <div className="schedule-card-info">
-                  <strong>
+                  <strong
+                    style={{
+                      background: scheduleTitleColor(s, currentUsername),
+                      borderRadius: "4px",
+                      padding: "2px 6px",
+                      color: "#e0e0e0",
+                      display: "inline-block",
+                    }}
+                  >
                     {(s.memberUsernames ?? []).length > 1 && (
                       <Users size={14} fill="currentColor" style={{ marginRight: "4px", verticalAlign: "middle" }} />
                     )}
