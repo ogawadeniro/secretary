@@ -7,6 +7,7 @@ import {
 } from "../api/scheduleApi";
 import { getMembers, addMember, removeMember } from "../api/memberApi";
 import { fetchMyShares, fetchIncomingShares } from "../api/shareApi";
+import { searchUsers } from "../api/userApi";
 import { adjustEndByStart, adjustStartByEnd } from "../utils/dateUtils";
 import { PartyPopper, Users } from "lucide-react";
 
@@ -267,26 +268,34 @@ function ScheduleFormComponent({
   const [memberLoading, setMemberLoading] = useState(false);
   const [memberError, setMemberError] = useState<string | null>(null);
   const [showSuggestions, setShowSuggestions] = useState(false);
-  const [shareCandidates, setShareCandidates] = useState<string[]>([]);
+  const [shareCandidates, setShareCandidates] = useState<{ username: string; displayName: string }[]>([]);
   const scheduleId = initial?.id;
   const isNew = !scheduleId;
 
   const adjustingRef = useRef(false);
   const suggestionsRef = useRef<HTMLDivElement>(null);
 
-  // 相互共有ユーザー一覧を取得
+  // 相互共有ユーザー一覧を取得（表示名付き）
   useEffect(() => {
     (async () => {
       try {
-        const [myShares, incomingShares] = await Promise.all([
+        const [myShares, incomingShares, allUsers] = await Promise.all([
           fetchMyShares(),
           fetchIncomingShares(),
+          searchUsers(""),
         ]);
         const usernames = new Set<string>();
         myShares.forEach((s) => usernames.add(s.sharedWithUsername));
         incomingShares.forEach((s) => usernames.add(s.ownerUsername));
         usernames.delete(currentUsername);
-        setShareCandidates(Array.from(usernames).sort());
+        // 全ユーザー情報から表示名をマップ
+        const displayNameMap = new Map<string, string>();
+        allUsers.forEach((u) => displayNameMap.set(u.username, u.displayName));
+        const candidates = Array.from(usernames).sort().map((username) => ({
+          username,
+          displayName: displayNameMap.get(username) ?? username,
+        }));
+        setShareCandidates(candidates);
       } catch {
         // 候補一覧がなくても機能に影響なし
       }
@@ -392,13 +401,16 @@ function ScheduleFormComponent({
 
   // 補完候補（フィルタ済み）
   const filteredSuggestions = shareCandidates.filter(
-    (u) =>
-      memberInput.trim() &&
-      u.toLowerCase().includes(memberInput.trim().toLowerCase()) &&
-      !(scheduleId
-        ? members.some((m) => m.username === u)
-        : pendingMembers.includes(u)) &&
-      u !== currentUsername
+    (c) => {
+      const query = memberInput.trim().toLowerCase();
+      const matchesQuery = query === "" ||
+        c.username.toLowerCase().includes(query) ||
+        c.displayName.toLowerCase().includes(query);
+      const alreadyAdded = scheduleId
+        ? members.some((m) => m.username === c.username)
+        : pendingMembers.includes(c.username);
+      return matchesQuery && !alreadyAdded;
+    }
   );
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -608,7 +620,7 @@ function ScheduleFormComponent({
                 if (e.key === "Enter") {
                   e.preventDefault();
                   if (filteredSuggestions.length > 0) {
-                    handleAddMember(filteredSuggestions[0]);
+                    handleAddMember(filteredSuggestions[0].username);
                   } else {
                     handleAddMember(memberInput);
                   }
@@ -632,7 +644,7 @@ function ScheduleFormComponent({
               disabled={!memberInput.trim()}
               onClick={() => {
                 if (filteredSuggestions.length > 0) {
-                  handleAddMember(filteredSuggestions[0]);
+                  handleAddMember(filteredSuggestions[0].username);
                 } else {
                   handleAddMember(memberInput);
                 }
@@ -659,9 +671,9 @@ function ScheduleFormComponent({
                 overflowY: "auto",
               }}
             >
-              {filteredSuggestions.map((u) => (
+              {filteredSuggestions.map((c) => (
                 <div
-                  key={u}
+                  key={c.username}
                   style={{
                     padding: "8px 10px",
                     cursor: "pointer",
@@ -670,7 +682,7 @@ function ScheduleFormComponent({
                   }}
                   onMouseDown={(e) => {
                     e.preventDefault();
-                    handleAddMember(u);
+                    handleAddMember(c.username);
                   }}
                   onMouseEnter={(e) => {
                     (e.currentTarget as HTMLElement).style.background = "var(--color-hover)";
@@ -679,7 +691,7 @@ function ScheduleFormComponent({
                     (e.currentTarget as HTMLElement).style.background = "transparent";
                   }}
                 >
-                  @{u}
+                  {c.displayName}<span style={{ color: "var(--color-text-muted)" }}>&lt;{c.username}&gt;</span>
                 </div>
               ))}
             </div>

@@ -23,7 +23,7 @@ public class UserPersistenceAdapter implements UserRepository {
 
     @Override
     public List<User> searchByUsername(String query) {
-        return jpaUserRepository.findByUsernameContainingIgnoreCase(query)
+        return jpaUserRepository.searchByQuery(query)
                 .stream()
                 .map(JpaUser::toDomain)
                 .collect(Collectors.toList());
