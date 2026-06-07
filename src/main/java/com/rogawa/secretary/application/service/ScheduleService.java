@@ -3,6 +3,7 @@ package com.rogawa.secretary.application.service;
 import com.rogawa.secretary.application.port.ScheduleUseCase;
 import com.rogawa.secretary.domain.exception.ScheduleAuthorizationException;
 import com.rogawa.secretary.domain.exception.ScheduleNotFoundException;
+import com.rogawa.secretary.domain.model.CalendarShare;
 import com.rogawa.secretary.domain.model.Schedule;
 import com.rogawa.secretary.domain.model.ScheduleMember;
 import com.rogawa.secretary.domain.repository.CalendarShareRepository;
@@ -250,12 +251,35 @@ public class ScheduleService implements ScheduleUseCase {
     }
 
     private boolean canEditSchedule(Schedule schedule, String username) {
+        // 条件1: 自分がオーナー
         if (schedule.getOwner().equals(username)) {
             return true;
         }
-        return scheduleMemberRepository.findByScheduleId(schedule.getId())
+        // 条件2: 予定のメンバーに自分が含まれている
+        List<ScheduleMember> members = scheduleMemberRepository.findByScheduleId(schedule.getId());
+        if (members.stream().anyMatch(m -> m.getUsername().equals(username))) {
+            return true;
+        }
+        // 全メンバー（オーナー含む）のユーザー名一覧
+        Set<String> allUsernames = members.stream()
+                .map(ScheduleMember::getUsername)
+                .collect(Collectors.toSet());
+        allUsernames.add(schedule.getOwner());
+        // 条件3: 予定に含まれるメンバー全員に自分の予定を共有している
+        Set<String> sharedTo = calendarShareRepository.findByOwnerUsername(username)
                 .stream()
-                .anyMatch(m -> m.getUsername().equals(username));
+                .map(CalendarShare::getSharedWithUsername)
+                .collect(Collectors.toSet());
+        if (allUsernames.stream().allMatch(sharedTo::contains)) {
+            return true;
+        }
+        // 条件4: 予定に含まれるメンバー全員から予定を共有されている
+        Set<String> sharedFrom = calendarShareRepository.findSharedOwnerUsernames(username)
+                .stream().collect(Collectors.toSet());
+        if (allUsernames.stream().allMatch(sharedFrom::contains)) {
+            return true;
+        }
+        return false;
     }
 
     @Override
