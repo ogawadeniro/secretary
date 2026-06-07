@@ -32,6 +32,9 @@ public class ScheduleDto {
     @JsonFormat(pattern = "yyyy/MM/dd-HH:mm:ss")
     private LocalDateTime updateTime;
 
+    /** 他のユーザーと共有するかどうか（デフォルト true） */
+    private Boolean shared = true;
+
     public static ScheduleDto fromDomain(Schedule schedule) {
         ScheduleDto dto = new ScheduleDto();
         dto.setId(schedule.getId());
@@ -42,6 +45,7 @@ public class ScheduleDto {
         dto.setOwner(schedule.getOwner());
         dto.setDescription(schedule.getDescription());
         dto.setUpdateTime(schedule.getUpdateTime());
+        dto.setShared(schedule.getShared());
         return dto;
     }
 
@@ -55,6 +59,7 @@ public class ScheduleDto {
         schedule.setOwner(this.owner);
         schedule.setDescription(this.description);
         schedule.setUpdateTime(this.updateTime);
+        schedule.setShared(this.shared);
         return schedule;
     }
 }

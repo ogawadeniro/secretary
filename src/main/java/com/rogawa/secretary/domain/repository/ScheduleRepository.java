@@ -16,6 +16,9 @@ public interface ScheduleRepository {
 
     List<Schedule> findByOwnerAndDateRange(String owner, LocalDateTime start, LocalDateTime end);
 
+    /** 指定したオーナー一覧のうち shared=true の予定を取得 */
+    List<Schedule> findByOwnersShared(List<String> owners);
+
     Schedule save(Schedule schedule);
 
     void deleteById(Long id);

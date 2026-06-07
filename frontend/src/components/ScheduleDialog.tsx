@@ -73,6 +73,7 @@ export default function ScheduleDialog({
           endDatetime: form.endDatetime ?? "",
           owner: "",
           description: form.description ?? "",
+          shared: form.shared ?? true,
         });
       }
       onSchedulesChanged();
@@ -189,6 +190,7 @@ interface ScheduleFormData {
   startDatetime?: string;
   endDatetime?: string;
   description?: string;
+  shared?: boolean;
 }
 
 /** 予定の新規作成・編集フォーム */
@@ -221,6 +223,7 @@ function ScheduleFormComponent({
     initial?.endDatetime?.slice(11) ?? "10:00"
   );
   const [description, setDescription] = useState(initial?.description ?? "");
+  const [shared, setShared] = useState(initial?.shared ?? true);
   const [saving, setSaving] = useState(false);
 
   const isEditing = initial !== null;
@@ -270,6 +273,7 @@ function ScheduleFormComponent({
           ? `${endDate.replace(/-/g, "/")}-00:00`
           : `${endDate.replace(/-/g, "/")}-${endTime}`,
         description,
+        shared,
       });
     } finally {
       setSaving(false);
@@ -287,14 +291,24 @@ function ScheduleFormComponent({
           required
         />
       </label>
-      <label>
-        終日
-        <input
-          type="checkbox"
-          checked={isAllDay}
-          onChange={(e) => setIsAllDay(e.target.checked)}
-        />
-      </label>
+      <div style={{ display: "flex", gap: "16px", alignItems: "flex-start" }}>
+        <label style={{ display: "flex", flexDirection: "column", gap: "4px", fontSize: "0.8rem", color: "var(--color-text-muted)", flex: 1 }}>
+          終日
+          <input
+            type="checkbox"
+            checked={isAllDay}
+            onChange={(e) => setIsAllDay(e.target.checked)}
+          />
+        </label>
+        <label style={{ display: "flex", flexDirection: "column", gap: "4px", fontSize: "0.8rem", color: "var(--color-text-muted)", flex: 1 }}>
+          他のユーザーと共有する
+          <input
+            type="checkbox"
+            checked={shared}
+            onChange={(e) => setShared(e.target.checked)}
+          />
+        </label>
+      </div>
       <div className="date-fields">
         <label>
           開始日

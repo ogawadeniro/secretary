@@ -89,6 +89,7 @@ function makeSchedule(startDatetime: string, endDatetime: string): Schedule {
     endDatetime,
     owner: "me",
     description: "",
+    shared: true,
   };
 }
 
@@ -204,7 +205,7 @@ function makeSched(
   start: string,
   end: string,
 ): Schedule {
-  return { id, title: `s${id}`, isAllDay: false, startDatetime: start, endDatetime: end, owner: "me", description: "" };
+  return { id, title: `s${id}`, isAllDay: false, startDatetime: start, endDatetime: end, owner: "me", description: "", shared: true };
 }
 
 function weekDates(year: number, month: number, startDay: number): Date[] {
