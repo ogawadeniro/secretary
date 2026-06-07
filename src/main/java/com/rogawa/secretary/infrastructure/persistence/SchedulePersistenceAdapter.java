@@ -51,6 +51,13 @@ public class SchedulePersistenceAdapter implements ScheduleRepository {
     }
 
     @Override
+    public List<Schedule> findByOwnersShared(List<String> owners) {
+        return jpaScheduleRepository.findByOwnersShared(owners).stream()
+                .map(JpaSchedule::toDomain)
+                .collect(Collectors.toList());
+    }
+
+    @Override
     public Schedule save(Schedule schedule) {
         JpaSchedule entity = JpaSchedule.fromDomain(schedule);
         JpaSchedule saved = jpaScheduleRepository.save(entity);

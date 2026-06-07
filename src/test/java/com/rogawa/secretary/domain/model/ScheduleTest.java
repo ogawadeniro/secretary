@@ -17,6 +17,7 @@ public class ScheduleTest {
         original.setOwner("rogawa");
         original.setDescription("test description");
         original.setUpdateTime(LocalDateTime.of(2025, 3, 7, 12, 0));
+        original.setShared(false);
 
         Schedule copy = original.copy();
 
@@ -29,6 +30,7 @@ public class ScheduleTest {
         assertEquals(original.getOwner(), copy.getOwner());
         assertEquals(original.getDescription(), copy.getDescription());
         assertEquals(original.getUpdateTime(), copy.getUpdateTime());
+        assertEquals(original.getShared(), copy.getShared());
     }
 
     @Test

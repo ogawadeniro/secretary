@@ -1,6 +1,6 @@
 import { Schedule } from "../types/schedule";
 import { getSchedulePosition, shouldShowTitle } from "../utils/dateUtils";
-import { textColorFromBg } from "../utils/colorUtils";
+import { textColorFromBg, ownerColor } from "../utils/colorUtils";
 import type { SlotInfo } from "../utils/dateUtils";
 
 interface DayCellProps {
@@ -10,6 +10,7 @@ interface DayCellProps {
   isToday: boolean;
   isCurrentMonth: boolean;
   chipBgColor: string;
+  currentUsername: string;
   holidayName: string | null;
   onDateClick: (date: Date) => void;
 }
@@ -22,6 +23,7 @@ export default function DayCell({
   isToday,
   isCurrentMonth,
   chipBgColor,
+  currentUsername,
   holidayName,
   onDateClick,
 }: DayCellProps) {
@@ -52,13 +54,15 @@ export default function DayCell({
           }
           const pos = getSchedulePosition(s, date);
           const showTitle = shouldShowTitle(s, date);
+          // 自分の予定は chipBgColor、共有予定はオーナー色
+          const bgColor = s.owner === currentUsername ? chipBgColor : ownerColor(s.owner);
           return (
             <div
               key={s.id}
               className={`schedule-chip schedule-${pos}`}
               style={{
-                backgroundColor: chipBgColor,
-                color: textColorFromBg(chipBgColor),
+                backgroundColor: bgColor,
+                color: textColorFromBg(bgColor),
               }}
             >
               {showTitle ? s.title : ""}

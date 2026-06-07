@@ -13,6 +13,8 @@ public class Schedule {
     private String owner;
     private String description;
     private LocalDateTime updateTime;
+    /** 他のユーザーと共有するかどうか（デフォルト true） */
+    private Boolean shared = true;
 
     public Schedule copy() {
         Schedule s = new Schedule();
@@ -24,6 +26,7 @@ public class Schedule {
         s.setOwner(this.owner);
         s.setDescription(this.description);
         s.setUpdateTime(this.updateTime);
+        s.setShared(this.shared);
         return s;
     }
 
@@ -37,5 +40,6 @@ public class Schedule {
         System.out.println("    owner: " + owner);
         System.out.println("    description: " + description);
         System.out.println("    updateTime: " + updateTime);
+        System.out.println("    shared: " + shared);
     }
 }

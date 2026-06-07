@@ -10,7 +10,7 @@ public interface ScheduleUseCase {
 
     Schedule createSchedule(Schedule schedule, String owner);
 
-    Schedule updateSchedule(Long id, Schedule requestBody);
+    Schedule updateSchedule(Long id, Schedule requestBody, String owner);
 
-    void deleteSchedule(Long id);
+    void deleteSchedule(Long id, String owner);
 }

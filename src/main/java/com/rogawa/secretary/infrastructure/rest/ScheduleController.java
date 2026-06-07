@@ -49,14 +49,15 @@ public class ScheduleController {
     @PatchMapping("/api/v1/schedules/{id}")
     public ResponseEntity<ScheduleDto> updateSchedule(
             @RequestBody ScheduleDto request,
-            @PathVariable Long id) {
-        var updated = scheduleUseCase.updateSchedule(id, request.toDomain());
+            @PathVariable Long id,
+            Authentication authentication) {
+        var updated = scheduleUseCase.updateSchedule(id, request.toDomain(), authentication.getName());
         return ResponseEntity.status(HttpStatus.CREATED).body(ScheduleDto.fromDomain(updated));
     }
 
     @DeleteMapping("/api/v1/schedules/{id}")
-    public ResponseEntity<Void> deleteSchedule(@PathVariable Long id) {
-        scheduleUseCase.deleteSchedule(id);
+    public ResponseEntity<Void> deleteSchedule(@PathVariable Long id, Authentication authentication) {
+        scheduleUseCase.deleteSchedule(id, authentication.getName());
         return ResponseEntity.noContent().build();
     }
 }

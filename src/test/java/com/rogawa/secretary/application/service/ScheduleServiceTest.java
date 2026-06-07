@@ -3,10 +3,13 @@ package com.rogawa.secretary.application.service;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
+import com.rogawa.secretary.domain.exception.ScheduleAuthorizationException;
 import com.rogawa.secretary.domain.exception.ScheduleNotFoundException;
 import com.rogawa.secretary.domain.model.Schedule;
+import com.rogawa.secretary.domain.repository.CalendarShareRepository;
 import com.rogawa.secretary.domain.repository.ScheduleRepository;
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
@@ -21,6 +24,9 @@ public class ScheduleServiceTest {
 
     @Mock
     private ScheduleRepository scheduleRepository;
+
+    @Mock
+    private CalendarShareRepository calendarShareRepository;
 
     @InjectMocks
     private ScheduleService scheduleService;
@@ -41,10 +47,29 @@ public class ScheduleServiceTest {
 
     @Test
     public void testGetSchedules() {
+        when(calendarShareRepository.findSharedOwnerUsernames("rogawa")).thenReturn(Collections.emptyList());
         when(scheduleRepository.findByOwner("rogawa")).thenReturn(List.of(testSchedule));
         List<Schedule> result = scheduleService.getSchedules("rogawa");
         assertEquals(1, result.size());
         assertEquals("test", result.get(0).getTitle());
+    }
+
+    @Test
+    public void testGetSchedulesWithShared() {
+        // 共有ユーザー "user2" がいる場合、自分の予定＋共有ユーザーの予定が返る
+        Schedule sharedSchedule = new Schedule();
+        sharedSchedule.setId(2L);
+        sharedSchedule.setTitle("shared event");
+        sharedSchedule.setStartDatetime(LocalDateTime.of(2025, 3, 7, 14, 0));
+        sharedSchedule.setEndDatetime(LocalDateTime.of(2025, 3, 7, 15, 0));
+        sharedSchedule.setOwner("user2");
+
+        when(calendarShareRepository.findSharedOwnerUsernames("rogawa")).thenReturn(List.of("user2"));
+        when(scheduleRepository.findByOwner("rogawa")).thenReturn(List.of(testSchedule));
+        when(scheduleRepository.findByOwnersShared(List.of("user2"))).thenReturn(List.of(sharedSchedule));
+
+        List<Schedule> result = scheduleService.getSchedules("rogawa");
+        assertEquals(2, result.size());
     }
 
     @Test
@@ -84,16 +109,47 @@ public class ScheduleServiceTest {
         when(scheduleRepository.findById(1L)).thenReturn(Optional.of(existing));
         when(scheduleRepository.save(any(Schedule.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        Schedule result = scheduleService.updateSchedule(1L, request);
+        Schedule result = scheduleService.updateSchedule(1L, request, "rogawa");
         assertEquals("updated", result.getTitle());
         assertEquals("rogawa", result.getOwner());
         assertNotNull(result.getUpdateTime());
     }
 
     @Test
+    public void testUpdateScheduleNotOwner() {
+        Schedule existing = new Schedule();
+        existing.setId(1L);
+        existing.setTitle("original");
+        existing.setIsAllDay(false);
+        existing.setOwner("other_user");
+        existing.setDescription("original");
+
+        Schedule request = new Schedule();
+        request.setTitle("hacked");
+
+        when(scheduleRepository.findById(1L)).thenReturn(Optional.of(existing));
+
+        assertThrows(ScheduleAuthorizationException.class,
+                () -> scheduleService.updateSchedule(1L, request, "rogawa"));
+    }
+
+    @Test
     public void testDeleteSchedule() {
         when(scheduleRepository.findById(1L)).thenReturn(Optional.of(testSchedule));
-        scheduleService.deleteSchedule(1L);
+        scheduleService.deleteSchedule(1L, "rogawa");
         verify(scheduleRepository).deleteById(1L);
+    }
+
+    @Test
+    public void testDeleteScheduleNotOwner() {
+        Schedule existing = new Schedule();
+        existing.setId(1L);
+        existing.setTitle("original");
+        existing.setOwner("other_user");
+
+        when(scheduleRepository.findById(1L)).thenReturn(Optional.of(existing));
+
+        assertThrows(ScheduleAuthorizationException.class,
+                () -> scheduleService.deleteSchedule(1L, "rogawa"));
     }
 }

@@ -1,3 +1,27 @@
+/** オーナーごとのチップ色パレット（10色） */
+const OWNER_COLORS = [
+  "#4a90d9", // blue
+  "#e87a90", // pink
+  "#50c878", // green
+  "#c9a0dc", // purple
+  "#f0a050", // orange
+  "#5ac8fa", // light blue
+  "#ff6b6b", // red
+  "#a8e6cf", // mint
+  "#ffd93d", // yellow
+  "#6c5ce7", // indigo
+];
+
+/** ユーザー名から決定論的に色を割り当てる */
+export function ownerColor(owner: string): string {
+  let hash = 0;
+  for (let i = 0; i < owner.length; i++) {
+    hash = ((hash << 5) - hash) + owner.charCodeAt(i);
+    hash |= 0;
+  }
+  return OWNER_COLORS[Math.abs(hash) % OWNER_COLORS.length];
+}
+
 /** 背景色から適切な文字色（白 or 黒）を返す */
 export function textColorFromBg(hex: string): string {
   const c = hex.replace("#", "");

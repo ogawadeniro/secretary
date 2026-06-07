@@ -14,6 +14,7 @@ interface ScheduleDialogProps {
   holidayName: string | null;
   onClose: () => void;
   onSchedulesChanged: () => void;
+  currentUsername: string;
 }
 
 /** 選択した日付の予定一覧を表示し、追加・編集・削除を行うダイアログ */
@@ -23,6 +24,7 @@ export default function ScheduleDialog({
   holidayName,
   onClose,
   onSchedulesChanged,
+  currentUsername,
 }: ScheduleDialogProps) {
   const [schedules, setSchedules] = useState<Schedule[]>(initialSchedules);
   const [showForm, setShowForm] = useState(false);
@@ -73,6 +75,7 @@ export default function ScheduleDialog({
           endDatetime: form.endDatetime ?? "",
           owner: "",
           description: form.description ?? "",
+          shared: form.shared ?? true,
         });
       }
       onSchedulesChanged();
@@ -120,26 +123,30 @@ export default function ScheduleDialog({
                   <span className="schedule-owner">{s.owner}</span>
                 </div>
                 <div className="schedule-card-actions">
-                  <button
-                    className="icon-btn"
-                    title="編集"
-                    onClick={() => {
-                      setEditing(s);
-                      setShowForm(true);
-                    }}
-                  >
-                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/>
-                    </svg>
-                  </button>
-                  <button className="icon-btn delete-btn-icon" title="削除" onClick={() => handleDeleteRequest(s)}>
-                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2">
-                      <polyline points="3 6 5 6 21 6"/>
-                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
-                      <line x1="10" y1="11" x2="10" y2="17"/>
-                      <line x1="14" y1="11" x2="14" y2="17"/>
-                    </svg>
-                  </button>
+                  {s.owner === currentUsername && (
+                    <>
+                      <button
+                        className="icon-btn"
+                        title="編集"
+                        onClick={() => {
+                          setEditing(s);
+                          setShowForm(true);
+                        }}
+                      >
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/>
+                        </svg>
+                      </button>
+                      <button className="icon-btn delete-btn-icon" title="削除" onClick={() => handleDeleteRequest(s)}>
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2">
+                          <polyline points="3 6 5 6 21 6"/>
+                          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                          <line x1="10" y1="11" x2="10" y2="17"/>
+                          <line x1="14" y1="11" x2="14" y2="17"/>
+                        </svg>
+                      </button>
+                    </>
+                  )}
                 </div>
               </div>
             ))}
@@ -189,6 +196,7 @@ interface ScheduleFormData {
   startDatetime?: string;
   endDatetime?: string;
   description?: string;
+  shared?: boolean;
 }
 
 /** 予定の新規作成・編集フォーム */
@@ -221,6 +229,7 @@ function ScheduleFormComponent({
     initial?.endDatetime?.slice(11) ?? "10:00"
   );
   const [description, setDescription] = useState(initial?.description ?? "");
+  const [shared, setShared] = useState(initial?.shared ?? true);
   const [saving, setSaving] = useState(false);
 
   const isEditing = initial !== null;
@@ -270,6 +279,7 @@ function ScheduleFormComponent({
           ? `${endDate.replace(/-/g, "/")}-00:00`
           : `${endDate.replace(/-/g, "/")}-${endTime}`,
         description,
+        shared,
       });
     } finally {
       setSaving(false);
@@ -287,14 +297,24 @@ function ScheduleFormComponent({
           required
         />
       </label>
-      <label>
-        終日
-        <input
-          type="checkbox"
-          checked={isAllDay}
-          onChange={(e) => setIsAllDay(e.target.checked)}
-        />
-      </label>
+      <div style={{ display: "flex", gap: "16px", alignItems: "flex-start" }}>
+        <label style={{ display: "flex", flexDirection: "column", gap: "4px", fontSize: "0.8rem", color: "var(--color-text-muted)", flex: 1 }}>
+          終日
+          <input
+            type="checkbox"
+            checked={isAllDay}
+            onChange={(e) => setIsAllDay(e.target.checked)}
+          />
+        </label>
+        <label style={{ display: "flex", flexDirection: "column", gap: "4px", fontSize: "0.8rem", color: "var(--color-text-muted)", flex: 1 }}>
+          他のユーザーと共有する
+          <input
+            type="checkbox"
+            checked={shared}
+            onChange={(e) => setShared(e.target.checked)}
+          />
+        </label>
+      </div>
       <div className="date-fields">
         <label>
           開始日

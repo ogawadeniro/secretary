@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback, useLayoutEffect, useMemo } from "react";
-import { CircleUser, Settings, LogOut } from "lucide-react";
+import { CircleUser, Settings, LogOut, Share2 } from "lucide-react";
 import type { UserSettings } from "../types/settings";
 import type { Schedule } from "../types/schedule";
 import { fetchSchedules } from "../api/scheduleApi";
@@ -7,6 +7,7 @@ import { fetchSettings } from "../api/settingsApi";
 import WeekRow from "./WeekRow";
 import ScheduleDialog from "./ScheduleDialog";
 import SettingsDialog from "./SettingsDialog";
+import ShareDialog from "./ShareDialog";
 import { addDays, getWeekStart, formatDateKey, toEpochDay } from "../utils/dateUtils";
 import { getHolidaysInRange } from "../utils/holidayUtils";
 import type { HolidayMap } from "../utils/holidayUtils";
@@ -49,6 +50,7 @@ export default function InfiniteCalendar() {
   const [showSettings, setShowSettings] = useState(false);
   const [showAccountMenu, setShowAccountMenu] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [showShare, setShowShare] = useState(false);
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
 
@@ -270,6 +272,16 @@ export default function InfiniteCalendar() {
                 </button>
                 <button
                   className="account-dropdown-item"
+                  onClick={() => {
+                    setShowAccountMenu(false);
+                    setShowShare(true);
+                  }}
+                >
+                  <Share2 size={16} />
+                  <span>カレンダー共有</span>
+                </button>
+                <button
+                  className="account-dropdown-item"
                   onClick={() => setShowLogoutConfirm(true)}
                 >
                   <LogOut size={16} />
@@ -313,6 +325,7 @@ export default function InfiniteCalendar() {
             schedules={schedules}
             currentMonth={currentMonth}
             chipBgColor={settings.chipBgColor}
+            currentUsername={user?.username ?? ""}
             holidays={holidays}
             onDateClick={handleDateClick}
           />
@@ -340,6 +353,10 @@ export default function InfiniteCalendar() {
         </div>
       )}
 
+      {showShare && (
+        <ShareDialog onClose={() => setShowShare(false)} />
+      )}
+
       {selectedDate && (
         <ScheduleDialog
           date={selectedDate}
@@ -347,6 +364,7 @@ export default function InfiniteCalendar() {
           holidayName={holidays.get(formatDateKey(selectedDate)) ?? null}
           onClose={handleDialogClose}
           onSchedulesChanged={reloadSchedules}
+          currentUsername={user?.username ?? ""}
         />
       )}
     </div>

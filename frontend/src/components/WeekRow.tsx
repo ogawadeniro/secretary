@@ -14,6 +14,7 @@ interface WeekRowProps {
   schedules: Schedule[];
   currentMonth: number;
   chipBgColor: string;
+  currentUsername: string;
   holidays: HolidayMap;
   onDateClick: (date: Date) => void;
 }
@@ -24,6 +25,7 @@ export default function WeekRow({
   schedules,
   currentMonth,
   chipBgColor,
+  currentUsername,
   holidays,
   onDateClick,
 }: WeekRowProps) {
@@ -55,6 +57,7 @@ export default function WeekRow({
             isToday={isSameDay(date, today)}
             isCurrentMonth={date.getMonth() === currentMonth}
             chipBgColor={chipBgColor}
+            currentUsername={currentUsername}
             holidayName={holidays.get(key) ?? null}
             onDateClick={onDateClick}
           />

@@ -35,9 +35,9 @@ domain/ → application/ → infrastructure/ ← frontend/ (React)
 
 | レイヤー | 役割 | キーファイル |
 |----------|------|-------------|
-| `domain/` | エンティティ、リポジトリポート | `Schedule`, `ScheduleRepository` |
+| `domain/` | エンティティ、リポジトリポート | `Schedule`, `ScheduleRepository`, `CalendarShare`, `CalendarShareRepository` |
 | `application/` | ユースケース（アプリケーションサービス） | `ScheduleUseCase`, `ScheduleService` |
-| `infrastructure/` | JPA永続化、RESTエンドポイント | `JpaSchedule`, `SchedulePersistenceAdapter`, `ScheduleController`, `ScheduleDto` |
+| `infrastructure/` | JPA永続化、RESTエンドポイント | `JpaSchedule`, `SchedulePersistenceAdapter`, `ScheduleController`, `ScheduleDto`, `CalendarShareController` |
 
 ### フロントエンド（React + Vite + TypeScript）
 
@@ -47,13 +47,21 @@ frontend/src/
 ├── App.tsx                      # ルートコンポーネント
 ├── index.css                    # ダークテーマCSS
 ├── types/schedule.ts            # Schedule型定義
-├── api/scheduleApi.ts           # REST APIクライアント
+├── types/share.ts               # CalendarShare型定義
+├── api/scheduleApi.ts           # 予定REST APIクライアント
+├── api/shareApi.ts              # 共有設定REST APIクライアント
+├── api/userApi.ts               # ユーザー検索APIクライアント
 ├── utils/dateUtils.ts           # 日付ユーティリティ
+├── utils/colorUtils.ts          # 色ユーティリティ（ownerColor, textColorFromBg）
+├── context/AuthContext.tsx       # 認証コンテキスト
 └── components/
     ├── InfiniteCalendar.tsx     # 無限スクロールカレンダー（IntersectionObserver）
     ├── WeekRow.tsx              # 週単位の行
     ├── DayCell.tsx              # 日付セル
-    └── ScheduleDialog.tsx       # 予定CRUDダイアログ
+    ├── ScheduleDialog.tsx       # 予定CRUDダイアログ
+    ├── SettingsDialog.tsx       # 設定ダイアログ
+    ├── ShareDialog.tsx          # カレンダー共有管理ダイアログ
+    └── LoginPage.tsx            # ログインページ
 ```
 
 ### 主要エントリーポイント
@@ -78,6 +86,8 @@ frontend/src/
 ### 予定表示
 - **チップ表示**: 各日付セルに予定タイトルが色付きチップで表示。5件超は残り件数を `+N` で表示。
 - **チップ高さ**: 1.3em。`display: flex; align-items: center` で垂直中央配置。
+- **オーナー色分け**: 自分の予定は設定の `chipBgColor`、共有ユーザーの予定は決定論的10色パレットから割り当てた色で表示。
+  - 色割り当て関数: `ownerColor(username)` in `colorUtils.ts`（文字コードハッシュ → 10色）
 - **複数日またぎ接続表示**:
   - `getSchedulePosition()` で single / start / middle / end を判定。
   - 開始日は右マージン0、中間日は左右マージン0・border-radius 0、終了日は左マージン0。隣接セル間で背景色がシームレスに連続。
@@ -92,11 +102,12 @@ frontend/src/
 
 ### ダイアログ（CRUD）
 - **ボトムシート形式**: 画面下部からスライドアップ（200msアニメーション）。
-- **作成**: 「＋ 予定を追加」ボタンでフォーム表示。タイトル・作成者・終日・開始日時・終了日時・説明。
+- **作成**: 「＋ 予定を追加」ボタンでフォーム表示。タイトル・作成者・終日・開始日時・終了日時・説明・共有設定。
 - **編集**: 鉛筆アイコンボタンで既存値をプリセット。PATCH部分更新対応。
 - **削除**: ゴミ箱アイコン→確認ダイアログ→削除実行の二段階操作。
 - **日時自動補正**: `adjustEndByStart()` / `adjustStartByEnd()` で終了≦開始を防止。`adjustingRef` で相互発火防止。
 - **終日予定**: チェックボックスONで時刻非表示、保存時 `00:00`。
+- **共有設定**: 終日チェックボックスの横に「他のユーザーと共有する」チェックボックスを配置。デフォルトON。
 - **エラー・保存中状態**: エラーバナー表示、保存ボタンは `saving` で無効化。
 
 ### PWA
@@ -106,8 +117,11 @@ frontend/src/
 
 ### REST API
 - 予定のCRUD（GET一覧/個別、POST作成、PATCH更新、DELETE削除）
+- カレンダー共有管理（GET一覧/incoming、POST作成、DELETE削除）
+- ユーザー検索（GET search）
 - 日付形式: `yyyy/MM/dd-HH:mm`（Jackson @JsonFormat）
 - `updateTime` はサーバー側で自動設定
+- `shared`（公開設定）フィールド対応。自分以外のユーザーの予定は `shared=true` のみ取得
 
 ## 無限スクロールカレンダー
 
@@ -189,7 +203,43 @@ curl -X PATCH http://localhost:8080/api/v1/schedules/1 \
   -H "Content-Type:application/json" \
   -d '{"title":"test2"}'
 curl -X DELETE http://localhost:8080/api/v1/schedules/2
+
+### カレンダー共有API
+
+```bash
+# 共有設定一覧（自分が共有している相手）
+curl -X GET http://localhost:8080/api/v1/shares
+# 共有設定一覧（自分が共有されている相手）
+curl -X GET http://localhost:8080/api/v1/shares/incoming
+# 共有設定を作成
+curl -X POST http://localhost:8080/api/v1/shares \
+  -H "Content-Type: application/json" \
+  -d '{"sharedWithUsername":"user2"}'
+# 共有設定を削除
+curl -X DELETE http://localhost:8080/api/v1/shares/1
+# ユーザー検索
+curl -X GET "http://localhost:8080/api/v1/users/search?q=user"
 ```
+```
+
+## 将来のアイデア
+
+### 公開コード方式のカレンダー共有（検討中）
+
+現在の共有方法はユーザー名直接入力方式だが、セキュリティ向上のため
+各ユーザーが発行する公開コード（share_code）を入力して共有する方式も検討中。
+
+- コードはランダムな英数字（例: `X7K9M2`）
+- 設定画面でコード表示 + 再生成可能
+- コードを知っている人だけが共有リクエスト可能
+- 実装には `user_settings` テーブルに `share_code` カラム追加が必要
+
+### 共有ブロック機能（検討中）
+
+カレンダーを共有している相手をブロックできる機能。
+ブロックされたユーザーは以後、自分の予定を相手に共有できなくなる。
+管理画面でブロック一覧の表示・解除も可能。ブロック中は既存の共有設定も無効化される。
+実装には `share_blocks` テーブル（blocker_username, blocked_username, created_at）の追加が必要。
 
 ## DBセットアップ
 
@@ -210,5 +260,22 @@ psql -U rogawa -d secretary;
         owner text not null,
         description text,
         update_time timestamptz not null
+);
+```
+
+### カレンダー共有機能のマイグレーション（v2）
+
+```sql
+-- schedules テーブルに shared カラム追加（デフォルト true）
+alter table schedules add column shared boolean not null default true;
+
+-- カレンダー共有設定テーブル
+create table calendar_shares (
+    id bigserial primary key,
+    owner_username text not null,
+    shared_with_username text not null,
+    permission text not null default 'READ',
+    created_at timestamptz not null default now(),
+    unique(owner_username, shared_with_username)
 );
 ```

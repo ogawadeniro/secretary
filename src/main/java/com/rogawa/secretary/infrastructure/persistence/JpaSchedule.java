@@ -38,6 +38,9 @@ public class JpaSchedule {
 
     private LocalDateTime updateTime;
 
+    /** 他のユーザーと共有するかどうか（デフォルト true） */
+    private Boolean shared = true;
+
     public static JpaSchedule fromDomain(Schedule schedule) {
         JpaSchedule entity = new JpaSchedule();
         entity.setId(schedule.getId());
@@ -48,6 +51,7 @@ public class JpaSchedule {
         entity.setOwner(schedule.getOwner());
         entity.setDescription(schedule.getDescription());
         entity.setUpdateTime(schedule.getUpdateTime());
+        entity.setShared(schedule.getShared());
         return entity;
     }
 
@@ -61,6 +65,7 @@ public class JpaSchedule {
         schedule.setOwner(this.owner);
         schedule.setDescription(this.description);
         schedule.setUpdateTime(this.updateTime);
+        schedule.setShared(this.shared);
         return schedule;
     }
 }

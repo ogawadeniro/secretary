@@ -66,6 +66,7 @@ public class JpaScheduleRepositoryTest {
         s.setOwner("rogawa");
         s.setDescription("");
         s.setUpdateTime(LocalDateTime.now());
+        s.setShared(true);
         return s;
     }
 }
