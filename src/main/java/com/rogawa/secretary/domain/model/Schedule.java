@@ -1,6 +1,7 @@
 package com.rogawa.secretary.domain.model;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import lombok.Data;
 
 @Data
@@ -19,6 +20,9 @@ public class Schedule {
     /** オーナーのチップ背景色（API応答用、永続化しない） */
     private String ownerChipBgColor;
 
+    /** メンバーのユーザー名一覧（API応答用、永続化しない） */
+    private List<String> memberUsernames;
+
     public Schedule copy() {
         Schedule s = new Schedule();
         s.setId(this.id);
@@ -31,6 +35,7 @@ public class Schedule {
         s.setUpdateTime(this.updateTime);
         s.setShared(this.shared);
         s.setOwnerChipBgColor(this.ownerChipBgColor);
+        s.setMemberUsernames(this.memberUsernames);
         return s;
     }
 
@@ -46,5 +51,6 @@ public class Schedule {
         System.out.println("    updateTime: " + updateTime);
         System.out.println("    shared: " + shared);
         System.out.println("    ownerChipBgColor: " + ownerChipBgColor);
+        System.out.println("    memberUsernames: " + memberUsernames);
     }
 }

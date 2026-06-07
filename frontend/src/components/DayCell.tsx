@@ -1,6 +1,6 @@
 import { Schedule } from "../types/schedule";
 import { getSchedulePosition, shouldShowTitle } from "../utils/dateUtils";
-import { textColorFromBg, ownerColor } from "../utils/colorUtils";
+import { textColorFromBg, ownerColor, scheduleColor } from "../utils/colorUtils";
 import type { SlotInfo } from "../utils/dateUtils";
 
 interface DayCellProps {
@@ -54,10 +54,14 @@ export default function DayCell({
           }
           const pos = getSchedulePosition(s, date);
           const showTitle = shouldShowTitle(s, date);
-          // 自分の予定は chipBgColor、共有予定はオーナーの設定色（なければ fallback）
-          const bgColor = s.owner === currentUsername
-            ? chipBgColor
-            : (s.ownerChipBgColor ?? ownerColor(s.owner));
+          // メンバーがいる予定はメンバー一覧から決定論的な色
+          // 自分の予定（メンバーなし）は chipBgColor
+          // 共有予定（メンバーなし）はオーナーの設定色（なければ fallback）
+          const bgColor = s.memberUsernames && s.memberUsernames.length > 0
+            ? scheduleColor(s.memberUsernames)
+            : s.owner === currentUsername
+              ? chipBgColor
+              : (s.ownerChipBgColor ?? ownerColor(s.owner));
           return (
             <div
               key={s.id}

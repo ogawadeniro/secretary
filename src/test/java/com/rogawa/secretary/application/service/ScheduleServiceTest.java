@@ -7,6 +7,7 @@ import com.rogawa.secretary.domain.exception.ScheduleAuthorizationException;
 import com.rogawa.secretary.domain.exception.ScheduleNotFoundException;
 import com.rogawa.secretary.domain.model.Schedule;
 import com.rogawa.secretary.domain.repository.CalendarShareRepository;
+import com.rogawa.secretary.domain.repository.ScheduleMemberRepository;
 import com.rogawa.secretary.domain.repository.ScheduleRepository;
 import com.rogawa.secretary.domain.repository.UserSettingRepository;
 import java.time.LocalDateTime;
@@ -32,6 +33,9 @@ public class ScheduleServiceTest {
     @Mock
     private UserSettingRepository userSettingRepository;
 
+    @Mock
+    private ScheduleMemberRepository scheduleMemberRepository;
+
     @InjectMocks
     private ScheduleService scheduleService;
 
@@ -54,6 +58,8 @@ public class ScheduleServiceTest {
         when(calendarShareRepository.findSharedOwnerUsernames("rogawa")).thenReturn(Collections.emptyList());
         when(scheduleRepository.findByOwner("rogawa")).thenReturn(List.of(testSchedule));
         when(userSettingRepository.findByUsername("rogawa")).thenReturn(Optional.empty());
+        when(scheduleMemberRepository.findScheduleIdsByUsername("rogawa")).thenReturn(Collections.emptyList());
+        when(scheduleMemberRepository.findByScheduleIdIn(any())).thenReturn(Collections.emptyList());
         List<Schedule> result = scheduleService.getSchedules("rogawa");
         assertEquals(1, result.size());
         assertEquals("test", result.get(0).getTitle());
@@ -74,6 +80,8 @@ public class ScheduleServiceTest {
         when(scheduleRepository.findByOwnersShared(List.of("user2"))).thenReturn(List.of(sharedSchedule));
         when(userSettingRepository.findByUsername("rogawa")).thenReturn(Optional.empty());
         when(userSettingRepository.findByUsername("user2")).thenReturn(Optional.empty());
+        when(scheduleMemberRepository.findScheduleIdsByUsername("rogawa")).thenReturn(Collections.emptyList());
+        when(scheduleMemberRepository.findByScheduleIdIn(any())).thenReturn(Collections.emptyList());
 
         List<Schedule> result = scheduleService.getSchedules("rogawa");
         assertEquals(2, result.size());
@@ -135,6 +143,7 @@ public class ScheduleServiceTest {
         request.setTitle("hacked");
 
         when(scheduleRepository.findById(1L)).thenReturn(Optional.of(existing));
+        when(scheduleMemberRepository.findByScheduleId(1L)).thenReturn(Collections.emptyList());
 
         assertThrows(ScheduleAuthorizationException.class,
                 () -> scheduleService.updateSchedule(1L, request, "rogawa"));
@@ -155,6 +164,7 @@ public class ScheduleServiceTest {
         existing.setOwner("other_user");
 
         when(scheduleRepository.findById(1L)).thenReturn(Optional.of(existing));
+        when(scheduleMemberRepository.findByScheduleId(1L)).thenReturn(Collections.emptyList());
 
         assertThrows(ScheduleAuthorizationException.class,
                 () -> scheduleService.deleteSchedule(1L, "rogawa"));

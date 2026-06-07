@@ -5,6 +5,7 @@ import com.rogawa.secretary.domain.model.Schedule;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import java.time.LocalDateTime;
+import java.util.List;
 import lombok.Data;
 
 @Data
@@ -38,6 +39,9 @@ public class ScheduleDto {
     /** オーナーのチップ背景色 */
     private String ownerChipBgColor;
 
+    /** メンバーのユーザー名一覧 */
+    private List<String> memberUsernames;
+
     public static ScheduleDto fromDomain(Schedule schedule) {
         ScheduleDto dto = new ScheduleDto();
         dto.setId(schedule.getId());
@@ -50,6 +54,7 @@ public class ScheduleDto {
         dto.setUpdateTime(schedule.getUpdateTime());
         dto.setShared(schedule.getShared());
         dto.setOwnerChipBgColor(schedule.getOwnerChipBgColor());
+        dto.setMemberUsernames(schedule.getMemberUsernames());
         return dto;
     }
 

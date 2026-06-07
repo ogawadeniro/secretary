@@ -19,6 +19,9 @@ public interface ScheduleRepository {
     /** 指定したオーナー一覧のうち shared=true の予定を取得 */
     List<Schedule> findByOwnersShared(List<String> owners);
 
+    /** ID一覧で予定を取得 */
+    List<Schedule> findByIds(List<Long> ids);
+
     Schedule save(Schedule schedule);
 
     void deleteById(Long id);

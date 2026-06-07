@@ -25,6 +25,17 @@ export function ownerColor(owner: string): string {
   return OWNER_COLORS[Math.abs(hash) % OWNER_COLORS.length];
 }
 
+/** メンバー一覧から決定論的に色を割り当てる（メンバー文字列を結合してハッシュ） */
+export function scheduleColor(memberUsernames: string[]): string {
+  const key = [...memberUsernames].sort().join(",");
+  let hash = 0;
+  for (let i = 0; i < key.length; i++) {
+    hash = ((hash << 5) - hash) + key.charCodeAt(i);
+    hash |= 0;
+  }
+  return OWNER_COLORS[Math.abs(hash) % OWNER_COLORS.length];
+}
+
 /** 背景色から適切な文字色（白 or 黒）を返す */
 export function textColorFromBg(hex: string): string {
   const c = hex.replace("#", "");

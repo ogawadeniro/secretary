@@ -13,4 +13,6 @@ export interface Schedule {
   updateTime?: string;     // 形式: yyyy/MM/dd-HH:mm:ss
   /** オーナーのチップ背景色（API応答用） */
   ownerChipBgColor?: string;
+  /** メンバーのユーザー名一覧 */
+  memberUsernames?: string[];
 }

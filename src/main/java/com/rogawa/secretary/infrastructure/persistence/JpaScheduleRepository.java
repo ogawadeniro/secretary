@@ -21,4 +21,6 @@ public interface JpaScheduleRepository extends JpaRepository<JpaSchedule, Long> 
 
     @Query("SELECT s FROM JpaSchedule s WHERE s.owner IN ?1 AND s.shared = true ORDER BY s.startDatetime")
     List<JpaSchedule> findByOwnersShared(List<String> owners);
+
+    List<JpaSchedule> findByIdIn(List<Long> ids);
 }
