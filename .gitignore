@@ -6,3 +6,5 @@ src/main/resources/application-product.properties
 .classpath
 .project
 test.sh
+BOOT-INF
+

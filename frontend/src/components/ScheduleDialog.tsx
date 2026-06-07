@@ -6,6 +6,7 @@ import {
   deleteSchedule,
 } from "../api/scheduleApi";
 import { getMembers, addMember, removeMember } from "../api/memberApi";
+import { fetchMyShares, fetchIncomingShares } from "../api/shareApi";
 import { adjustEndByStart, adjustStartByEnd } from "../utils/dateUtils";
 import { PartyPopper } from "lucide-react";
 
@@ -60,7 +61,7 @@ export default function ScheduleDialog({
   };
 
   /** 予定を保存（新規 or 更新）。保存した予定を返す */
-  const handleSave = async (form: ScheduleFormData): Promise<Schedule | void> => {
+  const handleSave = async (form: ScheduleFormData, pendingMembers?: string[]): Promise<Schedule | void> => {
     setError(null);
     try {
       if (editing?.id) {
@@ -79,7 +80,17 @@ export default function ScheduleDialog({
           description: form.description ?? "",
           shared: form.shared ?? true,
         });
-        // 新規作成後は編集モードに切り替え（メンバー追加のため）
+        // 新規作成後に保留中のメンバーを追加
+        if (pendingMembers && pendingMembers.length > 0) {
+          for (const username of pendingMembers) {
+            try {
+              await addMember(saved.id!, username);
+            } catch {
+              // 個別の追加失敗は無視
+            }
+          }
+        }
+        // 編集モードに切り替え
         setEditing(saved);
         onSchedulesChanged();
         return saved;
@@ -125,7 +136,6 @@ export default function ScheduleDialog({
                       : `${s.startDatetime.slice(11)} ~ ${s.endDatetime.slice(11)}`}
                   </span>
                   <span className="schedule-owner">{s.owner}</span>
-                  {/* メンバー表示 */}
                   {s.memberUsernames && s.memberUsernames.length > 0 && (
                     <span className="schedule-members">
                       {s.memberUsernames.map((u) => `@${u}`).join(", ")}
@@ -175,6 +185,7 @@ export default function ScheduleDialog({
             <ScheduleFormComponent
               initial={editing}
               date={date}
+              currentUsername={currentUsername}
               onSave={handleSave}
               onCancel={() => {
                 setShowForm(false);
@@ -213,12 +224,14 @@ interface ScheduleFormData {
 function ScheduleFormComponent({
   initial,
   date,
+  currentUsername,
   onSave,
   onCancel,
 }: {
   initial: Schedule | null;
   date: Date;
-  onSave: (data: ScheduleFormData) => Promise<Schedule | void>;
+  currentUsername: string;
+  onSave: (data: ScheduleFormData, pendingMembers?: string[]) => Promise<Schedule | void>;
   onCancel: () => void;
 }) {
   const pad = (n: number) => String(n).padStart(2, "0");
@@ -244,14 +257,36 @@ function ScheduleFormComponent({
 
   // メンバー管理 state
   const [members, setMembers] = useState<ScheduleMemberType[]>([]);
+  const [pendingMembers, setPendingMembers] = useState<string[]>([]);
   const [memberInput, setMemberInput] = useState("");
   const [memberLoading, setMemberLoading] = useState(false);
   const [memberError, setMemberError] = useState<string | null>(null);
-  const isEditing = initial !== null;
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [shareCandidates, setShareCandidates] = useState<string[]>([]);
   const scheduleId = initial?.id;
+  const isNew = !scheduleId;
 
-  // adjustingRef: プログラムによる補正中はフラグを立てて相互発火を防止
   const adjustingRef = useRef(false);
+  const suggestionsRef = useRef<HTMLDivElement>(null);
+
+  // 相互共有ユーザー一覧を取得
+  useEffect(() => {
+    (async () => {
+      try {
+        const [myShares, incomingShares] = await Promise.all([
+          fetchMyShares(),
+          fetchIncomingShares(),
+        ]);
+        const usernames = new Set<string>();
+        myShares.forEach((s) => usernames.add(s.sharedWithUsername));
+        incomingShares.forEach((s) => usernames.add(s.ownerUsername));
+        usernames.delete(currentUsername);
+        setShareCandidates(Array.from(usernames).sort());
+      } catch {
+        // 候補一覧がなくても機能に影響なし
+      }
+    })();
+  }, [currentUsername]);
 
   // 既存予定の編集時はメンバー一覧をロード
   useEffect(() => {
@@ -262,6 +297,18 @@ function ScheduleFormComponent({
       .catch(() => setMemberError("メンバーの読み込みに失敗しました"))
       .finally(() => setMemberLoading(false));
   }, [scheduleId]);
+
+  // 候補リストの外側クリックで閉じる
+  useEffect(() => {
+    if (!showSuggestions) return;
+    const handleClick = (e: MouseEvent) => {
+      if (suggestionsRef.current && !suggestionsRef.current.contains(e.target as Node)) {
+        setShowSuggestions(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [showSuggestions]);
 
   // 開始を変更 → 終了を補正
   useEffect(() => {
@@ -290,50 +337,93 @@ function ScheduleFormComponent({
     adjustingRef.current = false;
   });
 
+  // メンバー追加（新規: pending, 既存: API）
+  const handleAddMember = async (username: string) => {
+    const trimmed = username.trim();
+    if (!trimmed) return;
+    setMemberError(null);
+    setShowSuggestions(false);
+
+    // 重複チェック
+    const alreadyMember = scheduleId
+      ? members.some((m) => m.username === trimmed)
+      : pendingMembers.includes(trimmed);
+    if (alreadyMember) {
+      setMemberError("すでにメンバーです");
+      return;
+    }
+    if (trimmed === currentUsername) {
+      setMemberError("自分自身をメンバーに追加できません");
+      return;
+    }
+
+    if (scheduleId) {
+      try {
+        const m = await addMember(scheduleId, trimmed);
+        setMembers((prev) => [...prev, m]);
+      } catch {
+        setMemberError("メンバーの追加に失敗しました");
+        return;
+      }
+    } else {
+      setPendingMembers((prev) => [...prev, trimmed]);
+    }
+    setMemberInput("");
+  };
+
+  const handleRemoveMember = async (username: string) => {
+    setMemberError(null);
+    if (scheduleId) {
+      try {
+        await removeMember(scheduleId, username);
+        setMembers((prev) => prev.filter((m) => m.username !== username));
+      } catch {
+        setMemberError("メンバーの削除に失敗しました");
+      }
+    } else {
+      setPendingMembers((prev) => prev.filter((u) => u !== username));
+    }
+  };
+
+  // 補完候補（フィルタ済み）
+  const filteredSuggestions = shareCandidates.filter(
+    (u) =>
+      memberInput.trim() &&
+      u.toLowerCase().includes(memberInput.trim().toLowerCase()) &&
+      !(scheduleId
+        ? members.some((m) => m.username === u)
+        : pendingMembers.includes(u)) &&
+      u !== currentUsername
+  );
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
     try {
-      await onSave({
-        title,
-        isAllDay,
-        startDatetime: isAllDay
-          ? `${startDate.replace(/-/g, "/")}-00:00`
-          : `${startDate.replace(/-/g, "/")}-${startTime}`,
-        endDatetime: isAllDay
-          ? `${endDate.replace(/-/g, "/")}-00:00`
-          : `${endDate.replace(/-/g, "/")}-${endTime}`,
-        description,
-        shared,
-      });
+      await onSave(
+        {
+          title,
+          isAllDay,
+          startDatetime: isAllDay
+            ? `${startDate.replace(/-/g, "/")}-00:00`
+            : `${startDate.replace(/-/g, "/")}-${startTime}`,
+          endDatetime: isAllDay
+            ? `${endDate.replace(/-/g, "/")}-00:00`
+            : `${endDate.replace(/-/g, "/")}-${endTime}`,
+          description,
+          shared,
+        },
+        isNew ? pendingMembers : undefined
+      );
     } finally {
       setSaving(false);
     }
   };
 
-  const handleAddMember = async () => {
-    const username = memberInput.trim();
-    if (!username || !scheduleId) return;
-    setMemberError(null);
-    try {
-      const m = await addMember(scheduleId, username);
-      setMembers((prev) => [...prev, m]);
-      setMemberInput("");
-    } catch {
-      setMemberError("メンバーの追加に失敗しました");
-    }
-  };
-
-  const handleRemoveMember = async (username: string) => {
-    if (!scheduleId) return;
-    setMemberError(null);
-    try {
-      await removeMember(scheduleId, username);
-      setMembers((prev) => prev.filter((m) => m.username !== username));
-    } catch {
-      setMemberError("メンバーの削除に失敗しました");
-    }
-  };
+  // 表示用のメンバー一覧（既存 + pending）
+  const displayMembers = scheduleId
+    ? members.map((m) => ({ key: m.id.toString(), username: m.username, pending: false }))
+    : pendingMembers.map((u) => ({ key: u, username: u, pending: true }));
 
   return (
     <form className="schedule-form" onSubmit={handleSubmit}>
@@ -410,61 +500,74 @@ function ScheduleFormComponent({
         />
       </label>
 
-      {/* メンバー管理（既存予定のみ） */}
-      {scheduleId && (
-        <div className="settings-section">
-          <div className="settings-section-title">メンバー</div>
-          {memberLoading && (
-            <p style={{ fontSize: "0.8rem", color: "var(--color-text-muted)" }}>読み込み中...</p>
-          )}
-          {memberError && (
-            <p style={{ fontSize: "0.8rem", color: "var(--color-holiday)" }}>{memberError}</p>
-          )}
-          {members.length > 0 && (
-            <div style={{ display: "flex", flexDirection: "column", gap: "4px", marginBottom: "8px" }}>
-              {members.map((m) => (
-                <div
-                  key={m.id}
+      {/* メンバー管理 */}
+      <div className="settings-section">
+        <div className="settings-section-title">メンバー</div>
+        {memberLoading && (
+          <p style={{ fontSize: "0.8rem", color: "var(--color-text-muted)" }}>読み込み中...</p>
+        )}
+        {memberError && (
+          <p style={{ fontSize: "0.8rem", color: "var(--color-holiday)" }}>{memberError}</p>
+        )}
+        {displayMembers.length > 0 && (
+          <div style={{ display: "flex", flexDirection: "column", gap: "4px", marginBottom: "8px" }}>
+            {displayMembers.map((m) => (
+              <div
+                key={m.key}
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  padding: "6px 8px",
+                  background: "var(--color-surface2)",
+                  borderRadius: "6px",
+                  fontSize: "0.85rem",
+                }}
+              >
+                <span>@{m.username}{m.pending ? " (未保存)" : ""}</span>
+                <button
+                  type="button"
                   style={{
+                    background: "none",
+                    border: "none",
+                    cursor: "pointer",
+                    color: "var(--color-sun)",
+                    padding: "2px",
                     display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    padding: "6px 8px",
-                    background: "var(--color-surface2)",
-                    borderRadius: "6px",
-                    fontSize: "0.85rem",
                   }}
+                  onClick={() => handleRemoveMember(m.username)}
+                  title="メンバーを削除"
                 >
-                  <span>@{m.username}</span>
-                  <button
-                    type="button"
-                    style={{
-                      background: "none",
-                      border: "none",
-                      cursor: "pointer",
-                      color: "var(--color-sun)",
-                      padding: "2px",
-                      display: "flex",
-                    }}
-                    onClick={() => handleRemoveMember(m.username)}
-                    title="メンバーを削除"
-                  >
-                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2">
-                      <line x1="18" y1="6" x2="6" y2="18"/>
-                      <line x1="6" y1="6" x2="18" y2="18"/>
-                    </svg>
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2">
+                    <line x1="18" y1="6" x2="6" y2="18"/>
+                    <line x1="6" y1="6" x2="18" y2="18"/>
+                  </svg>
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+        <div style={{ position: "relative" }}>
           <div style={{ display: "flex", gap: "8px" }}>
             <input
               type="text"
               placeholder="追加するユーザー名..."
               value={memberInput}
-              onChange={(e) => setMemberInput(e.target.value)}
-              onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); handleAddMember(); } }}
+              onChange={(e) => {
+                setMemberInput(e.target.value);
+                setShowSuggestions(true);
+              }}
+              onFocus={() => setShowSuggestions(true)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  if (filteredSuggestions.length > 0) {
+                    handleAddMember(filteredSuggestions[0]);
+                  } else {
+                    handleAddMember(memberInput);
+                  }
+                }
+              }}
               style={{
                 flex: 1,
                 background: "var(--color-surface2)",
@@ -481,13 +584,62 @@ function ScheduleFormComponent({
               className="save-btn"
               style={{ padding: "6px 12px", fontSize: "0.8rem" }}
               disabled={!memberInput.trim()}
-              onClick={handleAddMember}
+              onClick={() => {
+                if (filteredSuggestions.length > 0) {
+                  handleAddMember(filteredSuggestions[0]);
+                } else {
+                  handleAddMember(memberInput);
+                }
+              }}
             >
               追加
             </button>
           </div>
+          {/* 補完候補ドロップダウン */}
+          {showSuggestions && filteredSuggestions.length > 0 && (
+            <div
+              ref={suggestionsRef}
+              style={{
+                position: "absolute",
+                top: "100%",
+                left: 0,
+                right: "72px",
+                zIndex: 100,
+                background: "var(--color-surface2)",
+                border: "1px solid var(--color-border)",
+                borderRadius: "6px",
+                marginTop: "4px",
+                maxHeight: "160px",
+                overflowY: "auto",
+              }}
+            >
+              {filteredSuggestions.map((u) => (
+                <div
+                  key={u}
+                  style={{
+                    padding: "8px 10px",
+                    cursor: "pointer",
+                    fontSize: "0.85rem",
+                    borderBottom: "1px solid var(--color-border)",
+                  }}
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    handleAddMember(u);
+                  }}
+                  onMouseEnter={(e) => {
+                    (e.currentTarget as HTMLElement).style.background = "var(--color-hover)";
+                  }}
+                  onMouseLeave={(e) => {
+                    (e.currentTarget as HTMLElement).style.background = "transparent";
+                  }}
+                >
+                  @{u}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
-      )}
+      </div>
 
       <div className="form-actions">
         <button type="submit" disabled={saving}>

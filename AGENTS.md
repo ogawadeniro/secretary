@@ -278,4 +278,17 @@ create table calendar_shares (
     created_at timestamptz not null default now(),
     unique(owner_username, shared_with_username)
 );
+
+### 予定メンバー機能のマイグレーション（v3）
+
+```sql
+-- 予定ごとのメンバーテーブル
+create table schedule_members (
+    id bigserial primary key,
+    schedule_id bigint not null references schedules(id) on delete cascade,
+    username text not null,
+    created_at timestamptz not null default now(),
+    unique(schedule_id, username)
+);
+```
 ```
