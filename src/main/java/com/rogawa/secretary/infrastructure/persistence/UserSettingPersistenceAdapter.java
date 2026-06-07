@@ -2,7 +2,9 @@ package com.rogawa.secretary.infrastructure.persistence;
 
 import com.rogawa.secretary.domain.model.UserSetting;
 import com.rogawa.secretary.domain.repository.UserSettingRepository;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import org.springframework.stereotype.Repository;
 
 @Repository
@@ -17,6 +19,14 @@ public class UserSettingPersistenceAdapter implements UserSettingRepository {
     @Override
     public Optional<UserSetting> findByUsername(String username) {
         return jpaUserSettingRepository.findByUsername(username).map(JpaUserSetting::toDomain);
+    }
+
+    @Override
+    public List<UserSetting> findByUsernameIn(List<String> usernames) {
+        return jpaUserSettingRepository.findByUsernameIn(usernames)
+                .stream()
+                .map(JpaUserSetting::toDomain)
+                .collect(Collectors.toList());
     }
 
     @Override

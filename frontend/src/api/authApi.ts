@@ -2,6 +2,7 @@ export interface AuthUser {
   id: number;
   username: string;
   displayName: string;
+  chipBgColor?: string;
 }
 
 const BASE = "/api/v1/auth";
