@@ -6,6 +6,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import lombok.Data;
 
 @Data
@@ -42,6 +43,9 @@ public class ScheduleDto {
     /** メンバーのユーザー名一覧 */
     private List<String> memberUsernames;
 
+    /** メンバーごとのチップ背景色（username → hexColor） */
+    private Map<String, String> memberChipBgColors;
+
     public static ScheduleDto fromDomain(Schedule schedule) {
         ScheduleDto dto = new ScheduleDto();
         dto.setId(schedule.getId());
@@ -55,6 +59,7 @@ public class ScheduleDto {
         dto.setShared(schedule.getShared());
         dto.setOwnerChipBgColor(schedule.getOwnerChipBgColor());
         dto.setMemberUsernames(schedule.getMemberUsernames());
+        dto.setMemberChipBgColors(schedule.getMemberChipBgColors());
         return dto;
     }
 

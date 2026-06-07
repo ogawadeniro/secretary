@@ -15,6 +15,8 @@ export interface Schedule {
   ownerChipBgColor?: string;
   /** メンバーのユーザー名一覧 */
   memberUsernames?: string[];
+  /** メンバーごとのチップ背景色（username → hexColor） */
+  memberChipBgColors?: Record<string, string>;
 }
 
 /** メンバーデータ（GET/POST /api/v1/schedules/{id}/members のレスポンス） */

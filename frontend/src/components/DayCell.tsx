@@ -57,8 +57,11 @@ export default function DayCell({
           // メンバーがいる予定はメンバー一覧から決定論的な色
           // 自分の予定（メンバーなし）は chipBgColor
           // 共有予定（メンバーなし）はオーナーの設定色（なければ fallback）
-          const bgColor = s.memberUsernames && s.memberUsernames.length > 0
-            ? scheduleColor(s.memberUsernames)
+          const memberColors = (s.memberUsernames ?? []).map(
+            (u) => s.memberChipBgColors?.[u] ?? ownerColor(u)
+          );
+          const bgColor = memberColors.length > 0
+            ? scheduleColor(memberColors)
             : s.owner === currentUsername
               ? chipBgColor
               : (s.ownerChipBgColor ?? ownerColor(s.owner));

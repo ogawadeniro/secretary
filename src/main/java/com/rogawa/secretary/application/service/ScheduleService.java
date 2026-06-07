@@ -61,12 +61,23 @@ public class ScheduleService implements ScheduleUseCase {
         // オーナーのチップ背景色とメンバー情報を設定
         Map<String, String> ownerChipColors = buildOwnerChipColorMap(all);
         Map<Long, List<String>> memberUsernamesMap = buildMemberUsernamesMap(all);
+        Map<String, String> memberChipColorMap = buildMemberChipColorMap(all, memberUsernamesMap);
         for (Schedule s : all) {
             String color = ownerChipColors.get(s.getOwner());
             if (color != null) {
                 s.setOwnerChipBgColor(color);
             }
-            s.setMemberUsernames(memberUsernamesMap.getOrDefault(s.getId(), List.of()));
+            List<String> usernames = memberUsernamesMap.getOrDefault(s.getId(), List.of());
+            s.setMemberUsernames(usernames);
+            // メンバーごとのチップ背景色を設定
+            Map<String, String> colors = new HashMap<>();
+            for (String username : usernames) {
+                String c = memberChipColorMap.get(username);
+                if (c != null) {
+                    colors.put(username, c);
+                }
+            }
+            s.setMemberChipBgColors(colors);
         }
 
         return all;
@@ -81,6 +92,24 @@ public class ScheduleService implements ScheduleUseCase {
                     List<String> list = map.computeIfAbsent(m.getScheduleId(), k -> new ArrayList<>());
                     list.add(m.getUsername());
                 });
+        return map;
+    }
+
+    /** 全メンバーのチップ背景色をまとめて取得 */
+    private Map<String, String> buildMemberChipColorMap(
+            List<Schedule> schedules, Map<Long, List<String>> memberUsernamesMap) {
+        Set<String> allMembers = memberUsernamesMap.values().stream()
+                .flatMap(List::stream)
+                .collect(Collectors.toSet());
+        Map<String, String> map = new HashMap<>();
+        for (String username : allMembers) {
+            userSettingRepository.findByUsername(username)
+                    .ifPresent(us -> {
+                        if (us.getChipBgColor() != null) {
+                            map.put(username, us.getChipBgColor());
+                        }
+                    });
+        }
         return map;
     }
 

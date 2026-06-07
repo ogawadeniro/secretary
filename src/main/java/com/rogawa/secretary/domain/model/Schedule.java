@@ -2,6 +2,7 @@ package com.rogawa.secretary.domain.model;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import lombok.Data;
 
 @Data
@@ -23,6 +24,9 @@ public class Schedule {
     /** メンバーのユーザー名一覧（API応答用、永続化しない） */
     private List<String> memberUsernames;
 
+    /** メンバーごとのチップ背景色（API応答用、永続化しない） */
+    private Map<String, String> memberChipBgColors;
+
     public Schedule copy() {
         Schedule s = new Schedule();
         s.setId(this.id);
@@ -36,6 +40,7 @@ public class Schedule {
         s.setShared(this.shared);
         s.setOwnerChipBgColor(this.ownerChipBgColor);
         s.setMemberUsernames(this.memberUsernames);
+        s.setMemberChipBgColors(this.memberChipBgColors);
         return s;
     }
 
@@ -52,5 +57,6 @@ public class Schedule {
         System.out.println("    shared: " + shared);
         System.out.println("    ownerChipBgColor: " + ownerChipBgColor);
         System.out.println("    memberUsernames: " + memberUsernames);
+        System.out.println("    memberChipBgColors: " + memberChipBgColors);
     }
 }
