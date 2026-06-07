@@ -621,7 +621,7 @@ function ScheduleFormComponent({
         </div>
 
         {displayMembers.length > 0 && (
-          <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", marginTop: "8px" }}>
             {displayMembers.map((m) => (
               <span
                 key={m.key}
