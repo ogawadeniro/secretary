@@ -267,7 +267,7 @@ function ScheduleFormComponent({
   const [memberLoading, setMemberLoading] = useState(false);
   const [memberError, setMemberError] = useState<string | null>(null);
   const [showSuggestions, setShowSuggestions] = useState(false);
-  const [shareCandidates, setShareCandidates] = useState<{ username: string; displayName: string }[]>([]);
+  const [shareCandidates, setShareCandidates] = useState<{ username: string; displayName: string; chipBgColor?: string }[]>([]);
   const scheduleId = initial?.id;
   const isNew = !scheduleId;
 
@@ -293,6 +293,7 @@ function ScheduleFormComponent({
         const candidates = Array.from(usernames).sort().map((username) => ({
           username,
           displayName: displayNameMap.get(username) ?? username,
+          chipBgColor: allUsers.find((u) => u.username === username)?.chipBgColor,
         }));
         setShareCandidates(candidates);
       } catch {
@@ -443,6 +444,11 @@ function ScheduleFormComponent({
     shareCandidates.forEach((c) => map.set(c.username, c.displayName));
     return map;
   }, [shareCandidates]);
+  const memberChipBgColorMap = useMemo(() => {
+    const map = new Map<string, string | undefined>();
+    shareCandidates.forEach((c) => map.set(c.username, c.chipBgColor));
+    return map;
+  }, [shareCandidates]);
   const displayMembers = [
     {
       key: "owner",
@@ -461,7 +467,7 @@ function ScheduleFormComponent({
             displayName: initial?.memberDisplayNames?.[m.username] ?? memberDisplayNameMap.get(m.username) ?? m.username,
             isOwner: false,
             pending: false,
-            chipBgColor: initial?.memberChipBgColors?.[m.username],
+            chipBgColor: initial?.memberChipBgColors?.[m.username] ?? memberChipBgColorMap.get(m.username),
           }))
       : pendingMembers
           .filter((u) => u !== ownerUsername)
@@ -471,7 +477,7 @@ function ScheduleFormComponent({
             displayName: memberDisplayNameMap.get(u) ?? u,
             isOwner: false,
             pending: true,
-            chipBgColor: undefined,
+            chipBgColor: memberChipBgColorMap.get(u),
           }))),
   ];
 
@@ -641,11 +647,6 @@ function ScheduleFormComponent({
                 }}
               >
                 {m.displayName}
-                {m.pending && (
-                  <span style={{ fontSize: "0.65rem", color: "var(--color-text-muted)" }}>
-                    未保存
-                  </span>
-                )}
                 {!m.isOwner && (
                   <button
                     type="button"
