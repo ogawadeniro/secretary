@@ -567,8 +567,8 @@ body {
 .schedule-form {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  padding: 8px 0;
+  gap: 8px;
+  padding: 4px 0;
 }
 
 .schedule-form label {
@@ -586,7 +586,7 @@ body {
   background: var(--color-surface2);
   border: 1px solid var(--color-border);
   color: var(--color-text);
-  padding: 8px 10px;
+  padding: 6px 8px;
   border-radius: 6px;
   font-size: 16px;
   font-family: inherit;
@@ -618,18 +618,18 @@ body {
 
 .schedule-form textarea {
   resize: vertical;
-  min-height: 60px;
+  min-height: 50px;
 }
 
 .form-actions {
   display: flex;
   gap: 8px;
-  margin-top: 4px;
+  margin-top: 0;
 }
 
 .form-actions button {
   flex: 1;
-  padding: 10px;
+  padding: 8px;
   border-radius: 8px;
   font-size: 0.85rem;
   cursor: pointer;
