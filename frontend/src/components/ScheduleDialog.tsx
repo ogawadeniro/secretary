@@ -523,50 +523,57 @@ function ScheduleFormComponent({
           <p style={{ fontSize: "0.8rem", color: "var(--color-holiday)" }}>{memberError}</p>
         )}
         {displayMembers.length > 0 && (
-          <div style={{ display: "flex", flexDirection: "column", gap: "4px", marginBottom: "8px" }}>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", marginBottom: "8px" }}>
             {displayMembers.map((m) => (
-              <div
+              <span
                 key={m.key}
                 style={{
-                  display: "flex",
-                  justifyContent: "space-between",
+                  display: "inline-flex",
                   alignItems: "center",
-                  padding: "6px 8px",
+                  gap: "4px",
+                  padding: "2px 4px 2px 10px",
                   background: "var(--color-surface2)",
-                  borderRadius: "6px",
-                  fontSize: "0.85rem",
+                  borderRadius: "999px",
+                  fontSize: "0.8rem",
                 }}
               >
-                <span>
-                  @{m.username}
-                  {m.isOwner && (
-                    <span style={{ fontSize: "0.7rem", color: "var(--color-text-muted)", marginLeft: "4px" }}>
-                      (作成者)
-                    </span>
-                  )}
-                  {m.pending ? " (未保存)" : ""}
-                </span>
+                @{m.username}
+                {m.isOwner && (
+                  <span style={{ fontSize: "0.65rem", color: "var(--color-text-muted)" }}>
+                    作成者
+                  </span>
+                )}
+                {m.pending && (
+                  <span style={{ fontSize: "0.65rem", color: "var(--color-text-muted)" }}>
+                    未保存
+                  </span>
+                )}
                 {!m.isOwner && (
                   <button
                     type="button"
-                    style={{
-                      background: "none",
-                      border: "none",
-                      cursor: "pointer",
-                      color: "var(--color-sun)",
-                      padding: "2px",
-                      display: "flex",
-                    }}
                     onClick={() => handleRemoveMember(m.username)}
                     title="メンバーを削除"
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      width: "18px",
+                      height: "18px",
+                      padding: 0,
+                      border: "none",
+                      borderRadius: "50%",
+                      background: "var(--color-border)",
+                      color: "var(--color-text-muted)",
+                      cursor: "pointer",
+                      fontSize: "11px",
+                      lineHeight: 1,
+                      flexShrink: 0,
+                    }}
                   >
-                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2">
-                      <line x1="18" y1="6" x2="6" y2="18"/>
-                      <line x1="6" y1="6" x2="18" y2="18"/>
-                    </svg>
+                    ✕
                   </button>
                 )}
-              </div>
+              </span>
             ))}
           </div>
         )}
