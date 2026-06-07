@@ -1,6 +1,7 @@
 package com.rogawa.secretary.infrastructure.rest;
 
 import com.rogawa.secretary.domain.model.CalendarShare;
+import com.rogawa.secretary.domain.model.User;
 import com.rogawa.secretary.domain.repository.CalendarShareRepository;
 import com.rogawa.secretary.domain.repository.UserRepository;
 import com.rogawa.secretary.infrastructure.rest.dto.CreateShareRequest;
@@ -8,6 +9,8 @@ import com.rogawa.secretary.infrastructure.rest.dto.ShareResponse;
 import jakarta.validation.Valid;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -35,23 +38,27 @@ public class CalendarShareController {
     /** 自分が誰と共有しているか一覧 */
     @GetMapping("/api/v1/shares")
     public ResponseEntity<List<ShareResponse>> getMyShares(Authentication authentication) {
-        List<ShareResponse> shares = calendarShareRepository
-                .findByOwnerUsername(authentication.getName())
-                .stream()
-                .map(ShareResponse::fromDomain)
+        List<CalendarShare> shares = calendarShareRepository
+                .findByOwnerUsername(authentication.getName());
+        Map<String, String> displayNames = loadDisplayNames(
+                shares.stream().map(CalendarShare::getSharedWithUsername).collect(Collectors.toSet()));
+        List<ShareResponse> result = shares.stream()
+                .map(s -> ShareResponse.fromDomain(s, null, displayNames.get(s.getSharedWithUsername())))
                 .collect(Collectors.toList());
-        return ResponseEntity.ok(shares);
+        return ResponseEntity.ok(result);
     }
 
     /** 誰が自分と共有してくれているか一覧 */
     @GetMapping("/api/v1/shares/incoming")
     public ResponseEntity<List<ShareResponse>> getIncomingShares(Authentication authentication) {
-        List<ShareResponse> shares = calendarShareRepository
-                .findBySharedWithUsername(authentication.getName())
-                .stream()
-                .map(ShareResponse::fromDomain)
+        List<CalendarShare> shares = calendarShareRepository
+                .findBySharedWithUsername(authentication.getName());
+        Map<String, String> displayNames = loadDisplayNames(
+                shares.stream().map(CalendarShare::getOwnerUsername).collect(Collectors.toSet()));
+        List<ShareResponse> result = shares.stream()
+                .map(s -> ShareResponse.fromDomain(s, displayNames.get(s.getOwnerUsername()), null))
                 .collect(Collectors.toList());
-        return ResponseEntity.ok(shares);
+        return ResponseEntity.ok(result);
     }
 
     /** 共有設定を作成 */
@@ -86,7 +93,9 @@ public class CalendarShareController {
         share.setCreatedAt(LocalDateTime.now());
 
         CalendarShare saved = calendarShareRepository.save(share);
-        return ResponseEntity.status(HttpStatus.CREATED).body(ShareResponse.fromDomain(saved));
+        String displayName = userRepository.findByUsername(request.getSharedWithUsername())
+                .map(User::getDisplayName).orElse(null);
+        return ResponseEntity.status(HttpStatus.CREATED).body(ShareResponse.fromDomain(saved, null, displayName));
     }
 
     /** 共有設定を削除 */
@@ -104,5 +113,12 @@ public class CalendarShareController {
         }
         calendarShareRepository.deleteById(id);
         return ResponseEntity.noContent().build();
+    }
+
+    /** ユーザー名一覧から表示名マップを作成 */
+    private Map<String, String> loadDisplayNames(Set<String> usernames) {
+        if (usernames.isEmpty()) return Map.of();
+        return userRepository.findByUsernames(List.copyOf(usernames)).stream()
+                .collect(Collectors.toMap(User::getUsername, User::getDisplayName, (a, b) -> a));
     }
 }

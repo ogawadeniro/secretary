@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { X, Trash2 } from "lucide-react";
 import type { CalendarShare } from "../types/share";
 import { fetchMyShares, fetchIncomingShares, createShare, deleteShare } from "../api/shareApi";
@@ -6,6 +6,14 @@ import { fetchMyShares, fetchIncomingShares, createShare, deleteShare } from "..
 interface ShareDialogProps {
   onClose: () => void;
   onError?: (msg: string) => void;
+}
+
+/** 表示名を「表示名<ユーザ名>」形式に整形 */
+function formatDisplay(name: string | undefined | null, username: string): string {
+  if (name && name !== username) {
+    return `${name}<${username}>`;
+  }
+  return username;
 }
 
 export default function ShareDialog({ onClose, onError }: ShareDialogProps) {
@@ -37,6 +45,35 @@ export default function ShareDialog({ onClose, onError }: ShareDialogProps) {
   useEffect(() => {
     loadShares();
   }, []);
+
+  /** 相互共有（自分→相手 かつ 相手→自分 の両方が存在） */
+  const mutualUsernames = useMemo(() => {
+    const myTargets = new Set(myShares.map((s) => s.sharedWithUsername));
+    const incomingOwners = new Set(incomingShares.map((s) => s.ownerUsername));
+    const mutual = new Set<string>();
+    for (const u of myTargets) {
+      if (incomingOwners.has(u)) mutual.add(u);
+    }
+    return mutual;
+  }, [myShares, incomingShares]);
+
+  /** 相互共有でない自分→相手のみの一覧 */
+  const outgoingOnly = useMemo(
+    () => myShares.filter((s) => !mutualUsernames.has(s.sharedWithUsername)),
+    [myShares, mutualUsernames],
+  );
+
+  /** 相互共有でない相手→自分のみの一覧 */
+  const incomingOnly = useMemo(
+    () => incomingShares.filter((s) => !mutualUsernames.has(s.ownerUsername)),
+    [incomingShares, mutualUsernames],
+  );
+
+  /** 相互共有の詳細情報（myShares 側のエントリを使う） */
+  const mutualShares = useMemo(
+    () => myShares.filter((s) => mutualUsernames.has(s.sharedWithUsername)),
+    [myShares, mutualUsernames],
+  );
 
   const handleAdd = async () => {
     const trimmed = username.trim();
@@ -110,16 +147,12 @@ export default function ShareDialog({ onClose, onError }: ShareDialogProps) {
             </div>
           </div>
 
-          {/* 共有している相手 */}
-          <div className="settings-section">
-            <div className="settings-section-title">共有している相手</div>
-            {myShares.length === 0 ? (
-              <p style={{ fontSize: "0.8rem", color: "var(--color-text-muted)" }}>
-                まだ誰とも共有していません
-              </p>
-            ) : (
+          {/* 相互共有している相手 */}
+          {mutualShares.length > 0 && (
+            <div className="settings-section">
+              <div className="settings-section-title">相互共有している相手</div>
               <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-                {myShares.map((share) => (
+                {mutualShares.map((share) => (
                   <div
                     key={share.id}
                     style={{
@@ -131,7 +164,9 @@ export default function ShareDialog({ onClose, onError }: ShareDialogProps) {
                       borderRadius: "6px",
                     }}
                   >
-                    <span style={{ fontSize: "0.85rem" }}>@{share.sharedWithUsername}</span>
+                    <span style={{ fontSize: "0.85rem" }}>
+                      {formatDisplay(share.sharedWithDisplayName, share.sharedWithUsername)}
+                    </span>
                     <button
                       className="icon-btn delete-btn-icon"
                       style={{
@@ -150,19 +185,70 @@ export default function ShareDialog({ onClose, onError }: ShareDialogProps) {
                   </div>
                 ))}
               </div>
-            )}
-          </div>
+            </div>
+          )}
 
-          {/* 共有してくれている相手 */}
+          {/* 共有している相手（相互以外） */}
+          {outgoingOnly.length > 0 && (
+            <div className="settings-section">
+              <div className="settings-section-title">共有している相手</div>
+              <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                {outgoingOnly.map((share) => (
+                  <div
+                    key={share.id}
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      padding: "8px 10px",
+                      background: "var(--color-surface2)",
+                      borderRadius: "6px",
+                    }}
+                  >
+                    <span style={{ fontSize: "0.85rem" }}>
+                      {formatDisplay(share.sharedWithDisplayName, share.sharedWithUsername)}
+                    </span>
+                    <button
+                      className="icon-btn delete-btn-icon"
+                      style={{
+                        background: "none",
+                        border: "none",
+                        cursor: "pointer",
+                        color: "var(--color-sun)",
+                        padding: "4px",
+                        display: "flex",
+                      }}
+                      onClick={() => handleRemove(share.id)}
+                      title="共有を解除"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {myShares.length === 0 && (
+            <p style={{ fontSize: "0.8rem", color: "var(--color-text-muted)" }}>
+              まだ誰とも共有していません
+            </p>
+          )}
+
+          {/* 共有してくれている相手（相互以外） */}
           <div className="settings-section" style={{ borderBottom: "none", paddingBottom: 0 }}>
             <div className="settings-section-title">共有してくれている相手</div>
             {incomingShares.length === 0 ? (
               <p style={{ fontSize: "0.8rem", color: "var(--color-text-muted)" }}>
                 まだ誰も共有してくれていません
               </p>
+            ) : incomingOnly.length === 0 ? (
+              <p style={{ fontSize: "0.8rem", color: "var(--color-text-muted)" }}>
+                共有してくれている相手はいません
+              </p>
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-                {incomingShares.map((share) => (
+                {incomingOnly.map((share) => (
                   <div
                     key={share.id}
                     style={{
@@ -172,7 +258,7 @@ export default function ShareDialog({ onClose, onError }: ShareDialogProps) {
                       fontSize: "0.85rem",
                     }}
                   >
-                    @{share.ownerUsername}
+                    {formatDisplay(share.ownerDisplayName, share.ownerUsername)}
                   </div>
                 ))}
               </div>
