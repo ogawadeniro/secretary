@@ -537,13 +537,6 @@ function ScheduleFormComponent({
           </label>
         </div>
       )}
-      <label>
-        説明
-        <textarea
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-        />
-      </label>
 
       {/* メンバー管理 */}
       <div className="settings-section">
@@ -696,6 +689,14 @@ function ScheduleFormComponent({
           )}
         </div>
       </div>
+
+      <label>
+        説明
+        <textarea
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+        />
+      </label>
 
       <div className="form-actions">
         <button type="submit" disabled={saving}>
