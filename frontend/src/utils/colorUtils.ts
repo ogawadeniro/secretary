@@ -1,17 +1,25 @@
 /** 低明度ビビッドカラー（個人の予定チップ色パレット）
- *  隣り合う色が別系統になるよう暖色・寒色を交互に配置
+ *  8列×2行で配置。上段は暖色→寒色、下段はさらに寒色→暖色のグラデーション。
  *  白文字との視認性を確保するため輝度を0.45以下に調整済み */
 const PERSONAL_COLORS = [
-  "#cc3333", // vivid red      (色相 0°)
-  "#1f9b7c", // vivid teal     (色相165°)
-  "#bb5522", // vivid orange   (色相20°)
-  "#2255aa", // vivid blue     (色相218°)
-  "#a06a28", // vivid amber    (色相33°)
-  "#3355aa", // vivid indigo   (色相223°)
-  "#4c971e", // vivid lime     (色相98°)
-  "#7722aa", // vivid purple   (色相278°)
-  "#21a352", // vivid green    (色相143°)
-  "#aa2255", // vivid rose     (色相338°)
+  // 上段: 暖色→寒色
+  "#cc3333", // vivid red
+  "#bb5522", // vivid orange
+  "#aa5522", // burnt orange
+  "#a06a28", // amber
+  "#6a7a22", // olive
+  "#4c971e", // lime
+  "#21a352", // green
+  "#1f9b7c", // teal
+  // 下段: 寒色→暖色
+  "#1a8a6a", // sea green
+  "#1a6a8a", // steel blue
+  "#2255aa", // vivid blue (デフォルト)
+  "#3355aa", // indigo
+  "#5544aa", // violet
+  "#7722aa", // purple
+  "#aa2255", // rose
+  "#cc3366", // pink
 ];
 
 /** 設定画面で選択可能なチップ色の候補（個人用パレット） */
