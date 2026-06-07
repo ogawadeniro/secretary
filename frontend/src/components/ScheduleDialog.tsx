@@ -564,7 +564,7 @@ function ScheduleFormComponent({
                   display: "inline-flex",
                   alignItems: "center",
                   gap: "4px",
-                  padding: "2px 4px 2px 10px",
+                  padding: m.isOwner ? "2px 10px" : "2px 4px 2px 10px",
                   background: m.isOwner ? "var(--color-surface2)" : (m.chipBgColor ?? "var(--color-surface2)"),
                   borderRadius: "999px",
                   fontSize: "0.8rem",
