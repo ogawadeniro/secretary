@@ -335,7 +335,6 @@ body {
   justify-content: center;
   z-index: 100;
   padding: 0;
-  padding-bottom: 20px;
   overflow: hidden;
   transition: opacity 0.2s ease-out;
 }
