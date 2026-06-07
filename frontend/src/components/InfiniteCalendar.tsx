@@ -364,6 +364,7 @@ export default function InfiniteCalendar() {
           holidayName={holidays.get(formatDateKey(selectedDate)) ?? null}
           onClose={handleDialogClose}
           onSchedulesChanged={reloadSchedules}
+          currentUsername={user?.username ?? ""}
         />
       )}
     </div>
