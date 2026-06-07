@@ -21,6 +21,8 @@ export interface Schedule {
   memberChipBgColors?: Record<string, string>;
   /** メンバーごとの表示名（username → displayName） */
   memberDisplayNames?: Record<string, string>;
+  /** 現在のユーザーが編集可能か */
+  canEdit?: boolean;
 }
 
 /** メンバーデータ（GET/POST /api/v1/schedules/{id}/members のレスポンス） */

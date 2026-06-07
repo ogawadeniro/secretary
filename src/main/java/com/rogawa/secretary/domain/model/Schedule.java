@@ -33,6 +33,9 @@ public class Schedule {
     /** メンバーごとの表示名（API応答用、永続化しない） */
     private Map<String, String> memberDisplayNames;
 
+    /** 現在のユーザーが編集可能か（API応答用、永続化しない） */
+    private Boolean canEdit;
+
     public Schedule copy() {
         Schedule s = new Schedule();
         s.setId(this.id);
@@ -49,6 +52,7 @@ public class Schedule {
         s.setMemberUsernames(this.memberUsernames);
         s.setMemberChipBgColors(this.memberChipBgColors);
         s.setMemberDisplayNames(this.memberDisplayNames);
+        s.setCanEdit(this.canEdit);
         return s;
     }
 

@@ -106,6 +106,7 @@ public class ScheduleService implements ScheduleUseCase {
             }
             s.setMemberChipBgColors(colors);
             s.setMemberDisplayNames(names);
+            s.setCanEdit(canEditSchedule(s, owner));
         }
 
         return all;

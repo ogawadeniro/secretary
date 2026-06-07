@@ -52,6 +52,9 @@ public class ScheduleDto {
     /** メンバーごとの表示名（username → displayName） */
     private Map<String, String> memberDisplayNames;
 
+    /** 現在のユーザーが編集可能か */
+    private Boolean canEdit;
+
     public static ScheduleDto fromDomain(Schedule schedule) {
         ScheduleDto dto = new ScheduleDto();
         dto.setId(schedule.getId());
@@ -68,6 +71,7 @@ public class ScheduleDto {
         dto.setMemberUsernames(schedule.getMemberUsernames());
         dto.setMemberChipBgColors(schedule.getMemberChipBgColors());
         dto.setMemberDisplayNames(schedule.getMemberDisplayNames());
+        dto.setCanEdit(schedule.getCanEdit());
         return dto;
     }
 

@@ -148,7 +148,7 @@ export default function ScheduleDialog({
                   )}
                 </div>
                 <div className="schedule-card-actions">
-                  {(s.owner === currentUsername) && (
+                  {s.canEdit && (
                     <>
                       <button
                         className="icon-btn"
