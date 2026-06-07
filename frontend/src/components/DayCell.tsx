@@ -2,6 +2,7 @@ import { Schedule } from "../types/schedule";
 import { getSchedulePosition, shouldShowTitle } from "../utils/dateUtils";
 import { ownerColor, scheduleColor } from "../utils/colorUtils";
 import type { SlotInfo } from "../utils/dateUtils";
+import { Users } from "lucide-react";
 
 interface DayCellProps {
   date: Date;
@@ -74,6 +75,9 @@ export default function DayCell({
                 color: "#e0e0e0",
               }}
             >
+              {showTitle && (s.memberUsernames ?? []).length > 1 && (
+                <Users size={10} fill="currentColor" style={{ marginRight: "2px", flexShrink: 0 }} />
+              )}
               {showTitle ? s.title : ""}
             </div>
           );

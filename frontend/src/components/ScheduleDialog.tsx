@@ -8,7 +8,7 @@ import {
 import { getMembers, addMember, removeMember } from "../api/memberApi";
 import { fetchMyShares, fetchIncomingShares } from "../api/shareApi";
 import { adjustEndByStart, adjustStartByEnd } from "../utils/dateUtils";
-import { PartyPopper } from "lucide-react";
+import { PartyPopper, Users } from "lucide-react";
 
 interface ScheduleDialogProps {
   date: Date;
@@ -129,7 +129,12 @@ export default function ScheduleDialog({
             schedules.map((s) => (
               <div key={s.id} className="schedule-card">
                 <div className="schedule-card-info">
-                  <strong>{s.title}</strong>
+                  <strong>
+                    {(s.memberUsernames ?? []).length > 1 && (
+                      <Users size={14} fill="currentColor" style={{ marginRight: "4px", verticalAlign: "middle" }} />
+                    )}
+                    {s.title}
+                  </strong>
                   <span className="schedule-time">
                     {s.isAllDay
                       ? "終日"
