@@ -40,11 +40,17 @@ public class ScheduleDto {
     /** オーナーのチップ背景色 */
     private String ownerChipBgColor;
 
+    /** オーナーの表示名 */
+    private String ownerDisplayName;
+
     /** メンバーのユーザー名一覧 */
     private List<String> memberUsernames;
 
     /** メンバーごとのチップ背景色（username → hexColor） */
     private Map<String, String> memberChipBgColors;
+
+    /** メンバーごとの表示名（username → displayName） */
+    private Map<String, String> memberDisplayNames;
 
     public static ScheduleDto fromDomain(Schedule schedule) {
         ScheduleDto dto = new ScheduleDto();
@@ -58,8 +64,10 @@ public class ScheduleDto {
         dto.setUpdateTime(schedule.getUpdateTime());
         dto.setShared(schedule.getShared());
         dto.setOwnerChipBgColor(schedule.getOwnerChipBgColor());
+        dto.setOwnerDisplayName(schedule.getOwnerDisplayName());
         dto.setMemberUsernames(schedule.getMemberUsernames());
         dto.setMemberChipBgColors(schedule.getMemberChipBgColors());
+        dto.setMemberDisplayNames(schedule.getMemberDisplayNames());
         return dto;
     }
 

@@ -8,6 +8,7 @@ import com.rogawa.secretary.domain.model.ScheduleMember;
 import com.rogawa.secretary.domain.repository.CalendarShareRepository;
 import com.rogawa.secretary.domain.repository.ScheduleMemberRepository;
 import com.rogawa.secretary.domain.repository.ScheduleRepository;
+import com.rogawa.secretary.domain.repository.UserRepository;
 import com.rogawa.secretary.domain.repository.UserSettingRepository;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -25,16 +26,19 @@ public class ScheduleService implements ScheduleUseCase {
 
     private final ScheduleRepository scheduleRepository;
     private final CalendarShareRepository calendarShareRepository;
+    private final UserRepository userRepository;
     private final UserSettingRepository userSettingRepository;
     private final ScheduleMemberRepository scheduleMemberRepository;
 
     public ScheduleService(
             ScheduleRepository scheduleRepository,
             CalendarShareRepository calendarShareRepository,
+            UserRepository userRepository,
             UserSettingRepository userSettingRepository,
             ScheduleMemberRepository scheduleMemberRepository) {
         this.scheduleRepository = scheduleRepository;
         this.calendarShareRepository = calendarShareRepository;
+        this.userRepository = userRepository;
         this.userSettingRepository = userSettingRepository;
         this.scheduleMemberRepository = scheduleMemberRepository;
     }
@@ -58,18 +62,27 @@ public class ScheduleService implements ScheduleUseCase {
         for (Schedule s : memberSchedules) { if (!seen.contains(s.getId())) { all.add(s); seen.add(s.getId()); } }
         all.sort(Comparator.comparing(Schedule::getStartDatetime));
 
-        // オーナーのチップ背景色とメンバー情報を設定
+        // オーナーとメンバーのチップ背景色・表示名を収集
         Map<String, String> ownerChipColors = buildOwnerChipColorMap(all);
+        Map<String, String> ownerDisplayNames = buildOwnerDisplayNameMap(all);
         Map<Long, List<String>> memberUsernamesMap = buildMemberUsernamesMap(all);
         Map<String, String> memberChipColorMap = buildMemberChipColorMap(all, memberUsernamesMap);
-        // オーナーも memberChipColorMap に追加（暗黙のメンバーとして）
+        Map<String, String> memberDisplayNamesMap = buildMemberDisplayNameMap(all, memberUsernamesMap);
+        // オーナーも各マップに追加（暗黙のメンバーとして）
         for (Map.Entry<String, String> e : ownerChipColors.entrySet()) {
             memberChipColorMap.putIfAbsent(e.getKey(), e.getValue());
+        }
+        for (Map.Entry<String, String> e : ownerDisplayNames.entrySet()) {
+            memberDisplayNamesMap.putIfAbsent(e.getKey(), e.getValue());
         }
         for (Schedule s : all) {
             String color = ownerChipColors.get(s.getOwner());
             if (color != null) {
                 s.setOwnerChipBgColor(color);
+            }
+            String displayName = ownerDisplayNames.get(s.getOwner());
+            if (displayName != null) {
+                s.setOwnerDisplayName(displayName);
             }
             // オーナーを暗黙のメンバーとして先頭に追加
             List<String> memberUsernames = memberUsernamesMap.getOrDefault(s.getId(), List.of());
@@ -77,15 +90,21 @@ public class ScheduleService implements ScheduleUseCase {
             usernames.add(s.getOwner());
             usernames.addAll(memberUsernames);
             s.setMemberUsernames(usernames);
-            // メンバーごとのチップ背景色を設定（オーナー含む）
+            // メンバーごとのチップ背景色と表示名を設定（オーナー含む）
             Map<String, String> colors = new HashMap<>();
+            Map<String, String> names = new HashMap<>();
             for (String username : usernames) {
                 String c = memberChipColorMap.get(username);
                 if (c != null) {
                     colors.put(username, c);
                 }
+                String n = memberDisplayNamesMap.get(username);
+                if (n != null) {
+                    names.put(username, n);
+                }
             }
             s.setMemberChipBgColors(colors);
+            s.setMemberDisplayNames(names);
         }
 
         return all;
@@ -133,6 +152,42 @@ public class ScheduleService implements ScheduleUseCase {
                     .ifPresent(us -> {
                         if (us.getChipBgColor() != null) {
                             map.put(username, us.getChipBgColor());
+                        }
+                    });
+        }
+        return map;
+    }
+
+    /** 予定リストに含まれる全オーナーの表示名をまとめて取得 */
+    private Map<String, String> buildOwnerDisplayNameMap(List<Schedule> schedules) {
+        List<String> owners = schedules.stream()
+                .map(Schedule::getOwner)
+                .distinct()
+                .collect(Collectors.toList());
+        Map<String, String> map = new HashMap<>();
+        for (String username : owners) {
+            userRepository.findByUsername(username)
+                    .ifPresent(u -> {
+                        if (u.getDisplayName() != null && !u.getDisplayName().isBlank()) {
+                            map.put(username, u.getDisplayName());
+                        }
+                    });
+        }
+        return map;
+    }
+
+    /** 全メンバーの表示名をまとめて取得 */
+    private Map<String, String> buildMemberDisplayNameMap(
+            List<Schedule> schedules, Map<Long, List<String>> memberUsernamesMap) {
+        Set<String> allMembers = memberUsernamesMap.values().stream()
+                .flatMap(List::stream)
+                .collect(Collectors.toSet());
+        Map<String, String> map = new HashMap<>();
+        for (String username : allMembers) {
+            userRepository.findByUsername(username)
+                    .ifPresent(u -> {
+                        if (u.getDisplayName() != null && !u.getDisplayName().isBlank()) {
+                            map.put(username, u.getDisplayName());
                         }
                     });
         }

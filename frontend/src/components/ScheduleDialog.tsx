@@ -140,10 +140,10 @@ export default function ScheduleDialog({
                       ? "終日"
                       : `${s.startDatetime.slice(11)} ~ ${s.endDatetime.slice(11)}`}
                   </span>
-                  <span className="schedule-owner">{s.owner}</span>
-                  {s.memberUsernames && s.memberUsernames.length > 0 && (
+                  <span className="schedule-owner">{s.ownerDisplayName ?? s.owner}</span>
+                  {s.memberUsernames && s.memberUsernames.filter((u) => u !== s.owner).length > 0 && (
                     <span className="schedule-members">
-                      {s.memberUsernames.map((u) => `@${u}`).join(", ")}
+                      {s.memberUsernames.filter((u) => u !== s.owner).map((u) => s.memberDisplayNames?.[u] ?? u).join(", ")}
                     </span>
                   )}
                 </div>
@@ -428,14 +428,35 @@ function ScheduleFormComponent({
   // 表示用のメンバー一覧（作成者を先頭に固定 + 既存メンバー + pending）
   const ownerUsername = initial?.owner ?? currentUsername;
   const displayMembers = [
-    { key: "owner", username: ownerUsername, isOwner: true, pending: false },
+    {
+      key: "owner",
+      username: ownerUsername,
+      displayName: initial?.ownerDisplayName ?? ownerUsername,
+      isOwner: true,
+      pending: false,
+      chipBgColor: initial?.ownerChipBgColor,
+    },
     ...(scheduleId
       ? members
           .filter((m) => m.username !== ownerUsername)
-          .map((m) => ({ key: m.id.toString(), username: m.username, isOwner: false, pending: false }))
+          .map((m) => ({
+            key: m.id.toString(),
+            username: m.username,
+            displayName: initial?.memberDisplayNames?.[m.username] ?? m.username,
+            isOwner: false,
+            pending: false,
+            chipBgColor: initial?.memberChipBgColors?.[m.username],
+          }))
       : pendingMembers
           .filter((u) => u !== ownerUsername)
-          .map((u) => ({ key: u, username: u, isOwner: false, pending: true }))),
+          .map((u) => ({
+            key: u,
+            username: u,
+            displayName: u,
+            isOwner: false,
+            pending: true,
+            chipBgColor: undefined,
+          }))),
   ];
 
   return (
@@ -532,17 +553,12 @@ function ScheduleFormComponent({
                   alignItems: "center",
                   gap: "4px",
                   padding: "2px 4px 2px 10px",
-                  background: "var(--color-surface2)",
+                  background: m.isOwner ? "var(--color-surface2)" : (m.chipBgColor ?? "var(--color-surface2)"),
                   borderRadius: "999px",
                   fontSize: "0.8rem",
                 }}
               >
-                @{m.username}
-                {m.isOwner && (
-                  <span style={{ fontSize: "0.65rem", color: "var(--color-text-muted)" }}>
-                    作成者
-                  </span>
-                )}
+                {m.displayName}
                 {m.pending && (
                   <span style={{ fontSize: "0.65rem", color: "var(--color-text-muted)" }}>
                     未保存

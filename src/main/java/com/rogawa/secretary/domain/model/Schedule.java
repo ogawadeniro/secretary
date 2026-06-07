@@ -21,11 +21,17 @@ public class Schedule {
     /** オーナーのチップ背景色（API応答用、永続化しない） */
     private String ownerChipBgColor;
 
+    /** オーナーの表示名（API応答用、永続化しない） */
+    private String ownerDisplayName;
+
     /** メンバーのユーザー名一覧（API応答用、永続化しない） */
     private List<String> memberUsernames;
 
     /** メンバーごとのチップ背景色（API応答用、永続化しない） */
     private Map<String, String> memberChipBgColors;
+
+    /** メンバーごとの表示名（API応答用、永続化しない） */
+    private Map<String, String> memberDisplayNames;
 
     public Schedule copy() {
         Schedule s = new Schedule();
@@ -39,8 +45,10 @@ public class Schedule {
         s.setUpdateTime(this.updateTime);
         s.setShared(this.shared);
         s.setOwnerChipBgColor(this.ownerChipBgColor);
+        s.setOwnerDisplayName(this.ownerDisplayName);
         s.setMemberUsernames(this.memberUsernames);
         s.setMemberChipBgColors(this.memberChipBgColors);
+        s.setMemberDisplayNames(this.memberDisplayNames);
         return s;
     }
 
@@ -58,5 +66,6 @@ public class Schedule {
         System.out.println("    ownerChipBgColor: " + ownerChipBgColor);
         System.out.println("    memberUsernames: " + memberUsernames);
         System.out.println("    memberChipBgColors: " + memberChipBgColors);
+        System.out.println("    memberDisplayNames: " + memberDisplayNames);
     }
 }

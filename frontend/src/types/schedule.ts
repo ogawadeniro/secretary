@@ -13,10 +13,14 @@ export interface Schedule {
   updateTime?: string;     // 形式: yyyy/MM/dd-HH:mm:ss
   /** オーナーのチップ背景色（API応答用） */
   ownerChipBgColor?: string;
+  /** オーナーの表示名（API応答用） */
+  ownerDisplayName?: string;
   /** メンバーのユーザー名一覧 */
   memberUsernames?: string[];
   /** メンバーごとのチップ背景色（username → hexColor） */
   memberChipBgColors?: Record<string, string>;
+  /** メンバーごとの表示名（username → displayName） */
+  memberDisplayNames?: Record<string, string>;
 }
 
 /** メンバーデータ（GET/POST /api/v1/schedules/{id}/members のレスポンス） */
