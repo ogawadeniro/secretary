@@ -91,10 +91,9 @@ export default function ScheduleDialog({
             }
           }
         }
-        // 編集モードに切り替え
-        setEditing(saved);
         onSchedulesChanged();
-        return saved;
+        handleClose();
+        return;
       }
     } catch {
       setError("保存に失敗しました");
