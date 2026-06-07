@@ -425,10 +425,18 @@ function ScheduleFormComponent({
     }
   };
 
-  // 表示用のメンバー一覧（既存 + pending）
-  const displayMembers = scheduleId
-    ? members.map((m) => ({ key: m.id.toString(), username: m.username, pending: false }))
-    : pendingMembers.map((u) => ({ key: u, username: u, pending: true }));
+  // 表示用のメンバー一覧（作成者を先頭に固定 + 既存メンバー + pending）
+  const ownerUsername = initial?.owner ?? currentUsername;
+  const displayMembers = [
+    { key: "owner", username: ownerUsername, isOwner: true, pending: false },
+    ...(scheduleId
+      ? members
+          .filter((m) => m.username !== ownerUsername)
+          .map((m) => ({ key: m.id.toString(), username: m.username, isOwner: false, pending: false }))
+      : pendingMembers
+          .filter((u) => u !== ownerUsername)
+          .map((u) => ({ key: u, username: u, isOwner: false, pending: true }))),
+  ];
 
   return (
     <form className="schedule-form" onSubmit={handleSubmit}>
@@ -529,25 +537,35 @@ function ScheduleFormComponent({
                   fontSize: "0.85rem",
                 }}
               >
-                <span>@{m.username}{m.pending ? " (未保存)" : ""}</span>
-                <button
-                  type="button"
-                  style={{
-                    background: "none",
-                    border: "none",
-                    cursor: "pointer",
-                    color: "var(--color-sun)",
-                    padding: "2px",
-                    display: "flex",
-                  }}
-                  onClick={() => handleRemoveMember(m.username)}
-                  title="メンバーを削除"
-                >
-                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2">
-                    <line x1="18" y1="6" x2="6" y2="18"/>
-                    <line x1="6" y1="6" x2="18" y2="18"/>
-                  </svg>
-                </button>
+                <span>
+                  @{m.username}
+                  {m.isOwner && (
+                    <span style={{ fontSize: "0.7rem", color: "var(--color-text-muted)", marginLeft: "4px" }}>
+                      (作成者)
+                    </span>
+                  )}
+                  {m.pending ? " (未保存)" : ""}
+                </span>
+                {!m.isOwner && (
+                  <button
+                    type="button"
+                    style={{
+                      background: "none",
+                      border: "none",
+                      cursor: "pointer",
+                      color: "var(--color-sun)",
+                      padding: "2px",
+                      display: "flex",
+                    }}
+                    onClick={() => handleRemoveMember(m.username)}
+                    title="メンバーを削除"
+                  >
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2">
+                      <line x1="18" y1="6" x2="6" y2="18"/>
+                      <line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                  </button>
+                )}
               </div>
             ))}
           </div>
