@@ -75,7 +75,7 @@ export default function SettingsDialog({
             <section className="settings-section">
               <h3 className="settings-section-title">色設定</h3>
               <label>
-                予定チップの色
+                マイカラー
                 <div className="chip-color-swatches">
                   {CHIP_COLORS.map((color) => (
                     <button
