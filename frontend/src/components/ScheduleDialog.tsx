@@ -142,17 +142,18 @@ export default function ScheduleDialog({
             schedules.map((s) => (
               <div key={s.id} className="schedule-card">
                 <div className="schedule-card-info">
-                  {(s.memberUsernames ?? []).length > 1 && (
-                    <Users size={14} fill="currentColor" style={{ marginRight: "4px", verticalAlign: "middle" }} />
-                  )}
                   <strong
                     style={{
                       background: scheduleTitleColor(s, currentUsername),
                       borderRadius: "4px",
                       padding: "2px 6px",
                       color: "#e0e0e0",
+                      alignSelf: "flex-start",
                     }}
                   >
+                    {(s.memberUsernames ?? []).length > 1 && (
+                      <Users size={14} fill="currentColor" style={{ marginRight: "4px", verticalAlign: "middle" }} />
+                    )}
                     {s.title}
                   </strong>
                   <span className="schedule-time">
