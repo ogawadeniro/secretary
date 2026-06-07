@@ -633,7 +633,6 @@ function ScheduleFormComponent({
                 color: "var(--color-text)",
                 padding: "6px 8px",
                 borderRadius: "6px",
-                fontSize: "0.8rem",
                 fontFamily: "inherit",
               }}
             />

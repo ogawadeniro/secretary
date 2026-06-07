@@ -96,7 +96,6 @@ export default function ShareDialog({ onClose, onError }: ShareDialogProps) {
                   color: "var(--color-text)",
                   padding: "8px 10px",
                   borderRadius: "6px",
-                  fontSize: "0.85rem",
                   fontFamily: "inherit",
                 }}
               />
