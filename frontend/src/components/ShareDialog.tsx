@@ -39,7 +39,7 @@ export default function ShareDialog({ onClose, onError, onNotify }: ShareDialogP
       setMyShares(my);
       setIncomingShares(incoming);
     } catch {
-      showError("共有設定の読み込みに失敗しました");
+      showError("共有設定の読み込みに失敗したよ");
     }
   };
 
@@ -85,9 +85,9 @@ export default function ShareDialog({ onClose, onError, onNotify }: ShareDialogP
       await createShare(trimmed);
       setUsername("");
       await loadShares();
-      onNotify("カレンダーを共有しました");
+      onNotify("カレンダーを共有したよ");
     } catch (e) {
-      showError(e instanceof Error ? e.message : "共有の追加に失敗しました");
+      showError(e instanceof Error ? e.message : "共有の追加に失敗したよ");
     } finally {
       setAdding(false);
     }
@@ -98,9 +98,9 @@ export default function ShareDialog({ onClose, onError, onNotify }: ShareDialogP
     try {
       await deleteShare(id);
       await loadShares();
-      onNotify("共有を解除しました");
+      onNotify("共有を解除したよ");
     } catch {
-      showError("共有の解除に失敗しました");
+      showError("共有の解除に失敗したよ");
     }
   };
 
@@ -234,7 +234,7 @@ export default function ShareDialog({ onClose, onError, onNotify }: ShareDialogP
 
           {myShares.length === 0 && (
             <p style={{ fontSize: "0.8rem", color: "var(--color-text-muted)" }}>
-              まだ誰とも共有していません
+              まだ誰とも共有していないよ
             </p>
           )}
 
@@ -243,11 +243,11 @@ export default function ShareDialog({ onClose, onError, onNotify }: ShareDialogP
             <div className="settings-section-title">共有してくれている相手</div>
             {incomingShares.length === 0 ? (
               <p style={{ fontSize: "0.8rem", color: "var(--color-text-muted)" }}>
-                まだ誰も共有してくれていません
+                まだ誰も共有してくれていないよ
               </p>
             ) : incomingOnly.length === 0 ? (
               <p style={{ fontSize: "0.8rem", color: "var(--color-text-muted)" }}>
-                共有してくれている相手はいません
+                共有してくれている相手はいないよ
               </p>
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>

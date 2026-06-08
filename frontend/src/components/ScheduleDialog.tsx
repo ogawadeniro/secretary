@@ -66,9 +66,9 @@ export default function ScheduleDialog({
       await deleteSchedule(id);
       setSchedules((prev) => prev.filter((s) => s.id !== id));
       onSchedulesChanged();
-      onNotify("予定を削除しました");
+      onNotify("予定を削除したよ");
     } catch {
-      setError("削除に失敗しました");
+      setError("削除に失敗したよ");
     } finally {
       setDeleteTarget(null);
     }
@@ -86,7 +86,7 @@ export default function ScheduleDialog({
       if (editing?.id) {
         await updateSchedule(editing.id, form);
         onSchedulesChanged();
-        onNotify("予定を編集しました");
+        onNotify("予定を編集したよ");
         handleClose();
         return;
       } else {
@@ -111,12 +111,12 @@ export default function ScheduleDialog({
           }
         }
         onSchedulesChanged();
-        onNotify("予定を作成しました");
+        onNotify("予定を作成したよ");
         handleClose();
         return;
       }
     } catch {
-      setError("保存に失敗しました");
+      setError("保存に失敗したよ");
     }
   };
 
@@ -142,7 +142,7 @@ export default function ScheduleDialog({
           {error && <p className="dialog-error">{error}</p>}
 
           {schedules.length === 0 && !showForm && (
-            <p className="empty-msg">予定はありません</p>
+            <p className="empty-msg">予定はないよ</p>
           )}
 
           {!showForm && !deleteTarget &&
@@ -347,7 +347,7 @@ function ScheduleFormComponent({
     setMemberLoading(true);
     getMembers(scheduleId)
       .then(setMembers)
-      .catch(() => setMemberError("メンバーの読み込みに失敗しました"))
+      .catch(() => setMemberError("メンバーの読み込みに失敗したよ"))
       .finally(() => setMemberLoading(false));
   }, [scheduleId]);
 
@@ -406,7 +406,7 @@ function ScheduleFormComponent({
       return;
     }
     if (trimmed === currentUsername) {
-      setMemberError("自分自身をメンバーに追加できません");
+      setMemberError("自分自身をメンバーに追加できないよ");
       return;
     }
 
@@ -415,7 +415,7 @@ function ScheduleFormComponent({
         const m = await addMember(scheduleId, trimmed);
         setMembers((prev) => [...prev, m]);
       } catch {
-        setMemberError("メンバーの追加に失敗しました");
+        setMemberError("メンバーの追加に失敗したよ");
         return;
       }
     } else {
@@ -430,9 +430,9 @@ function ScheduleFormComponent({
       try {
         await removeMember(scheduleId, username);
         setMembers((prev) => prev.filter((m) => m.username !== username));
-        onNotify("メンバーを削除しました");
+        onNotify("メンバーを削除したよ");
       } catch {
-        setMemberError("メンバーの削除に失敗しました");
+        setMemberError("メンバーの削除に失敗したよ");
       }
     } else {
       setPendingMembers((prev) => prev.filter((u) => u !== username));

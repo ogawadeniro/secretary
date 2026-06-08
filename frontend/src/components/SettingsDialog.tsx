@@ -38,7 +38,7 @@ export default function SettingsDialog({
         displayName: displayName || undefined,
       });
       onSaved(saved);
-      onNotify("設定を保存しました");
+      onNotify("設定を保存したよ");
       handleClose();
     } catch {
       // ignore
@@ -56,7 +56,7 @@ export default function SettingsDialog({
       setFirstDayOfWeek(saved.firstDayOfWeek);
       setDisplayName(saved.displayName ?? "");
       onSaved(saved);
-      onNotify("設定をデフォルトに戻しました");
+      onNotify("設定をデフォルトに戻したよ");
       handleClose();
     } catch {
       // ignore

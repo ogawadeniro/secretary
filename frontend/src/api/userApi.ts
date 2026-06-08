@@ -7,6 +7,6 @@ export async function searchUsers(query: string): Promise<AuthUser[]> {
   const res = await fetch(`${API_BASE}/users/search?q=${encodeURIComponent(query)}`, {
     credentials: "include",
   });
-  if (!res.ok) throw new Error("ユーザー検索に失敗しました");
+  if (!res.ok) throw new Error("ユーザー検索に失敗したよ");
   return res.json();
 }

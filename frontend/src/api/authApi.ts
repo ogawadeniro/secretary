@@ -16,8 +16,8 @@ export async function loginApi(username: string, password: string): Promise<Auth
     body: JSON.stringify({ username, password }),
   });
   if (!res.ok) {
-    if (res.status === 401) throw new Error("ユーザー名またはパスワードが違います");
-    throw new Error("ログインに失敗しました");
+    if (res.status === 401) throw new Error("ユーザー名またはパスワードが違うよ");
+    throw new Error("ログインに失敗したよ");
   }
   return res.json();
 }
@@ -35,8 +35,8 @@ export async function registerApi(
     body: JSON.stringify({ username, password, displayName }),
   });
   if (!res.ok) {
-    if (res.status === 409) throw new Error("このユーザー名は既に使われています");
-    throw new Error("登録に失敗しました");
+    if (res.status === 409) throw new Error("このユーザー名はもう使われているよ");
+    throw new Error("登録に失敗したよ");
   }
   return res.json();
 }
@@ -46,7 +46,7 @@ export async function fetchMe(): Promise<AuthUser | null> {
   const res = await fetch(`${BASE}/me`, { credentials: "include" });
   if (!res.ok) {
     if (res.status === 401) return null;
-    throw new Error("認証情報の取得に失敗しました");
+    throw new Error("認証情報の取得に失敗したよ");
   }
   return res.json();
 }

@@ -358,7 +358,7 @@ export default function InfiniteCalendar() {
       {showLogoutConfirm && (
         <div className="dialog-overlay dialog-overlay-center" onClick={() => setShowLogoutConfirm(false)}>
           <div className="confirm-dialog" onClick={(e) => e.stopPropagation()}>
-            <p>ログアウトしますか？</p>
+            <p>ログアウトする？</p>
             <div className="confirm-actions">
               <button className="confirm-btn-yes" onClick={handleLogoutConfirm}>うん</button>
               <button className="confirm-btn-no" onClick={() => setShowLogoutConfirm(false)}>やめる</button>
