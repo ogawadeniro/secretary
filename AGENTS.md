@@ -229,7 +229,10 @@ fix/xxx     → merge → dev → (デプロイ時) → merge → main
 ブロックされたユーザーは以後、自分の予定を相手に共有できなくなる。
 `share_blocks` テーブル（blocker_username, blocked_username, created_at）の追加が必要。
 
-## DBセットアップ
+## 既知の問題
+
+### 予定チップの重なり
+複数日またぎ予定がある場合、チップの後ろにある別のチップの下端が1px程度見えることがある。原因不明。`height: 1.3em` + `box-sizing: content-box` + flex layout の計算差が疑われる。軽微な視覚的バグなので対応優先度は低い。
 
 ```sql
 psql -U postgres -d postgres
