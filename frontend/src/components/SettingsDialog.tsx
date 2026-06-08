@@ -20,6 +20,7 @@ export default function SettingsDialog({
   const [displayName, setDisplayName] = useState(initial.displayName ?? "");
   const [saving, setSaving] = useState(false);
   const [closing, setClosing] = useState(false);
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
 
   const handleClose = () => {
     setClosing(true);
@@ -60,7 +61,8 @@ export default function SettingsDialog({
   };
 
   return (
-    <div className={`dialog-overlay ${closing ? "closing" : ""}`} onClick={handleClose}>
+    <>
+      <div className={`dialog-overlay ${closing ? "closing" : ""}`} onClick={handleClose}>
       <div className={`dialog ${closing ? "closing" : ""}`} onClick={(e) => e.stopPropagation()}>
         <div className="dialog-header">
           <h2>設定</h2>
@@ -137,7 +139,7 @@ export default function SettingsDialog({
 
             {/* リセット */}
             <section className="settings-section">
-              <button className="reset-btn" onClick={handleReset} disabled={saving}>
+              <button className="reset-btn" onClick={() => setShowResetConfirm(true)} disabled={saving}>
                 デフォルトに戻す
               </button>
             </section>
@@ -154,5 +156,18 @@ export default function SettingsDialog({
         </div>
       </div>
     </div>
+
+      {showResetConfirm && (
+        <div className="dialog-overlay dialog-overlay-center" onClick={() => setShowResetConfirm(false)}>
+          <div className="confirm-dialog" onClick={(e) => e.stopPropagation()}>
+            <p>設定をデフォルトに戻してもいいですか？</p>
+            <div className="confirm-actions">
+              <button className="confirm-btn-yes" onClick={handleReset}>する</button>
+              <button className="confirm-btn-no" onClick={() => setShowResetConfirm(false)}>しない</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
