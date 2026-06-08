@@ -877,14 +877,18 @@ body {
   line-height: 1.5;
 }
 
+.settings-form + .form-actions {
+  border-top: 1px solid var(--color-border);
+  padding-top: 12px;
+  margin-top: 4px;
+}
+
 /* 設定セクション */
 .settings-section {
-  border-bottom: 1px solid var(--color-border);
   padding-bottom: 12px;
 }
 
 .settings-section:last-of-type {
-  border-bottom: none;
   padding-bottom: 0;
 }
 
