@@ -9,6 +9,7 @@ public class UserSettingDto {
     private Long id;
     private String username;
     private String displayName;
+    private String email;
     private String chipBgColor;
     private Integer firstDayOfWeek;
 

@@ -33,7 +33,10 @@ public class UserSettingController {
                 .orElseGet(() -> createDefaultSetting());
         UserSettingDto dto = UserSettingDto.fromDomain(setting);
         userRepository.findByUsername(username)
-                .ifPresent(u -> dto.setDisplayName(u.getDisplayName()));
+                .ifPresent(u -> {
+                    dto.setDisplayName(u.getDisplayName());
+                    dto.setEmail(u.getEmail());
+                });
         return ResponseEntity.ok(dto);
     }
 
@@ -48,6 +51,14 @@ public class UserSettingController {
         if (request.getDisplayName() != null) {
             userRepository.findByUsername(username).ifPresent(u -> {
                 u.setDisplayName(request.getDisplayName());
+                userRepository.save(u);
+            });
+        }
+
+        // メールアドレスの更新
+        if (request.getEmail() != null) {
+            userRepository.findByUsername(username).ifPresent(u -> {
+                u.setEmail(request.getEmail());
                 userRepository.save(u);
             });
         }

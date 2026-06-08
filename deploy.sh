@@ -101,7 +101,7 @@ transfer_files() {
 build_and_run_remote() {
     step "Building image and starting container on remote..."
 
-    ssh "${PROD_USER}@${PROD_HOST}" "SECRETARY_DB_PASSWORD='${SECRETARY_DB_PASSWORD}' SSL_KEYSTORE_PASSWORD='${SSL_KEYSTORE_PASSWORD:-}' bash -s" <<'REMOTE'
+    ssh "${PROD_USER}@${PROD_HOST}" "SECRETARY_DB_PASSWORD='${SECRETARY_DB_PASSWORD}' SMTP_PASSWORD='${SMTP_PASSWORD:-}' SSL_KEYSTORE_PASSWORD='${SSL_KEYSTORE_PASSWORD:-}' bash -s" <<'REMOTE'
         set -eu
         IMAGE_NAME="secretary"
         CONTAINER_NAME="secretary"
@@ -156,6 +156,9 @@ build_and_run_remote() {
             -e SERVER_SSL_KEY_STORE_PASSWORD="${SSL_KEYSTORE_PASSWORD:-}" \
             -e SERVER_SSL_KEY_STORE_TYPE=PKCS12 \
             -e SERVER_SSL_KEY_ALIAS=secretary \
+            -e SMTP_USERNAME="${SMTP_USERNAME:-info.secretary.ryokotu@gmail.com}" \
+            -e SMTP_PASSWORD="${SMTP_PASSWORD:-}" \
+            -e APP_BASE_URL="${APP_BASE_URL:-https://tk2-245-32038.vs.sakura.ne.jp}" \
             -v /etc/secretary:/etc/secretary:ro \
             "${IMAGE_NAME}:latest"
 

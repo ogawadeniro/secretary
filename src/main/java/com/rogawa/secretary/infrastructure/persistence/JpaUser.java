@@ -27,12 +27,16 @@ public class JpaUser {
     @Column(name = "display_name")
     private String displayName;
 
+    @Column(unique = true)
+    private String email;
+
     public static JpaUser fromDomain(User user) {
         JpaUser entity = new JpaUser();
         entity.setId(user.getId());
         entity.setUsername(user.getUsername());
         entity.setPassword(user.getPassword());
         entity.setDisplayName(user.getDisplayName());
+        entity.setEmail(user.getEmail());
         return entity;
     }
 
@@ -42,6 +46,7 @@ public class JpaUser {
         user.setUsername(this.username);
         user.setPassword(this.password);
         user.setDisplayName(this.displayName);
+        user.setEmail(this.email);
         return user;
     }
 }
