@@ -46,7 +46,8 @@ export default function InfiniteCalendar() {
     generateWeeks(new Date(), INITIAL_WEEKS / 2, DEFAULT_SETTINGS.firstDayOfWeek)
   );
   const [schedules, setSchedules] = useState<Schedule[]>([]);
-  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [highlightDate, setHighlightDate] = useState<Date | null>(null);
+  const [dialogDate, setDialogDate] = useState<Date | null>(null);
   const [showSettings, setShowSettings] = useState(false);
   const [showAccountMenu, setShowAccountMenu] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
@@ -206,11 +207,12 @@ export default function InfiniteCalendar() {
   }, [weeks]);
 
   const handleDateClick = (date: Date) => {
-    setSelectedDate(date);
+    setHighlightDate(date);
+    setDialogDate(date);
   };
 
   const handleDialogClose = () => {
-    setSelectedDate(null);
+    setDialogDate(null);
   };
 
   const handleSettingsSaved = (s: UserSettings) => {
@@ -227,7 +229,7 @@ export default function InfiniteCalendar() {
   };
 
   // 選択された日付に紐づく予定をフィルタ
-  const selectedSchedules = selectedDate
+  const selectedSchedules = dialogDate
     ? schedules.filter((s) => {
         const startMatch = s.startDatetime.match(
           /^(\d{4})\/(\d{2})\/(\d{2})/
@@ -239,7 +241,7 @@ export default function InfiniteCalendar() {
         if (!endMatch) return false;
         const endD = new Date(+endMatch[1], +endMatch[2] - 1, +endMatch[3]);
 
-        const day = toEpochDay(selectedDate);
+        const day = toEpochDay(dialogDate!);
         return day >= toEpochDay(startD) && day <= toEpochDay(endD);
       })
     : [];
@@ -338,7 +340,7 @@ export default function InfiniteCalendar() {
             currentUsername={user?.username ?? ""}
             holidays={holidays}
             onDateClick={handleDateClick}
-            selectedDate={selectedDate}
+            selectedDate={highlightDate}
           />
         ))}
         <div ref={bottomSentinelRef} className="sentinel" />
@@ -369,11 +371,11 @@ export default function InfiniteCalendar() {
         <ShareDialog onClose={() => setShowShare(false)} onNotify={notify} />
       )}
 
-      {selectedDate && (
+      {dialogDate && (
         <ScheduleDialog
-          date={selectedDate}
+          date={dialogDate}
           schedules={selectedSchedules}
-          holidayName={holidays.get(formatDateKey(selectedDate)) ?? null}
+          holidayName={holidays.get(formatDateKey(dialogDate)) ?? null}
           onClose={handleDialogClose}
           onSchedulesChanged={reloadSchedules}
           currentUsername={user?.username ?? ""}
