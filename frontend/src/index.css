@@ -347,6 +347,47 @@ body {
   opacity: 0;
 }
 
+/* 通知トースト */
+.toast-container {
+  position: fixed;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  pointer-events: none;
+}
+
+.toast {
+  background: var(--color-surface2);
+  color: var(--color-text);
+  padding: 12px 20px;
+  border-radius: 10px;
+  font-size: 0.85rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+  pointer-events: auto;
+  animation: toast-slide-in 0.3s ease-out;
+  border-left: 4px solid var(--color-accent);
+  white-space: nowrap;
+}
+
+.toast.toast-error {
+  border-left-color: var(--color-sun);
+}
+
+@keyframes toast-slide-in {
+  from {
+    opacity: 0;
+    transform: translateY(-12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .dialog {
   background: var(--color-surface);
   border-radius: 16px 16px 0 0;

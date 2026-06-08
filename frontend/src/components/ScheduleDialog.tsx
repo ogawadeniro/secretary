@@ -20,6 +20,7 @@ interface ScheduleDialogProps {
   onSchedulesChanged: () => void;
   currentUsername: string;
   chipBgColor: string;
+  onNotify: (message: string, type?: "success" | "error") => void;
 }
 
 /** 予定のタイトル背景色を計算（DayCellのチップ色と一致させる） */
@@ -43,6 +44,7 @@ export default function ScheduleDialog({
   onSchedulesChanged,
   currentUsername,
   chipBgColor,
+  onNotify,
 }: ScheduleDialogProps) {
   const [schedules, setSchedules] = useState<Schedule[]>(initialSchedules);
   const [showForm, setShowForm] = useState(false);
@@ -64,6 +66,7 @@ export default function ScheduleDialog({
       await deleteSchedule(id);
       setSchedules((prev) => prev.filter((s) => s.id !== id));
       onSchedulesChanged();
+      onNotify("予定を削除しました");
     } catch {
       setError("削除に失敗しました");
     } finally {
@@ -83,6 +86,7 @@ export default function ScheduleDialog({
       if (editing?.id) {
         await updateSchedule(editing.id, form);
         onSchedulesChanged();
+        onNotify("予定を編集しました");
         handleClose();
         return;
       } else {
@@ -107,6 +111,7 @@ export default function ScheduleDialog({
           }
         }
         onSchedulesChanged();
+        onNotify("予定を作成しました");
         handleClose();
         return;
       }
@@ -227,6 +232,7 @@ export default function ScheduleDialog({
                 setShowForm(false);
                 setEditing(null);
               }}
+              onNotify={onNotify}
             />
           )}
 
@@ -263,12 +269,14 @@ function ScheduleFormComponent({
   currentUsername,
   onSave,
   onCancel,
+  onNotify,
 }: {
   initial: Schedule | null;
   date: Date;
   currentUsername: string;
   onSave: (data: ScheduleFormData, pendingMembers?: string[]) => Promise<Schedule | void>;
   onCancel: () => void;
+  onNotify: (message: string, type?: "success" | "error") => void;
 }) {
   const pad = (n: number) => String(n).padStart(2, "0");
   const dateStr = `${date.getFullYear()}/${pad(date.getMonth() + 1)}/${pad(date.getDate())}`;
@@ -422,6 +430,7 @@ function ScheduleFormComponent({
       try {
         await removeMember(scheduleId, username);
         setMembers((prev) => prev.filter((m) => m.username !== username));
+        onNotify("メンバーを削除しました");
       } catch {
         setMemberError("メンバーの削除に失敗しました");
       }

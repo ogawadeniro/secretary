@@ -53,6 +53,16 @@ export default function InfiniteCalendar() {
   const [showShare, setShowShare] = useState(false);
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
+  const [toasts, setToasts] = useState<{ id: number; message: string; type: "success" | "error" }[]>([]);
+  const toastId = useRef(0);
+
+  const notify = useCallback((message: string, type: "success" | "error" = "success") => {
+    const id = ++toastId.current;
+    setToasts((prev) => [...prev, { id, message, type }]);
+    setTimeout(() => {
+      setToasts((prev) => prev.filter((t) => t.id !== id));
+    }, 3000);
+  }, []);
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const topSentinelRef = useRef<HTMLDivElement>(null);
@@ -338,6 +348,7 @@ export default function InfiniteCalendar() {
           settings={settings}
           onClose={() => setShowSettings(false)}
           onSaved={handleSettingsSaved}
+          onNotify={notify}
         />
       )}
 
@@ -354,7 +365,7 @@ export default function InfiniteCalendar() {
       )}
 
       {showShare && (
-        <ShareDialog onClose={() => setShowShare(false)} />
+        <ShareDialog onClose={() => setShowShare(false)} onNotify={notify} />
       )}
 
       {selectedDate && (
@@ -366,7 +377,18 @@ export default function InfiniteCalendar() {
           onSchedulesChanged={reloadSchedules}
           currentUsername={user?.username ?? ""}
           chipBgColor={settings.chipBgColor}
+          onNotify={notify}
         />
+      )}
+
+      {toasts.length > 0 && (
+        <div className="toast-container">
+          {toasts.map((t) => (
+            <div key={t.id} className={`toast${t.type === "error" ? " toast-error" : ""}`}>
+              {t.message}
+            </div>
+          ))}
+        </div>
       )}
     </div>
   );

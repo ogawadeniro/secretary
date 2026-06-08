@@ -7,6 +7,7 @@ interface SettingsDialogProps {
   settings: UserSettings;
   onClose: () => void;
   onSaved: (settings: UserSettings) => void;
+  onNotify: (message: string, type?: "success" | "error") => void;
 }
 
 /** 設定ダイアログ */
@@ -14,6 +15,7 @@ export default function SettingsDialog({
   settings: initial,
   onClose,
   onSaved,
+  onNotify,
 }: SettingsDialogProps) {
   const [chipBgColor, setChipBgColor] = useState(initial.chipBgColor);
   const [firstDayOfWeek, setFirstDayOfWeek] = useState(initial.firstDayOfWeek);
@@ -36,6 +38,7 @@ export default function SettingsDialog({
         displayName: displayName || undefined,
       });
       onSaved(saved);
+      onNotify("設定を保存しました");
       handleClose();
     } catch {
       // ignore
@@ -46,12 +49,14 @@ export default function SettingsDialog({
 
   const handleReset = async () => {
     setSaving(true);
+    setShowResetConfirm(false);
     try {
       const saved = await resetSettings();
       setChipBgColor(saved.chipBgColor);
       setFirstDayOfWeek(saved.firstDayOfWeek);
       setDisplayName(saved.displayName ?? "");
       onSaved(saved);
+      onNotify("設定をデフォルトに戻しました");
       handleClose();
     } catch {
       // ignore

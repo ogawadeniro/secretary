@@ -6,6 +6,7 @@ import { fetchMyShares, fetchIncomingShares, createShare, deleteShare } from "..
 interface ShareDialogProps {
   onClose: () => void;
   onError?: (msg: string) => void;
+  onNotify: (message: string, type?: "success" | "error") => void;
 }
 
 /** 表示名を「表示名<ユーザ名>」形式に整形 */
@@ -16,7 +17,7 @@ function formatDisplay(name: string | undefined | null, username: string): strin
   return username;
 }
 
-export default function ShareDialog({ onClose, onError }: ShareDialogProps) {
+export default function ShareDialog({ onClose, onError, onNotify }: ShareDialogProps) {
   const [myShares, setMyShares] = useState<CalendarShare[]>([]);
   const [incomingShares, setIncomingShares] = useState<CalendarShare[]>([]);
   const [username, setUsername] = useState("");
@@ -84,6 +85,7 @@ export default function ShareDialog({ onClose, onError }: ShareDialogProps) {
       await createShare(trimmed);
       setUsername("");
       await loadShares();
+      onNotify("カレンダーを共有しました");
     } catch (e) {
       showError(e instanceof Error ? e.message : "共有の追加に失敗しました");
     } finally {
@@ -96,6 +98,7 @@ export default function ShareDialog({ onClose, onError }: ShareDialogProps) {
     try {
       await deleteShare(id);
       await loadShares();
+      onNotify("共有を解除しました");
     } catch {
       showError("共有の解除に失敗しました");
     }
