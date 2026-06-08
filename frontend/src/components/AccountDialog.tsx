@@ -82,7 +82,7 @@ export default function AccountDialog({
         <div className="dialog-body" style={{ gap: "16px" }}>
           <div className="settings-form">
 
-            <section className="settings-section">
+            <section className="settings-section" style={{ borderBottom: "none" }}>
               <h3 className="settings-section-title">プロフィール設定</h3>
               <label>
                 表示名
@@ -104,7 +104,7 @@ export default function AccountDialog({
               </label>
             </section>
 
-            <div className="form-actions">
+            <div className="form-actions" style={{ borderTop: "1px solid var(--color-border)", paddingTop: "12px" }}>
               <button className="save-btn" onClick={handleSave} disabled={saving}>
                 {saving ? "保存中..." : "保存"}
               </button>
