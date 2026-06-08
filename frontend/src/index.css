@@ -459,8 +459,7 @@ body {
 }
 
 .schedule-time,
-.schedule-owner,
-.schedule-members {
+.schedule-owner-members {
   font-size: 0.75rem;
   color: var(--color-text-muted);
 }

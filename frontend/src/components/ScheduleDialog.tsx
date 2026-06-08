@@ -157,16 +157,24 @@ export default function ScheduleDialog({
                     {s.title}
                   </strong>
                   <span className="schedule-time">
-                    {s.isAllDay
-                      ? "終日"
-                      : `${s.startDatetime.slice(11)} ~ ${s.endDatetime.slice(11)}`}
+                    {(() => {
+                      const sd = s.startDatetime.slice(0, 10);
+                      const ed = s.endDatetime.slice(0, 10);
+                      const multiDay = sd !== ed;
+                      if (s.isAllDay) {
+                        return multiDay ? `${sd} 終日 ~ ${ed} 終日` : "終日";
+                      }
+                      return multiDay
+                        ? `${sd} ${s.startDatetime.slice(11)} ~ ${ed} ${s.endDatetime.slice(11)}`
+                        : `${s.startDatetime.slice(11)} ~ ${s.endDatetime.slice(11)}`;
+                    })()}
                   </span>
-                  <span className="schedule-owner">{s.ownerDisplayName ?? s.owner}</span>
-                  {s.memberUsernames && s.memberUsernames.filter((u) => u !== s.owner).length > 0 && (
-                    <span className="schedule-members">
-                      {s.memberUsernames.filter((u) => u !== s.owner).map((u) => s.memberDisplayNames?.[u] ?? u).join(", ")}
-                    </span>
-                  )}
+                  <span className="schedule-owner-members">{(() => {
+                    const members = s.memberUsernames ?? [];
+                    return members.length > 1
+                      ? [s.ownerDisplayName ?? s.owner, ...members.filter((u) => u !== s.owner).map((u) => s.memberDisplayNames?.[u] ?? u)].join(", ")
+                      : s.ownerDisplayName ?? s.owner;
+                  })()}</span>
                 </div>
                 <div className="schedule-card-actions">
                   {s.canEdit && (
