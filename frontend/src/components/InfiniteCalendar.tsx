@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback, useLayoutEffect, useMemo } from "react";
-import { CircleUser, Settings, LogOut, Share2 } from "lucide-react";
+import { CircleUser, Settings, LogOut, Share2, User } from "lucide-react";
 import type { UserSettings } from "../types/settings";
 import type { Schedule } from "../types/schedule";
 import { fetchSchedules } from "../api/scheduleApi";
@@ -7,6 +7,7 @@ import { fetchSettings } from "../api/settingsApi";
 import WeekRow from "./WeekRow";
 import ScheduleDialog from "./ScheduleDialog";
 import SettingsDialog from "./SettingsDialog";
+import AccountDialog from "./AccountDialog";
 import ShareDialog from "./ShareDialog";
 import { addDays, getWeekStart, formatDateKey, toEpochDay } from "../utils/dateUtils";
 import { getHolidaysInRange } from "../utils/holidayUtils";
@@ -49,6 +50,7 @@ export default function InfiniteCalendar() {
   const [highlightDate, setHighlightDate] = useState<Date | null>(null);
   const [dialogDate, setDialogDate] = useState<Date | null>(null);
   const [showSettings, setShowSettings] = useState(false);
+  const [showAccount, setShowAccount] = useState(false);
   const [showAccountMenu, setShowAccountMenu] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [showShare, setShowShare] = useState(false);
@@ -286,6 +288,16 @@ export default function InfiniteCalendar() {
                   className="account-dropdown-item"
                   onClick={() => {
                     setShowAccountMenu(false);
+                    setShowAccount(true);
+                  }}
+                >
+                  <User size={16} />
+                  <span>アカウント</span>
+                </button>
+                <button
+                  className="account-dropdown-item"
+                  onClick={() => {
+                    setShowAccountMenu(false);
                     setShowShare(true);
                   }}
                 >
@@ -350,6 +362,15 @@ export default function InfiniteCalendar() {
         <SettingsDialog
           settings={settings}
           onClose={() => setShowSettings(false)}
+          onSaved={handleSettingsSaved}
+          onNotify={notify}
+        />
+      )}
+
+      {showAccount && (
+        <AccountDialog
+          settings={settings}
+          onClose={() => setShowAccount(false)}
           onSaved={handleSettingsSaved}
           onNotify={notify}
         />

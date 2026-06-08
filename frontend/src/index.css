@@ -921,7 +921,10 @@ body {
 }
 
 /* 設定フォームのテキスト入力 */
-.settings-form input[type="text"] {
+.settings-form input[type="text"],
+.settings-form input[type="email"],
+.settings-form input[type="password"],
+.settings-form select {
   background: var(--color-surface2);
   color: var(--color-text);
   border: 1px solid var(--color-border);
