@@ -104,7 +104,7 @@ export default function AccountDialog({
               </label>
             </section>
 
-            <div className="form-actions" style={{ borderTop: "1px solid var(--color-border)", paddingTop: "12px" }}>
+            <div className="form-actions" style={{ borderBottom: "1px solid var(--color-border)", paddingBottom: "12px" }}>
               <button className="save-btn" onClick={handleSave} disabled={saving}>
                 {saving ? "保存中..." : "保存"}
               </button>
