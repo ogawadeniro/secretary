@@ -339,6 +339,10 @@ body {
   transition: opacity 0.2s ease-out;
 }
 
+.dialog-overlay-center {
+  align-items: center;
+}
+
 .dialog-overlay.closing {
   opacity: 0;
 }
