@@ -141,13 +141,6 @@ export default function SettingsDialog({
                 />
               </label>
             </section>
-
-            {/* リセット */}
-            <section className="settings-section">
-              <button className="reset-btn" onClick={() => setShowResetConfirm(true)} disabled={saving}>
-                デフォルトに戻す
-              </button>
-            </section>
           </div>
 
           <div className="form-actions">
@@ -158,6 +151,12 @@ export default function SettingsDialog({
               キャンセル
             </button>
           </div>
+
+          <section className="settings-section">
+            <button className="reset-btn" onClick={() => setShowResetConfirm(true)} disabled={saving}>
+              デフォルトに戻す
+            </button>
+          </section>
         </div>
       </div>
     </div>
