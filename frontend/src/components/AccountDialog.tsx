@@ -82,7 +82,7 @@ export default function AccountDialog({
         <div className="dialog-body" style={{ gap: "16px" }}>
           <div className="settings-form">
 
-            <section className="settings-section" style={{ borderBottom: "none" }}>
+            <section className="settings-section" style={{ borderBottom: "none", paddingBottom: 0 }}>
               <h3 className="settings-section-title">プロフィール設定</h3>
               <label>
                 表示名
