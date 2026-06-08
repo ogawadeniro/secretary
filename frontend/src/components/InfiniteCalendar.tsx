@@ -357,8 +357,8 @@ export default function InfiniteCalendar() {
           <div className="confirm-dialog" onClick={(e) => e.stopPropagation()}>
             <p>ログアウトしますか？</p>
             <div className="confirm-actions">
-              <button className="confirm-btn-yes" onClick={handleLogoutConfirm}>する</button>
-              <button className="confirm-btn-no" onClick={() => setShowLogoutConfirm(false)}>しない</button>
+              <button className="confirm-btn-yes" onClick={handleLogoutConfirm}>うん</button>
+              <button className="confirm-btn-no" onClick={() => setShowLogoutConfirm(false)}>やめる</button>
             </div>
           </div>
         </div>

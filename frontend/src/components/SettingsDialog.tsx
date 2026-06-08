@@ -166,8 +166,8 @@ export default function SettingsDialog({
           <div className="confirm-dialog" onClick={(e) => e.stopPropagation()}>
             <p>設定をデフォルトに戻してもいいですか？</p>
             <div className="confirm-actions">
-              <button className="confirm-btn-yes" onClick={handleReset}>する</button>
-              <button className="confirm-btn-no" onClick={() => setShowResetConfirm(false)}>しない</button>
+              <button className="confirm-btn-yes" onClick={handleReset}>うん</button>
+              <button className="confirm-btn-no" onClick={() => setShowResetConfirm(false)}>やめる</button>
             </div>
           </div>
         </div>
