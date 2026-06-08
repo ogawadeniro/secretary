@@ -52,20 +52,37 @@ export function ownerColor(owner: string): string {
   return PERSONAL_COLORS[Math.abs(hash) % PERSONAL_COLORS.length];
 }
 
-/** 複数の色コードを減法混色（絵の具の混色、幾何平均）でブレンドして予定チップ色を決定する */
+/** 複数の色コードを減法混色（絵の具の混色、幾何平均）でブレンドして予定チップ色を決定する
+ *  暗くなりすぎを防ぐため、入力色の平均輝度を基準に輝度補正を行う */
 export function scheduleColor(colors: string[]): string {
   if (colors.length === 0) return "#5b7fa5";
+  if (colors.length === 1) return colors[0];
   const n = colors.length;
-  let r = 1, g = 1, b = 1;
+  let geoR = 1, geoG = 1, geoB = 1;
+  let sumR = 0, sumG = 0, sumB = 0;
   for (const c of colors) {
     const rgb = hexToRgb(c);
-    r *= rgb.r / 255;
-    g *= rgb.g / 255;
-    b *= rgb.b / 255;
+    geoR *= rgb.r / 255;
+    geoG *= rgb.g / 255;
+    geoB *= rgb.b / 255;
+    sumR += rgb.r;
+    sumG += rgb.g;
+    sumB += rgb.b;
   }
-  const rr = Math.round(Math.pow(r, 1 / n) * 255);
-  const gg = Math.round(Math.pow(g, 1 / n) * 255);
-  const bb = Math.round(Math.pow(b, 1 / n) * 255);
+  let rr = Math.round(Math.pow(geoR, 1 / n) * 255);
+  let gg = Math.round(Math.pow(geoG, 1 / n) * 255);
+  let bb = Math.round(Math.pow(geoB, 1 / n) * 255);
+
+  // 入力色の平均輝度を基準に、幾何平均が暗くなりすぎないよう補正
+  const avgLum = (0.299 * sumR + 0.587 * sumG + 0.114 * sumB) / n;
+  const resultLum = 0.299 * rr + 0.587 * gg + 0.114 * bb;
+  if (resultLum < avgLum * 0.85) {
+    const scale = Math.min((avgLum * 0.85) / resultLum, 1.6);
+    rr = Math.min(255, Math.round(rr * scale));
+    gg = Math.min(255, Math.round(gg * scale));
+    bb = Math.min(255, Math.round(bb * scale));
+  }
+
   return `#${rr.toString(16).padStart(2, "0")}${gg.toString(16).padStart(2, "0")}${bb.toString(16).padStart(2, "0")}`;
 }
 
