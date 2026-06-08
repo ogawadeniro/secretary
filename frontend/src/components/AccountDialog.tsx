@@ -104,7 +104,16 @@ export default function AccountDialog({
               </label>
             </section>
 
-            <section className="settings-section">
+            <div className="form-actions">
+              <button className="save-btn" onClick={handleSave} disabled={saving}>
+                {saving ? "保存中..." : "保存"}
+              </button>
+              <button className="cancel-btn" onClick={handleClose}>
+                キャンセル
+              </button>
+            </div>
+
+            <section className="settings-section" style={{ borderBottom: "none" }}>
               <h3 className="settings-section-title">パスワード変更</h3>
               <label>
                 現在のパスワード
@@ -133,24 +142,17 @@ export default function AccountDialog({
                   placeholder="もう一度入力"
                 />
               </label>
-              <button
-                className="save-btn"
-                onClick={handleChangePassword}
-                disabled={saving || !currentPassword || !newPassword}
-                style={{ marginTop: "12px" }}
-              >
-                パスワードを変更
-              </button>
+              <div style={{ display: "flex", justifyContent: "center" }}>
+                <button
+                  className="save-btn"
+                  onClick={handleChangePassword}
+                  disabled={saving || !currentPassword || !newPassword}
+                  style={{ width: "70%", marginTop: "8px" }}
+                >
+                  パスワードを変更
+                </button>
+              </div>
             </section>
-          </div>
-
-          <div className="form-actions">
-            <button className="save-btn" onClick={handleSave} disabled={saving}>
-              {saving ? "保存中..." : "保存"}
-            </button>
-            <button className="cancel-btn" onClick={handleClose}>
-              キャンセル
-            </button>
           </div>
         </div>
       </div>
