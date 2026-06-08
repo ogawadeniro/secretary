@@ -625,6 +625,7 @@ body {
   gap: 4px;
   font-size: 0.8rem;
   color: var(--color-text-muted);
+  font-weight: 600;
 }
 
 .schedule-form input[type="text"],
@@ -634,7 +635,7 @@ body {
   background: var(--color-surface2);
   border: 1px solid var(--color-border);
   color: var(--color-text);
-  padding: 2px 4px;
+  padding: 6px 8px;
   border-radius: 6px;
   font-size: 16px;
   font-family: inherit;

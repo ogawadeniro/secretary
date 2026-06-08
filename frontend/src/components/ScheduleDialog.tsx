@@ -524,30 +524,43 @@ function ScheduleFormComponent({
   return (
     <form className="schedule-form" onSubmit={handleSubmit}>
       <label>
-        タイトル
+        <span style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+          タイトル
+          <span style={{
+            width: "8px",
+            height: "8px",
+            borderRadius: "50%",
+            background: "#e87a40",
+            display: "inline-block",
+            flexShrink: 0,
+          }} />
+        </span>
         <input
           type="text"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           required
+          placeholder="タイトルを入力"
         />
       </label>
-      <div style={{ display: "flex", gap: "16px", alignItems: "flex-start" }}>
-        <label style={{ display: "flex", flexDirection: "column", gap: "4px", fontSize: "0.8rem", color: "var(--color-text-muted)", flex: 1 }}>
-          終日
+      <div style={{ display: "flex", gap: "16px", alignItems: "center" }}>
+        <label style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: "4px", fontSize: "0.8rem", color: "var(--color-text-muted)", fontWeight: 600, cursor: "pointer" }}>
           <input
             type="checkbox"
             checked={isAllDay}
             onChange={(e) => setIsAllDay(e.target.checked)}
+            style={{ margin: 0 }}
           />
+          終日
         </label>
-        <label style={{ display: "flex", flexDirection: "column", gap: "4px", fontSize: "0.8rem", color: "var(--color-text-muted)", flex: 1 }}>
-          他のユーザーと共有する
+        <label style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: "4px", fontSize: "0.8rem", color: "var(--color-text-muted)", fontWeight: 600, cursor: "pointer" }}>
           <input
             type="checkbox"
             checked={shared}
             onChange={(e) => setShared(e.target.checked)}
+            style={{ margin: 0 }}
           />
+          他のユーザーと共有する
         </label>
       </div>
       <div className="date-fields">
@@ -590,7 +603,7 @@ function ScheduleFormComponent({
       )}
 
       {/* メンバー管理 */}
-      <div className="settings-section">
+      <div className="settings-section" style={{ borderBottom: "none", paddingBottom: 0 }}>
         <div className="settings-section-title">メンバー</div>
         {memberLoading && (
           <p style={{ fontSize: "0.8rem", color: "var(--color-text-muted)" }}>読み込み中...</p>
