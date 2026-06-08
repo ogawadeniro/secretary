@@ -79,7 +79,7 @@ export default function AccountDialog({
             ✕
           </button>
         </div>
-        <div className="dialog-body">
+        <div className="dialog-body" style={{ gap: "16px" }}>
           <div className="settings-form">
 
             <section className="settings-section">
@@ -137,7 +137,7 @@ export default function AccountDialog({
                 className="save-btn"
                 onClick={handleChangePassword}
                 disabled={saving || !currentPassword || !newPassword}
-                style={{ marginTop: "8px" }}
+                style={{ marginTop: "12px" }}
               >
                 パスワードを変更
               </button>
