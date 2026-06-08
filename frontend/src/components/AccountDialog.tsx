@@ -144,10 +144,10 @@ export default function AccountDialog({
               </label>
               <div style={{ display: "flex", justifyContent: "center" }}>
                 <button
-                  className="save-btn"
+                  className="reset-btn"
                   onClick={handleChangePassword}
                   disabled={saving || !currentPassword || !newPassword}
-                  style={{ width: "70%", marginTop: "8px", padding: "8px", fontSize: "0.85rem", cursor: "pointer", border: "none" }}
+                  style={{ width: "70%", marginTop: "8px" }}
                 >
                   パスワードを変更
                 </button>
