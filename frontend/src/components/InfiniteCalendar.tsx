@@ -365,6 +365,7 @@ export default function InfiniteCalendar() {
           onClose={handleDialogClose}
           onSchedulesChanged={reloadSchedules}
           currentUsername={user?.username ?? ""}
+          chipBgColor={settings.chipBgColor}
         />
       )}
     </div>

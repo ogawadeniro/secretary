@@ -19,17 +19,18 @@ interface ScheduleDialogProps {
   onClose: () => void;
   onSchedulesChanged: () => void;
   currentUsername: string;
+  chipBgColor: string;
 }
 
-/** 予定のタイトル背景色を計算 */
-function scheduleTitleColor(s: Schedule, currentUsername: string): string {
+/** 予定のタイトル背景色を計算（DayCellのチップ色と一致させる） */
+function scheduleTitleColor(s: Schedule, currentUsername: string, chipBgColor: string): string {
   const memberColors = (s.memberUsernames ?? []).map(
     (u) => s.memberChipBgColors?.[u] ?? ownerColor(u)
   );
   return memberColors.length > 1
     ? scheduleColor(memberColors)
     : s.owner === currentUsername
-      ? (s.ownerChipBgColor ?? ownerColor(s.owner))
+      ? chipBgColor
       : (s.ownerChipBgColor ?? ownerColor(s.owner));
 }
 
@@ -41,6 +42,7 @@ export default function ScheduleDialog({
   onClose,
   onSchedulesChanged,
   currentUsername,
+  chipBgColor,
 }: ScheduleDialogProps) {
   const [schedules, setSchedules] = useState<Schedule[]>(initialSchedules);
   const [showForm, setShowForm] = useState(false);
@@ -144,7 +146,7 @@ export default function ScheduleDialog({
                 <div className="schedule-card-info">
                   <strong
                     style={{
-                      background: scheduleTitleColor(s, currentUsername),
+                      background: scheduleTitleColor(s, currentUsername, chipBgColor),
                       borderRadius: "4px",
                       padding: "2px 6px",
                       color: "#e0e0e0",
