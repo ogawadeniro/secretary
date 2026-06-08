@@ -136,9 +136,11 @@ export default function SettingsDialog({
           </div>
 
           <section className="settings-section">
-            <button className="reset-btn" onClick={() => setShowResetConfirm(true)} disabled={saving}>
-              デフォルトに戻す
-            </button>
+            <div style={{ display: "flex", justifyContent: "center", marginTop: "12px" }}>
+              <button className="reset-btn" onClick={() => setShowResetConfirm(true)} disabled={saving} style={{ width: "70%" }}>
+                デフォルトに戻す
+              </button>
+            </div>
           </section>
         </div>
       </div>
