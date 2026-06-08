@@ -338,6 +338,7 @@ export default function InfiniteCalendar() {
             currentUsername={user?.username ?? ""}
             holidays={holidays}
             onDateClick={handleDateClick}
+            selectedDate={selectedDate}
           />
         ))}
         <div ref={bottomSentinelRef} className="sentinel" />

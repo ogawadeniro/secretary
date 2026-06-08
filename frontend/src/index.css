@@ -242,12 +242,16 @@ body {
   border-right: none;
 }
 
-.day-cell:hover {
+.day-cell.selected {
   background: var(--color-hover);
 }
 
 .day-cell.today {
   background: var(--color-today);
+}
+
+.day-cell.other-month {
+  background: rgba(0, 0, 0, 0.12);
 }
 
 .day-cell.other-month .day-number {

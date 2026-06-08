@@ -17,6 +17,7 @@ interface WeekRowProps {
   currentUsername: string;
   holidays: HolidayMap;
   onDateClick: (date: Date) => void;
+  selectedDate: Date | null;
 }
 
 /** 1週間分（7日）の行を表示 */
@@ -28,6 +29,7 @@ export default function WeekRow({
   currentUsername,
   holidays,
   onDateClick,
+  selectedDate,
 }: WeekRowProps) {
   const today = new Date();
 
@@ -55,6 +57,7 @@ export default function WeekRow({
             slotInfos={slots}
             overflowCount={overflowCount}
             isToday={isSameDay(date, today)}
+            isSelected={selectedDate ? isSameDay(date, selectedDate) : false}
             isCurrentMonth={date.getMonth() === currentMonth}
             chipBgColor={chipBgColor}
             currentUsername={currentUsername}

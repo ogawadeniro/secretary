@@ -9,6 +9,7 @@ interface DayCellProps {
   slotInfos: SlotInfo[];
   overflowCount: number;
   isToday: boolean;
+  isSelected: boolean;
   isCurrentMonth: boolean;
   chipBgColor: string;
   currentUsername: string;
@@ -22,6 +23,7 @@ export default function DayCell({
   slotInfos,
   overflowCount,
   isToday,
+  isSelected,
   isCurrentMonth,
   chipBgColor,
   currentUsername,
@@ -40,7 +42,7 @@ export default function DayCell({
 
   return (
     <div
-      className={`day-cell ${isToday ? "today" : ""} ${!isCurrentMonth ? "other-month" : ""}`}
+      className={`day-cell ${isToday ? "today" : ""} ${isSelected ? "selected" : ""} ${!isCurrentMonth ? "other-month" : ""}`}
       onClick={() => onDateClick(date)}
     >
       <span className="day-number" style={{ color: dateColor }}>
