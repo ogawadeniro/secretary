@@ -885,10 +885,12 @@ body {
 
 /* 設定セクション */
 .settings-section {
+  border-bottom: 1px solid var(--color-border);
   padding-bottom: 12px;
 }
 
 .settings-section:last-of-type {
+  border-bottom: none;
   padding-bottom: 0;
 }
 
