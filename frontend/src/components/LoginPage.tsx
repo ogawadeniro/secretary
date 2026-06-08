@@ -22,7 +22,7 @@ export default function LoginPage() {
         await login(username, password);
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "エラーが発生したよ");
+      setError(err instanceof Error ? err.message : "エラーが発生しました");
     } finally {
       setSubmitting(false);
     }
@@ -88,7 +88,7 @@ export default function LoginPage() {
             </>
           ) : (
             <>
-              アカウントがない？{" "}
+              アカウントがありませんか？{" "}
               <button className="link-btn" onClick={() => setIsRegister(true)}>
                 新規登録
               </button>

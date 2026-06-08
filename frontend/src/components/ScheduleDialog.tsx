@@ -142,7 +142,7 @@ export default function ScheduleDialog({
           {error && <p className="dialog-error">{error}</p>}
 
           {schedules.length === 0 && !showForm && (
-            <p className="empty-msg">予定はないよ</p>
+            <p className="empty-msg">予定が入っていないよ</p>
           )}
 
           {!showForm && !deleteTarget &&
@@ -406,7 +406,7 @@ function ScheduleFormComponent({
       return;
     }
     if (trimmed === currentUsername) {
-      setMemberError("自分自身をメンバーに追加できないよ");
+      setMemberError("自分自身はメンバーに追加できないよ");
       return;
     }
 

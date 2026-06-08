@@ -39,7 +39,7 @@ export default function ShareDialog({ onClose, onError, onNotify }: ShareDialogP
       setMyShares(my);
       setIncomingShares(incoming);
     } catch {
-      showError("共有設定の読み込みに失敗したよ");
+      showError("共有設定を読み込めなかったよ");
     }
   };
 
@@ -87,7 +87,7 @@ export default function ShareDialog({ onClose, onError, onNotify }: ShareDialogP
       await loadShares();
       onNotify("カレンダーを共有したよ");
     } catch (e) {
-      showError(e instanceof Error ? e.message : "共有の追加に失敗したよ");
+      showError(e instanceof Error ? e.message : "共有設定の追加に失敗したよ");
     } finally {
       setAdding(false);
     }
@@ -243,11 +243,11 @@ export default function ShareDialog({ onClose, onError, onNotify }: ShareDialogP
             <div className="settings-section-title">共有してくれている相手</div>
             {incomingShares.length === 0 ? (
               <p style={{ fontSize: "0.8rem", color: "var(--color-text-muted)" }}>
-                まだ誰も共有してくれていないよ
+                まだ誰にも共有されていないよ
               </p>
             ) : incomingOnly.length === 0 ? (
               <p style={{ fontSize: "0.8rem", color: "var(--color-text-muted)" }}>
-                共有してくれている相手はいないよ
+                誰にも共有されていないよ
               </p>
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
