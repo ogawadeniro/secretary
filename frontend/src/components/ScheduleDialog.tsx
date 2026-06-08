@@ -35,6 +35,17 @@ function scheduleTitleColor(s: Schedule, currentUsername: string, chipBgColor: s
       : (s.ownerChipBgColor ?? ownerColor(s.owner));
 }
 
+/** 時刻文字列 "HH:MM" を5分刻みに丸める */
+function roundToNearestFive(time: string): string {
+  if (!time) return time;
+  const [h, m] = time.split(":").map(Number);
+  const rounded = Math.round(m / 5) * 5;
+  if (rounded >= 60) {
+    return `${String((h + 1) % 24).padStart(2, "0")}:00`;
+  }
+  return `${String(h).padStart(2, "0")}:${String(rounded).padStart(2, "0")}`;
+}
+
 /** 選択した日付の予定一覧を表示し、追加・編集・削除を行うダイアログ */
 export default function ScheduleDialog({
   date,
@@ -587,16 +598,20 @@ function ScheduleFormComponent({
             開始時刻
             <input
               type="time"
+              step="300"
               value={startTime}
               onChange={(e) => setStartTime(e.target.value)}
+              onBlur={(e) => setStartTime(roundToNearestFive(e.target.value))}
             />
           </label>
           <label>
             終了時刻
             <input
               type="time"
+              step="300"
               value={endTime}
               onChange={(e) => setEndTime(e.target.value)}
+              onBlur={(e) => setEndTime(roundToNearestFive(e.target.value))}
             />
           </label>
         </div>
