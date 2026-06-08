@@ -791,6 +791,20 @@ body {
   margin-top: 16px;
 }
 
+.forgot-password-btn {
+  display: block;
+  margin: 12px auto 0;
+  text-align: center;
+  font-size: 0.8rem;
+}
+
+.forgot-password-hint {
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+  margin: 16px 0;
+  line-height: 1.6;
+}
+
 .link-btn {
   background: none;
   border: none;

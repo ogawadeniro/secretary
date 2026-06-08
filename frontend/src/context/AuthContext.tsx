@@ -6,7 +6,7 @@ interface AuthContextType {
   user: AuthUser | null;
   loading: boolean;
   login: (username: string, password: string) => Promise<void>;
-  register: (username: string, password: string, displayName: string) => Promise<void>;
+  register: (username: string, password: string, displayName: string, email: string) => Promise<void>;
   logout: () => Promise<void>;
   updateUser: (partial: Partial<AuthUser>) => void;
 }
@@ -33,8 +33,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     username: string,
     password: string,
     displayName: string,
+    email: string,
   ) => {
-    const u = await registerApi(username, password, displayName);
+    const u = await registerApi(username, password, displayName, email);
     setUser(u);
   }, []);
 

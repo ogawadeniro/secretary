@@ -1,13 +1,18 @@
 import { useState, type FormEvent } from "react";
 import { useAuth } from "../context/AuthContext";
 
+interface LoginPageProps {
+  onShowForgotPassword: () => void;
+}
+
 /** ログインページ */
-export default function LoginPage() {
+export default function LoginPage({ onShowForgotPassword }: LoginPageProps) {
   const { login, register } = useAuth();
   const [isRegister, setIsRegister] = useState(false);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [displayName, setDisplayName] = useState("");
+  const [email, setEmail] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -17,7 +22,7 @@ export default function LoginPage() {
     setSubmitting(true);
     try {
       if (isRegister) {
-        await register(username, password, displayName);
+        await register(username, password, displayName, email);
       } else {
         await login(username, password);
       }
@@ -62,6 +67,19 @@ export default function LoginPage() {
             </label>
           )}
 
+          {isRegister && (
+            <label>
+              メールアドレス
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                placeholder="パスワードリセットに使うよ"
+              />
+            </label>
+          )}
+
           <label>
             パスワード
             <input
@@ -77,6 +95,12 @@ export default function LoginPage() {
             {submitting ? "送信中..." : isRegister ? "登録" : "ログイン"}
           </button>
         </form>
+
+        {!isRegister && (
+          <button className="link-btn forgot-password-btn" onClick={onShowForgotPassword}>
+            パスワードを忘れた
+          </button>
+        )}
 
         <p className="login-toggle">
           {isRegister ? (
