@@ -83,6 +83,16 @@ check_prerequisites() {
         fi
         ok "パスワードを設定しました"
     fi
+    if [ -z "${SMTP_PASSWORD:-}" ]; then
+        step "SMTP_PASSWORD が未設定です（Gmailアプリパスワード）"
+        read -r -s -p "SMTPパスワードを入力してください: " SMTP_PASSWORD
+        echo ""
+        if [ -z "${SMTP_PASSWORD:-}" ]; then
+            warn "SMTP_PASSWORDが未設定です。パスワードリセット機能は使えません"
+        else
+            ok "SMTPパスワードを設定しました"
+        fi
+    fi
     if [ ! -f "$JAR_FILE" ]; then
         step "Building JAR (React + Spring Boot)..."
         bash build.sh

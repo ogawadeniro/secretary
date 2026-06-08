@@ -229,6 +229,24 @@ fix/xxx     → merge → dev → (デプロイ時) → merge → main
 ブロックされたユーザーは以後、自分の予定を相手に共有できなくなる。
 `share_blocks` テーブル（blocker_username, blocked_username, created_at）の追加が必要。
 
+## 将来的なDBマイグレーション TODO
+
+### アカウント管理機能（`feature/account-management`）
+本番DBでまだ未実行。他のテーブル追加時に一緒に実行すること。
+
+```sql
+ALTER TABLE users ADD COLUMN email text UNIQUE;
+
+CREATE TABLE password_reset_tokens (
+    id bigserial primary key,
+    username text not null,
+    token text not null unique,
+    expires_at timestamptz not null,
+    used boolean not null default false,
+    created_at timestamptz not null
+);
+```
+
 ## 既知の問題
 
 ### 予定チップの重なり
