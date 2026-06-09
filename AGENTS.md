@@ -219,6 +219,7 @@ frontend/src/
 | `build.sh` | Reactビルド → Spring Bootのstaticにコピー → JARパッケージ |
 | `dev.sh` | Spring Boot + Vite を同時起動（Ctrl+Cで終了） |
 | `deploy.sh` | リモートサーバーにデプロイ（JARビルド → scp → Dockerビルド → 起動） |
+| `migrate.sh` | 本番DBのマイグレーション（不足テーブル・カラムを追加） |
 | `setup-server.sh` | 初回サーバーセットアップ（Docker/DB/キーストア） |
 | `setup-letsencrypt.sh` | Let's Encrypt 証明書の初回取得・更新（acme.sh使用） |
 
@@ -259,8 +260,11 @@ fix/xxx     → merge → dev → (デプロイ時) → merge → main
 
 ## 将来的なDBマイグレーション TODO
 
+これらのマイグレーションは `setup-server.sh`（初回セットアップ時）と `migrate.sh`（既存DB更新時）で自動化済み。
+本番DBに不足がある場合は `bash migrate.sh` を実行。
+
 ### アカウント管理機能（`feature/account-management`）
-本番DBでまだ未実行。他のテーブル追加時に一緒に実行すること。
+`setup-server.sh` / `migrate.sh` で対応済み。
 
 ```sql
 ALTER TABLE users ADD COLUMN email text UNIQUE;
@@ -276,7 +280,7 @@ CREATE TABLE password_reset_tokens (
 ```
 
 ### 時刻間隔設定（`feature/time-interval-setting`）
-本番DBでまだ未実行。初回起動時に自動投入されるわけではないので注意。
+`setup-server.sh` / `migrate.sh` で対応済み。
 
 ```sql
 ALTER TABLE user_settings ADD COLUMN time_interval integer NOT NULL DEFAULT 5;
