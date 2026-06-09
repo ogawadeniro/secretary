@@ -1,4 +1,3 @@
-import { Schedule } from "../types/schedule";
 import { getSchedulePosition, shouldShowTitle } from "../utils/dateUtils";
 import { ownerColor, scheduleColor } from "../utils/colorUtils";
 import type { SlotInfo } from "../utils/dateUtils";

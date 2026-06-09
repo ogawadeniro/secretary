@@ -47,7 +47,7 @@ export function formatDateKey(d: Date): string {
 }
 
 /** 日付の時刻をリセット（ローカルタイム基準で00:00:00に） */
-export function normalizeDate(d: Date): Date {
+function normalizeDate(d: Date): Date {
   return new Date(d.getFullYear(), d.getMonth(), d.getDate());
 }
 

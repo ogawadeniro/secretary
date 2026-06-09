@@ -8,6 +8,7 @@ interface TimePickerProps {
 
 const HOURS = Array.from({ length: 24 }, (_, i) => String(i).padStart(2, "0"));
 
+/** step分間隔で分の配列を生成（例: step=5 → ["00","05",…,"55"]） */
 function generateMinutes(step: number): string[] {
   const minutes: string[] = [];
   for (let m = 0; m < 60; m += step) {
@@ -59,6 +60,7 @@ export default function TimePicker({ value, onChange, stepMinutes = 5 }: TimePic
     });
   }, [open, displayHour, displayMin]);
 
+  /** Enter/Spaceでポップアップを開く */
   const handleInputKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" || e.key === " ") {
       e.preventDefault();
@@ -68,6 +70,7 @@ export default function TimePicker({ value, onChange, stepMinutes = 5 }: TimePic
 
   const [focusIndex, setFocusIndex] = useState<{ col: "hours" | "minutes"; idx: number } | null>(null);
 
+  /** ポップアップ内のキーボードナビゲーション（Esc/矢印キー/Enter） */
   const handlePopoverKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Escape") {
       setOpen(false);
