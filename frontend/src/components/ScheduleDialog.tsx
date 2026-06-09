@@ -328,30 +328,44 @@ function ScheduleFormComponent({
 
   // 時刻入力を5分刻みでスクロール
   useEffect(() => {
-    const setup = (ref: React.RefObject<HTMLInputElement | null>, setter: (v: string) => void) => {
-      const el = ref.current;
-      if (!el) return;
-      const handler = (e: WheelEvent) => {
-        e.preventDefault();
-        const parts = el.value.split(":");
-        if (parts.length !== 2) return;
-        const [h, m] = parts.map(Number);
-        const totalMin = h * 60 + m;
-        const delta = e.deltaY > 0 ? -5 : 5;
-        const newTotal = Math.max(0, Math.min(1439, totalMin + delta));
-        setter(
-          `${String(Math.floor(newTotal / 60)).padStart(2, "0")}:${String(newTotal % 60).padStart(2, "0")}`
-        );
-      };
-      el.addEventListener("wheel", handler, { passive: false });
-      return () => el.removeEventListener("wheel", handler);
+    if (isAllDay) return;
+    const el = startTimeRef.current;
+    if (!el) return;
+    const handler = (e: WheelEvent) => {
+      e.preventDefault();
+      if (e.deltaY < 0) {
+        el.stepUp();
+      } else {
+        el.stepDown();
+      }
+      const nativeSetter = Object.getOwnPropertyDescriptor(
+        window.HTMLInputElement.prototype, "value"
+      )?.set;
+      nativeSetter?.call(el, el.value);
+      el.dispatchEvent(new Event("input", { bubbles: true }));
     };
-    const cleanup1 = setup(startTimeRef, setStartTime);
-    const cleanup2 = setup(endTimeRef, setEndTime);
-    return () => {
-      cleanup1?.();
-      cleanup2?.();
+    el.addEventListener("wheel", handler, { passive: false });
+    return () => el.removeEventListener("wheel", handler);
+  }, [isAllDay]);
+  useEffect(() => {
+    if (isAllDay) return;
+    const el = endTimeRef.current;
+    if (!el) return;
+    const handler = (e: WheelEvent) => {
+      e.preventDefault();
+      if (e.deltaY < 0) {
+        el.stepUp();
+      } else {
+        el.stepDown();
+      }
+      const nativeSetter = Object.getOwnPropertyDescriptor(
+        window.HTMLInputElement.prototype, "value"
+      )?.set;
+      nativeSetter?.call(el, el.value);
+      el.dispatchEvent(new Event("input", { bubbles: true }));
     };
+    el.addEventListener("wheel", handler, { passive: false });
+    return () => el.removeEventListener("wheel", handler);
   }, [isAllDay]);
 
   // 相互共有ユーザー一覧を取得（表示名付き）
