@@ -11,6 +11,7 @@ import { searchUsers } from "../api/userApi";
 import { adjustEndByStart, adjustStartByEnd } from "../utils/dateUtils";
 import { ownerColor, scheduleColor } from "../utils/colorUtils";
 import { PartyPopper, Users } from "lucide-react";
+import TimePicker from "./TimePicker";
 
 interface ScheduleDialogProps {
   date: Date;
@@ -312,41 +313,6 @@ function ScheduleFormComponent({
 
   const adjustingRef = useRef(false);
   const suggestionsRef = useRef<HTMLDivElement>(null);
-  const startTimeRef = useRef<HTMLInputElement>(null);
-  const endTimeRef = useRef<HTMLInputElement>(null);
-  const lastStartTimeRef = useRef(startTime);
-  const lastEndTimeRef = useRef(endTime);
-
-  const roundInDirection = (raw: string, last: string): string => {
-    const [rh, rm] = raw.split(":").map(Number);
-    const [lh, lm] = last.split(":").map(Number);
-    const rawMin = rh * 60 + rm;
-    const lastMin = lh * 60 + lm;
-    const direction = rawMin >= lastMin ? 1 : -1;
-    const nearest5 = Math.round(rawMin / 5) * 5;
-    if (nearest5 === rawMin) {
-      return `${String(rh).padStart(2, "0")}:${String(rm).padStart(2, "0")}`;
-    }
-    if (direction > 0) {
-      const rounded = Math.ceil(rawMin / 5) * 5;
-      return `${String(Math.floor(rounded / 60) % 24).padStart(2, "0")}:${String(rounded % 60).padStart(2, "0")}`;
-    }
-    const rounded = Math.floor(rawMin / 5) * 5;
-    return `${String(Math.floor(rounded / 60) % 24).padStart(2, "0")}:${String(rounded % 60).padStart(2, "0")}`;
-  };
-
-  const handleStartTimeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const raw = e.target.value;
-    const rounded = roundInDirection(raw, lastStartTimeRef.current);
-    lastStartTimeRef.current = rounded;
-    setStartTime(rounded);
-  };
-  const handleEndTimeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const raw = e.target.value;
-    const rounded = roundInDirection(raw, lastEndTimeRef.current);
-    lastEndTimeRef.current = rounded;
-    setEndTime(rounded);
-  };
 
   // 相互共有ユーザー一覧を取得（表示名付き）
   useEffect(() => {
@@ -620,23 +586,11 @@ function ScheduleFormComponent({
         <div className="time-fields">
           <label>
             開始時刻
-            <input
-              type="time"
-              step="300"
-              ref={startTimeRef}
-              value={startTime}
-              onChange={handleStartTimeChange}
-            />
+            <TimePicker value={startTime} onChange={setStartTime} />
           </label>
           <label>
             終了時刻
-            <input
-              type="time"
-              step="300"
-              ref={endTimeRef}
-              value={endTime}
-              onChange={handleEndTimeChange}
-            />
+            <TimePicker value={endTime} onChange={setEndTime} />
           </label>
         </div>
       )}
