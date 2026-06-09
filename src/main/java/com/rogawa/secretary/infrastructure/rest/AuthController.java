@@ -8,6 +8,7 @@ import com.rogawa.secretary.infrastructure.rest.dto.AuthResponse;
 import com.rogawa.secretary.infrastructure.rest.dto.ChangePasswordRequest;
 import com.rogawa.secretary.infrastructure.rest.dto.LoginRequest;
 import com.rogawa.secretary.infrastructure.rest.dto.RegisterRequest;
+import java.util.Map;
 import com.rogawa.secretary.infrastructure.service.EmailService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
@@ -59,13 +60,15 @@ public class AuthController {
 
     /** ユーザー登録 */
     @PostMapping("/api/v1/auth/register")
-    public ResponseEntity<AuthResponse> register(
+    public ResponseEntity<?> register(
             @Valid @RequestBody RegisterRequest request) {
         if (userRepository.findByUsername(request.getUsername()).isPresent()) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).build();
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(Map.of("field", "username", "message", "このユーザー名はもう使われているよ"));
         }
         if (request.getEmail() != null && userRepository.findByEmail(request.getEmail()).isPresent()) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).build();
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(Map.of("field", "email", "message", "このメールアドレスはもう使われているよ"));
         }
         User user = new User();
         user.setUsername(request.getUsername());

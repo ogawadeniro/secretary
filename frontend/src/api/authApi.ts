@@ -37,7 +37,10 @@ export async function registerApi(
     body: JSON.stringify({ username, password, displayName, email }),
   });
   if (!res.ok) {
-    if (res.status === 409) throw new Error("このユーザー名はもう使われているよ");
+    if (res.status === 409) {
+      const body = await res.json().catch(() => null);
+      throw new Error(body?.message ?? "このユーザー名はもう使われているよ");
+    }
     throw new Error("登録に失敗したよ");
   }
   return res.json();
