@@ -45,7 +45,7 @@ export default function LoginPage({ onShowForgotPassword }: LoginPageProps) {
 
         <form onSubmit={handleSubmit} className="login-form">
           <label>
-            ユーザー名<span className="required-mark">●</span>
+            ユーザー名{isRegister && <span className="required-mark">●</span>}
             <input
               type="text"
               value={username}
@@ -80,7 +80,7 @@ export default function LoginPage({ onShowForgotPassword }: LoginPageProps) {
           )}
 
           <label>
-            パスワード
+            パスワード{isRegister && <span className="required-mark">●</span>}
             <input
               type="password"
               value={password}
