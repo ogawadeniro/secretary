@@ -6,6 +6,30 @@ PROD_USER="${PROD_USER:-rocky}"
 IMAGE_NAME="${IMAGE_NAME:-secretary}"
 JAR_FILE="target/secretary-0.0.1-SNAPSHOT.jar"
 
+check_tag() {
+    local tag
+    tag=$(git describe --exact-match --tags HEAD 2>/dev/null || true)
+    if [ -z "$tag" ]; then
+        local latest
+        latest=$(git describe --tags --abbrev=0 HEAD 2>/dev/null || true)
+        fail "現在のHEADにタグがありません"
+        if [ -n "$latest" ]; then
+            local ahead
+            ahead=$(git rev-list --count "${latest}..HEAD" 2>/dev/null || echo "?")
+            echo ""
+            info "最新タグ: ${latest}（${ahead}コミット ahead）"
+            info "タグを打ってからデプロイしてね:"
+            info "  git tag v1.x.x && bash deploy.sh"
+        else
+            echo ""
+            info "タグを打ってからデプロイしてね:"
+            info "  git tag v1.0.0 && bash deploy.sh"
+        fi
+        exit 1
+    fi
+    ok "タグ ${tag} でデプロイします"
+}
+
 red() { echo -e "\033[31m$1\033[0m"; }
 green() { echo -e "\033[32m$1\033[0m"; }
 yellow() { echo -e "\033[33m$1\033[0m"; }
@@ -209,6 +233,7 @@ main() {
     local width
     width=$(calc_width)
     header $width
+    check_tag
     check_prerequisites
     load_keystore_password
     transfer_files
