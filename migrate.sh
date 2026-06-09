@@ -19,10 +19,18 @@ echo "DB: ${DB_HOST}/${DB_NAME} as ${DB_USER}"
 echo ""
 
 psql -h "$DB_HOST" -U "$DB_USER" -d "$DB_NAME" <<-EOSQL
-    -- 1. users テーブルに email カラムを追加
+    -- 1. users テーブルを作成（初回セットアップ漏れ対策）
+    CREATE TABLE IF NOT EXISTS users (
+        id BIGSERIAL PRIMARY KEY,
+        username TEXT NOT NULL UNIQUE,
+        password TEXT NOT NULL,
+        display_name TEXT
+    );
+
+    -- 2. users テーブルに email カラムを追加
     ALTER TABLE users ADD COLUMN IF NOT EXISTS email TEXT;
 
-    -- 2. password_reset_tokens テーブルを作成
+    -- 3. password_reset_tokens テーブルを作成
     CREATE TABLE IF NOT EXISTS password_reset_tokens (
         id BIGSERIAL PRIMARY KEY,
         username TEXT NOT NULL,
@@ -32,17 +40,17 @@ psql -h "$DB_HOST" -U "$DB_USER" -d "$DB_NAME" <<-EOSQL
         created_at TIMESTAMPTZ NOT NULL
     );
 
-    -- 3. user_settings に time_interval カラムを追加
+    -- 4. user_settings に time_interval カラムを追加
     ALTER TABLE user_settings ADD COLUMN IF NOT EXISTS time_interval INTEGER NOT NULL DEFAULT 5;
 
-    -- 4. schedules に shared カラムを追加（古いテーブル対策）
+    -- 5. schedules に shared カラムを追加（古いテーブル対策）
     ALTER TABLE schedules ADD COLUMN IF NOT EXISTS shared BOOLEAN NOT NULL DEFAULT true;
 
-    -- 5. schedules.id を INTEGER (SERIAL) → BIGINT (BIGSERIAL) に変更
+    -- 6. schedules.id を INTEGER (SERIAL) → BIGINT (BIGSERIAL) に変更
     --    Hibernate が Long 型として認識するため validation に通す
     ALTER TABLE schedules ALTER COLUMN id TYPE BIGINT;
 
-    -- 6. 不足しているテーブルをまとめて作成
+    -- 7. 不足しているテーブルをまとめて作成
     CREATE TABLE IF NOT EXISTS calendar_shares (
         id BIGSERIAL PRIMARY KEY,
         owner_username TEXT NOT NULL,
