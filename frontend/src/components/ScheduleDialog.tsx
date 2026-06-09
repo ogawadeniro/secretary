@@ -323,6 +323,36 @@ function ScheduleFormComponent({
 
   const adjustingRef = useRef(false);
   const suggestionsRef = useRef<HTMLDivElement>(null);
+  const startTimeRef = useRef<HTMLInputElement>(null);
+  const endTimeRef = useRef<HTMLInputElement>(null);
+
+  // 時刻入力を5分刻みでスクロール
+  useEffect(() => {
+    const setup = (ref: React.RefObject<HTMLInputElement | null>, setter: (v: string) => void) => {
+      const el = ref.current;
+      if (!el) return;
+      const handler = (e: WheelEvent) => {
+        e.preventDefault();
+        const parts = el.value.split(":");
+        if (parts.length !== 2) return;
+        const [h, m] = parts.map(Number);
+        const totalMin = h * 60 + m;
+        const delta = e.deltaY > 0 ? -5 : 5;
+        const newTotal = Math.max(0, Math.min(1439, totalMin + delta));
+        setter(
+          `${String(Math.floor(newTotal / 60)).padStart(2, "0")}:${String(newTotal % 60).padStart(2, "0")}`
+        );
+      };
+      el.addEventListener("wheel", handler, { passive: false });
+      return () => el.removeEventListener("wheel", handler);
+    };
+    const cleanup1 = setup(startTimeRef, setStartTime);
+    const cleanup2 = setup(endTimeRef, setEndTime);
+    return () => {
+      cleanup1?.();
+      cleanup2?.();
+    };
+  }, [isAllDay]);
 
   // 相互共有ユーザー一覧を取得（表示名付き）
   useEffect(() => {
@@ -599,6 +629,7 @@ function ScheduleFormComponent({
             <input
               type="time"
               step="300"
+              ref={startTimeRef}
               value={startTime}
               onChange={(e) => setStartTime(e.target.value)}
               onBlur={(e) => setStartTime(roundToNearestFive(e.target.value))}
@@ -609,6 +640,7 @@ function ScheduleFormComponent({
             <input
               type="time"
               step="300"
+              ref={endTimeRef}
               value={endTime}
               onChange={(e) => setEndTime(e.target.value)}
               onBlur={(e) => setEndTime(roundToNearestFive(e.target.value))}
