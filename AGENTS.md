@@ -233,6 +233,20 @@ fix/xxx     → merge → dev → (デプロイ時) → merge → main
 - `dev`: 開発統合ブランチ。feature/fix はここにマージ
 - `feature/xxx`, `fix/xxx`: 1機能・1修正 = 1ブランチ
 
+## バージョン管理
+
+[SemVer](https://semver.org/)（`MAJOR.MINOR.PATCH`）。
+
+| バージョン | 上げるタイミング | 例 |
+|-----------|----------------|-----|
+| MAJOR | 互換性のないAPI変更・アーキテクチャ刷新 | Vaadin→React移行 |
+| MINOR | 後方互換のある機能追加 | TimePicker実装、アカウント管理 |
+| PATCH | 後方互換のあるバグ修正・リファクタリング | デッドコード削除、APIパス修正 |
+
+- mainマージ＋デプロイ時に MINOR または PATCH を上げる
+- 大きな機能追加で MAJOR を上げる
+- タグは `main` ブランチに打つ
+
 ## 将来のアイデア
 
 ### 公開コード方式のカレンダー共有（検討中）

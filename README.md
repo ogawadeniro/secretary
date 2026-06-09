@@ -163,6 +163,20 @@ mvn test
 - 日付フォーマットは `yyyy/MM/dd-HH:mm`（Jacksonの `@JsonFormat`）。
 - `updateTime` はサーバー側で自動設定。フロントエンドから送信しないこと。
 
+## バージョン管理
+
+[Semantic Versioning](https://semver.org/)（`MAJOR.MINOR.PATCH`）に従う。
+
+| バージョン | 上げるタイミング | 例 |
+|-----------|----------------|-----|
+| MAJOR | 互換性のないAPI変更・アーキテクチャ刷新 | Vaadin→React移行 |
+| MINOR | 後方互換のある機能追加 | アカウント管理機能 |
+| PATCH | 後方互換のあるバグ修正・リファクタリング | APIクライアント共通化 |
+
+- **mainにマージ＋デプロイ** したら MINOR または PATCH を上げる
+- 大きな機能追加で MAJOR を上げる
+- タグは `main` ブランチに打つ
+
 ## CI/CD
 
 `main` ブランチへのpush / PR で `mvn test` + Dockerイメージビルドが実行される（`.github/workflows/ci.yml`）。
