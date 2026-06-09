@@ -35,17 +35,6 @@ function scheduleTitleColor(s: Schedule, currentUsername: string, chipBgColor: s
       : (s.ownerChipBgColor ?? ownerColor(s.owner));
 }
 
-/** 時刻文字列 "HH:MM" を5分刻みに丸める */
-function roundToNearestFive(time: string): string {
-  if (!time) return time;
-  const [h, m] = time.split(":").map(Number);
-  const rounded = Math.round(m / 5) * 5;
-  if (rounded >= 60) {
-    return `${String((h + 1) % 24).padStart(2, "0")}:00`;
-  }
-  return `${String(h).padStart(2, "0")}:${String(rounded).padStart(2, "0")}`;
-}
-
 /** 選択した日付の予定一覧を表示し、追加・編集・削除を行うダイアログ */
 export default function ScheduleDialog({
   date,
@@ -325,48 +314,39 @@ function ScheduleFormComponent({
   const suggestionsRef = useRef<HTMLDivElement>(null);
   const startTimeRef = useRef<HTMLInputElement>(null);
   const endTimeRef = useRef<HTMLInputElement>(null);
+  const lastStartTimeRef = useRef(startTime);
+  const lastEndTimeRef = useRef(endTime);
 
-  // 時刻入力を5分刻みでスクロール
-  useEffect(() => {
-    if (isAllDay) return;
-    const el = startTimeRef.current;
-    if (!el) return;
-    const handler = (e: WheelEvent) => {
-      e.preventDefault();
-      if (e.deltaY < 0) {
-        el.stepUp();
-      } else {
-        el.stepDown();
-      }
-      const nativeSetter = Object.getOwnPropertyDescriptor(
-        window.HTMLInputElement.prototype, "value"
-      )?.set;
-      nativeSetter?.call(el, el.value);
-      el.dispatchEvent(new Event("input", { bubbles: true }));
-    };
-    el.addEventListener("wheel", handler, { passive: false });
-    return () => el.removeEventListener("wheel", handler);
-  }, [isAllDay]);
-  useEffect(() => {
-    if (isAllDay) return;
-    const el = endTimeRef.current;
-    if (!el) return;
-    const handler = (e: WheelEvent) => {
-      e.preventDefault();
-      if (e.deltaY < 0) {
-        el.stepUp();
-      } else {
-        el.stepDown();
-      }
-      const nativeSetter = Object.getOwnPropertyDescriptor(
-        window.HTMLInputElement.prototype, "value"
-      )?.set;
-      nativeSetter?.call(el, el.value);
-      el.dispatchEvent(new Event("input", { bubbles: true }));
-    };
-    el.addEventListener("wheel", handler, { passive: false });
-    return () => el.removeEventListener("wheel", handler);
-  }, [isAllDay]);
+  const roundInDirection = (raw: string, last: string): string => {
+    const [rh, rm] = raw.split(":").map(Number);
+    const [lh, lm] = last.split(":").map(Number);
+    const rawMin = rh * 60 + rm;
+    const lastMin = lh * 60 + lm;
+    const direction = rawMin >= lastMin ? 1 : -1;
+    const nearest5 = Math.round(rawMin / 5) * 5;
+    if (nearest5 === rawMin) {
+      return `${String(rh).padStart(2, "0")}:${String(rm).padStart(2, "0")}`;
+    }
+    if (direction > 0) {
+      const rounded = Math.ceil(rawMin / 5) * 5;
+      return `${String(Math.floor(rounded / 60) % 24).padStart(2, "0")}:${String(rounded % 60).padStart(2, "0")}`;
+    }
+    const rounded = Math.floor(rawMin / 5) * 5;
+    return `${String(Math.floor(rounded / 60) % 24).padStart(2, "0")}:${String(rounded % 60).padStart(2, "0")}`;
+  };
+
+  const handleStartTimeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const raw = e.target.value;
+    const rounded = roundInDirection(raw, lastStartTimeRef.current);
+    lastStartTimeRef.current = rounded;
+    setStartTime(rounded);
+  };
+  const handleEndTimeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const raw = e.target.value;
+    const rounded = roundInDirection(raw, lastEndTimeRef.current);
+    lastEndTimeRef.current = rounded;
+    setEndTime(rounded);
+  };
 
   // 相互共有ユーザー一覧を取得（表示名付き）
   useEffect(() => {
@@ -642,22 +622,18 @@ function ScheduleFormComponent({
             開始時刻
             <input
               type="time"
-              step="300"
               ref={startTimeRef}
               value={startTime}
-              onChange={(e) => setStartTime(e.target.value)}
-              onBlur={(e) => setStartTime(roundToNearestFive(e.target.value))}
+              onChange={handleStartTimeChange}
             />
           </label>
           <label>
             終了時刻
             <input
               type="time"
-              step="300"
               ref={endTimeRef}
               value={endTime}
-              onChange={(e) => setEndTime(e.target.value)}
-              onBlur={(e) => setEndTime(roundToNearestFive(e.target.value))}
+              onChange={handleEndTimeChange}
             />
           </label>
         </div>
