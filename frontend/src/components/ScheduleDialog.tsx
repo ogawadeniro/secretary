@@ -21,6 +21,7 @@ interface ScheduleDialogProps {
   onSchedulesChanged: () => void;
   currentUsername: string;
   chipBgColor: string;
+  timeInterval: number;
   onNotify: (message: string, type?: "success" | "error") => void;
 }
 
@@ -45,6 +46,7 @@ export default function ScheduleDialog({
   onSchedulesChanged,
   currentUsername,
   chipBgColor,
+  timeInterval,
   onNotify,
 }: ScheduleDialogProps) {
   const [schedules, setSchedules] = useState<Schedule[]>(initialSchedules);
@@ -233,6 +235,7 @@ export default function ScheduleDialog({
                 setShowForm(false);
                 setEditing(null);
               }}
+              timeInterval={timeInterval}
               onNotify={onNotify}
             />
           )}
@@ -271,6 +274,7 @@ function ScheduleFormComponent({
   onSave,
   onCancel,
   onNotify,
+  timeInterval,
 }: {
   initial: Schedule | null;
   date: Date;
@@ -278,6 +282,7 @@ function ScheduleFormComponent({
   onSave: (data: ScheduleFormData, pendingMembers?: string[]) => Promise<Schedule | void>;
   onCancel: () => void;
   onNotify: (message: string, type?: "success" | "error") => void;
+  timeInterval: number;
 }) {
   const pad = (n: number) => String(n).padStart(2, "0");
   const dateStr = `${date.getFullYear()}/${pad(date.getMonth() + 1)}/${pad(date.getDate())}`;
@@ -586,11 +591,11 @@ function ScheduleFormComponent({
         <div className="time-fields">
           <label>
             開始時刻
-            <TimePicker value={startTime} onChange={setStartTime} />
+            <TimePicker value={startTime} onChange={setStartTime} stepMinutes={timeInterval} />
           </label>
           <label>
             終了時刻
-            <TimePicker value={endTime} onChange={setEndTime} />
+            <TimePicker value={endTime} onChange={setEndTime} stepMinutes={timeInterval} />
           </label>
         </div>
       )}

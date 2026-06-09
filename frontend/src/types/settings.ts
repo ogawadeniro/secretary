@@ -6,4 +6,5 @@ export interface UserSettings {
   email?: string;
   chipBgColor: string;
   firstDayOfWeek: number;
+  timeInterval: number;
 }

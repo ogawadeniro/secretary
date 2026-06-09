@@ -76,6 +76,9 @@ public class UserSettingController {
         if (request.getFirstDayOfWeek() != null) {
             setting.setFirstDayOfWeek(request.getFirstDayOfWeek());
         }
+        if (request.getTimeInterval() != null) {
+            setting.setTimeInterval(request.getTimeInterval());
+        }
 
         UserSetting saved = userSettingRepository.save(setting);
         UserSettingDto dto = UserSettingDto.fromDomain(saved);
@@ -101,6 +104,7 @@ public class UserSettingController {
         UserSetting setting = new UserSetting();
         setting.setChipBgColor("#4a90d9");
         setting.setFirstDayOfWeek(0);
+        setting.setTimeInterval(5);
         return setting;
     }
 }

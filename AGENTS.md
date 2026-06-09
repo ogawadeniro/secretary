@@ -247,6 +247,13 @@ CREATE TABLE password_reset_tokens (
 );
 ```
 
+### 時刻間隔設定（`feature/time-interval-setting`）
+本番DBでまだ未実行。初回起動時に自動投入されるわけではないので注意。
+
+```sql
+ALTER TABLE user_settings ADD COLUMN time_interval integer NOT NULL DEFAULT 5;
+```
+
 ## 既知の問題
 
 ### 予定チップの重なり

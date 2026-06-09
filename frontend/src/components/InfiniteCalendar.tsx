@@ -38,6 +38,7 @@ function generateWeeks(centerDate: Date, halfWeeks: number, firstDayOfWeek: numb
 const DEFAULT_SETTINGS: UserSettings = {
   chipBgColor: "#2255aa",
   firstDayOfWeek: 0,
+  timeInterval: 5,
 };
 
 export default function InfiniteCalendar() {
@@ -401,6 +402,7 @@ export default function InfiniteCalendar() {
           onSchedulesChanged={reloadSchedules}
           currentUsername={user?.username ?? ""}
           chipBgColor={settings.chipBgColor}
+          timeInterval={settings.timeInterval}
           onNotify={notify}
         />
       )}

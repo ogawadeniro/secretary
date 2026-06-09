@@ -8,4 +8,5 @@ public class UserSetting {
     private String username;
     private String chipBgColor;
     private Integer firstDayOfWeek;
+    private Integer timeInterval;
 }

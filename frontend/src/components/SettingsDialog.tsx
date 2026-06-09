@@ -19,6 +19,7 @@ export default function SettingsDialog({
 }: SettingsDialogProps) {
   const [chipBgColor, setChipBgColor] = useState(initial.chipBgColor);
   const [firstDayOfWeek, setFirstDayOfWeek] = useState(initial.firstDayOfWeek);
+  const [timeInterval, setTimeInterval] = useState(initial.timeInterval);
   const [saving, setSaving] = useState(false);
   const [closing, setClosing] = useState(false);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
@@ -34,6 +35,7 @@ export default function SettingsDialog({
       const saved = await saveSettings({
         chipBgColor,
         firstDayOfWeek,
+        timeInterval,
       });
       onSaved(saved);
       onNotify("設定を保存したよ");
@@ -52,6 +54,7 @@ export default function SettingsDialog({
       const saved = await resetSettings();
       setChipBgColor(saved.chipBgColor);
       setFirstDayOfWeek(saved.firstDayOfWeek);
+      setTimeInterval(saved.timeInterval);
       onSaved(saved);
       onNotify("設定をデフォルトに戻したよ");
       handleClose();
@@ -121,6 +124,21 @@ export default function SettingsDialog({
                       {dayOfWeekLabel(i)}
                     </option>
                   ))}
+                </select>
+              </label>
+              <label>
+                時刻間隔
+                <span style={{ fontSize: "0.75rem", color: "var(--color-text-muted)" }}>
+                  時刻ピッカーの選択間隔
+                </span>
+                <select
+                  value={timeInterval}
+                  onChange={(e) => setTimeInterval(Number(e.target.value))}
+                >
+                  <option value={1}>1分</option>
+                  <option value={5}>5分</option>
+                  <option value={10}>10分</option>
+                  <option value={30}>30分</option>
                 </select>
               </label>
             </section>

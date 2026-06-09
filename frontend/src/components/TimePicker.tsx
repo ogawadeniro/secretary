@@ -1,23 +1,33 @@
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 
 interface TimePickerProps {
   value: string;
   onChange: (value: string) => void;
+  stepMinutes?: number;
 }
 
 const HOURS = Array.from({ length: 24 }, (_, i) => String(i).padStart(2, "0"));
-const MINUTES = ["00", "05", "10", "15", "20", "25", "30", "35", "40", "45", "50", "55"];
 
-export default function TimePicker({ value, onChange }: TimePickerProps) {
+function generateMinutes(step: number): string[] {
+  const minutes: string[] = [];
+  for (let m = 0; m < 60; m += step) {
+    minutes.push(String(m).padStart(2, "0"));
+  }
+  return minutes;
+}
+
+export default function TimePicker({ value, onChange, stepMinutes = 5 }: TimePickerProps) {
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const hoursRef = useRef<HTMLDivElement>(null);
   const minutesRef = useRef<HTMLDivElement>(null);
 
+  const MINUTES = useMemo(() => generateMinutes(stepMinutes), [stepMinutes]);
+
   const [h, m] = value.split(":").map(Number);
   const displayHour = String(h).padStart(2, "0");
-  const displayMin = String(Math.round(m / 5) * 5 % 60).padStart(2, "0");
+  const displayMin = String(Math.round(m / stepMinutes) * stepMinutes % 60).padStart(2, "0");
 
   const select = useCallback((hour: string, minute: string) => {
     onChange(`${hour}:${minute}`);
@@ -56,7 +66,6 @@ export default function TimePicker({ value, onChange }: TimePickerProps) {
     }
   };
 
-  // ポップオーバー内でのキーボード操作
   const [focusIndex, setFocusIndex] = useState<{ col: "hours" | "minutes"; idx: number } | null>(null);
 
   const handlePopoverKeyDown = (e: React.KeyboardEvent) => {

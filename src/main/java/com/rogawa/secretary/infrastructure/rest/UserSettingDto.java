@@ -12,6 +12,7 @@ public class UserSettingDto {
     private String email;
     private String chipBgColor;
     private Integer firstDayOfWeek;
+    private Integer timeInterval;
 
     public static UserSettingDto fromDomain(UserSetting domain) {
         UserSettingDto dto = new UserSettingDto();
@@ -19,6 +20,7 @@ public class UserSettingDto {
         dto.setUsername(domain.getUsername());
         dto.setChipBgColor(domain.getChipBgColor());
         dto.setFirstDayOfWeek(domain.getFirstDayOfWeek());
+        dto.setTimeInterval(domain.getTimeInterval());
         return dto;
     }
 }

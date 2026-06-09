@@ -27,12 +27,16 @@ public class JpaUserSetting {
     @Column(name = "first_day_of_week")
     private Integer firstDayOfWeek;
 
+    @Column(name = "time_interval")
+    private Integer timeInterval;
+
     public static JpaUserSetting fromDomain(UserSetting domain) {
         JpaUserSetting entity = new JpaUserSetting();
         entity.setId(domain.getId());
         entity.setUsername(domain.getUsername());
         entity.setChipBgColor(domain.getChipBgColor());
         entity.setFirstDayOfWeek(domain.getFirstDayOfWeek());
+        entity.setTimeInterval(domain.getTimeInterval());
         return entity;
     }
 
@@ -42,6 +46,7 @@ public class JpaUserSetting {
         setting.setUsername(this.username);
         setting.setChipBgColor(this.chipBgColor);
         setting.setFirstDayOfWeek(this.firstDayOfWeek);
+        setting.setTimeInterval(this.timeInterval);
         return setting;
     }
 }
