@@ -773,9 +773,8 @@ body {
 /* 必須マーク（オレンジの丸ポッチ） */
 .required-mark {
   color: #ff8800;
-  margin-left: 2px;
-  font-size: 0.7rem;
-  vertical-align: super;
+  margin-left: 1px;
+  font-size: 0.75rem;
 }
 
 .login-btn {
