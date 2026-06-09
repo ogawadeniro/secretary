@@ -770,6 +770,14 @@ body {
   font-family: inherit;
 }
 
+/* 必須マーク（オレンジの丸ポッチ） */
+.required-mark {
+  color: #ff8800;
+  margin-left: 2px;
+  font-size: 0.7rem;
+  vertical-align: super;
+}
+
 .login-btn {
   background: var(--color-accent);
   color: #fff;
