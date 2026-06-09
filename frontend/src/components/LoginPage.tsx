@@ -69,12 +69,11 @@ export default function LoginPage({ onShowForgotPassword }: LoginPageProps) {
 
           {isRegister && (
             <label>
-              メールアドレス
+              メールアドレス（任意）
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                required
                 placeholder="パスワードリセットに使うよ"
               />
             </label>

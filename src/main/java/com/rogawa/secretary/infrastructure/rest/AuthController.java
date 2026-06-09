@@ -66,15 +66,14 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.CONFLICT)
                     .body(Map.of("field", "username", "message", "このユーザー名はもう使われているよ"));
         }
-        if (request.getEmail() != null && userRepository.findByEmail(request.getEmail()).isPresent()) {
-            return ResponseEntity.status(HttpStatus.CONFLICT)
-                    .body(Map.of("field", "email", "message", "このメールアドレスはもう使われているよ"));
-        }
+
         User user = new User();
         user.setUsername(request.getUsername());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setDisplayName(request.getDisplayName());
-        user.setEmail(request.getEmail());
+        // 空文字は null に正規化
+        String email = request.getEmail();
+        user.setEmail(email != null && !email.isBlank() ? email : null);
         User saved = userRepository.save(user);
         AuthResponse res = new AuthResponse(
                 saved.getId(), saved.getUsername(), saved.getDisplayName());
