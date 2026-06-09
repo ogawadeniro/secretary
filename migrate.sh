@@ -38,7 +38,11 @@ psql -h "$DB_HOST" -U "$DB_USER" -d "$DB_NAME" <<-EOSQL
     -- 4. schedules に shared カラムを追加（古いテーブル対策）
     ALTER TABLE schedules ADD COLUMN IF NOT EXISTS shared BOOLEAN NOT NULL DEFAULT true;
 
-    -- 5. 不足しているテーブルをまとめて作成
+    -- 5. schedules.id を INTEGER (SERIAL) → BIGINT (BIGSERIAL) に変更
+    --    Hibernate が Long 型として認識するため validation に通す
+    ALTER TABLE schedules ALTER COLUMN id TYPE BIGINT;
+
+    -- 6. 不足しているテーブルをまとめて作成
     CREATE TABLE IF NOT EXISTS calendar_shares (
         id BIGSERIAL PRIMARY KEY,
         owner_username TEXT NOT NULL,
