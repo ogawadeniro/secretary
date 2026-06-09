@@ -630,18 +630,7 @@ body {
 
 .schedule-form input[type="text"],
 .schedule-form input[type="time"],
-.schedule-form input[type="date"] {
-  background: var(--color-surface2);
-  border: 1px solid var(--color-border);
-  color: var(--color-text);
-  padding: 6px 8px;
-  border-radius: 6px;
-  font-size: 16px;
-  font-family: inherit;
-  height: 36px;
-  box-sizing: border-box;
-}
-
+.schedule-form input[type="date"],
 .schedule-form textarea {
   background: var(--color-surface2);
   border: 1px solid var(--color-border);
@@ -650,7 +639,6 @@ body {
   border-radius: 6px;
   font-size: 16px;
   font-family: inherit;
-  box-sizing: border-box;
 }
 
 .schedule-form input[type="checkbox"] {
