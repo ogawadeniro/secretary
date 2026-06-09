@@ -1,20 +1,13 @@
 package com.rogawa.secretary.domain.repository;
 
 import com.rogawa.secretary.domain.model.Schedule;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
 public interface ScheduleRepository {
-    List<Schedule> findAll();
-
     List<Schedule> findByOwner(String owner);
 
     Optional<Schedule> findById(Long id);
-
-    List<Schedule> findAllByDateRange(LocalDateTime start, LocalDateTime end);
-
-    List<Schedule> findByOwnerAndDateRange(String owner, LocalDateTime start, LocalDateTime end);
 
     /** 指定したオーナー一覧のうち shared=true の予定を取得 */
     List<Schedule> findByOwnersShared(List<String> owners);

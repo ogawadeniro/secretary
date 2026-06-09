@@ -252,6 +252,15 @@ public class ScheduleService implements ScheduleUseCase {
         scheduleRepository.deleteById(id);
     }
 
+    /**
+     * 編集権限を判定する。
+     * 以下の3条件を全て満たす場合のみ編集を許可:
+     * 1. 予定のメンバーに自分が含まれている
+     * 2. 予定に含まれるメンバー全員に予定を共有している
+     * 3. 予定に含まれるメンバー全員から予定を共有されている
+     * 自分自身は共有チェック対象から除外する。
+     * オーナーは常に編集可能（上記チェックよりも優先）。
+     */
     private boolean canEditSchedule(Schedule schedule, String username) {
         // 条件1: 自分がオーナー
         if (schedule.getOwner().equals(username)) {

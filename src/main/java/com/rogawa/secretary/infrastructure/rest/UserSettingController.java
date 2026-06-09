@@ -102,7 +102,7 @@ public class UserSettingController {
 
     private UserSetting createDefaultSetting() {
         UserSetting setting = new UserSetting();
-        setting.setChipBgColor("#4a90d9");
+        setting.setChipBgColor("#2255aa");
         setting.setFirstDayOfWeek(0);
         setting.setTimeInterval(5);
         return setting;
