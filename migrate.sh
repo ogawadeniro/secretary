@@ -27,10 +27,8 @@ psql -h "$DB_HOST" -U "$DB_USER" -d "$DB_NAME" <<-EOSQL
         display_name TEXT
     );
 
-    -- 2. users テーブルに email カラムを追加（一意制約付き）
+    -- 2. users テーブルに email カラムを追加
     ALTER TABLE users ADD COLUMN IF NOT EXISTS email TEXT;
-    -- email の一意制約（既存のnull同士は競合しない）
-    CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email ON users (email) WHERE email IS NOT NULL;
 
     -- 3. password_reset_tokens テーブルを作成
     CREATE TABLE IF NOT EXISTS password_reset_tokens (
