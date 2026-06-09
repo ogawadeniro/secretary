@@ -2,7 +2,7 @@ target
 src/main/resources/static
 frontend/node_modules
 frontend/dist
-src/main/resources/application-product.properties
+src/main/resources/application-*.properties
 .classpath
 .project
 test.sh

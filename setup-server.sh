@@ -81,6 +81,7 @@ EOSQL
     PGPASSWORD="${DB_ADMIN_PASSWORD:-}" psql -h "$db_host" -U "$db_admin" -d postgres -c "CREATE DATABASE secretary OWNER rogawa;" 2>/dev/null || echo "Database 'secretary' already exists"
 
     PGPASSWORD="${DB_ADMIN_PASSWORD:-}" psql -h "$db_host" -U "$db_admin" -d secretary <<-EOSQL
+        -- 予定
         CREATE TABLE IF NOT EXISTS schedules (
             id SERIAL PRIMARY KEY,
             title TEXT NOT NULL,
@@ -89,8 +90,58 @@ EOSQL
             end_datetime TIMESTAMPTZ NOT NULL,
             owner TEXT NOT NULL,
             description TEXT,
-            update_time TIMESTAMPTZ NOT NULL
+            update_time TIMESTAMPTZ NOT NULL,
+            shared BOOLEAN NOT NULL DEFAULT true
         );
+
+        -- カレンダー共有設定
+        CREATE TABLE IF NOT EXISTS calendar_shares (
+            id BIGSERIAL PRIMARY KEY,
+            owner_username TEXT NOT NULL,
+            shared_with_username TEXT NOT NULL,
+            permission TEXT NOT NULL DEFAULT 'READ',
+            created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+            UNIQUE(owner_username, shared_with_username)
+        );
+
+        -- 予定メンバー
+        CREATE TABLE IF NOT EXISTS schedule_members (
+            id BIGSERIAL PRIMARY KEY,
+            schedule_id BIGINT NOT NULL REFERENCES schedules(id) ON DELETE CASCADE,
+            username TEXT NOT NULL,
+            created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+            UNIQUE(schedule_id, username)
+        );
+
+        -- ユーザー
+        CREATE TABLE IF NOT EXISTS users (
+            id BIGSERIAL PRIMARY KEY,
+            username TEXT NOT NULL UNIQUE,
+            password TEXT NOT NULL,
+            display_name TEXT
+        );
+
+        -- ユーザー設定
+        CREATE TABLE IF NOT EXISTS user_settings (
+            id BIGSERIAL PRIMARY KEY,
+            username TEXT NOT NULL UNIQUE,
+            chip_bg_color TEXT,
+            first_day_of_week INTEGER,
+            time_interval INTEGER NOT NULL DEFAULT 5
+        );
+
+        -- パスワードリセットトークン
+        CREATE TABLE IF NOT EXISTS password_reset_tokens (
+            id BIGSERIAL PRIMARY KEY,
+            username TEXT NOT NULL,
+            token TEXT NOT NULL UNIQUE,
+            expires_at TIMESTAMPTZ NOT NULL,
+            used BOOLEAN NOT NULL DEFAULT false,
+            created_at TIMESTAMPTZ NOT NULL
+        );
+
+        -- メールアドレスカラム追加（既存テーブルへの追記。なければ追加）
+        ALTER TABLE users ADD COLUMN IF NOT EXISTS email TEXT;
 EOSQL
     echo "=== Database setup complete ==="
 }
@@ -108,6 +159,7 @@ main() {
     echo ""
     echo " 次のステップ:"
     echo "   1. ログアウトして再ログイン（Docker権限反映）"
+    echo "      または newgrp docker"
     echo "   2. Let's Encrypt で正式な証明書を取得する場合:"
     echo "       bash setup-letsencrypt.sh"
     echo "       ※自己証明書でOKならスキップしてね"
