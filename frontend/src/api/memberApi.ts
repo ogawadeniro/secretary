@@ -1,7 +1,7 @@
 import type { ScheduleMember } from "../types/schedule";
 import { get, post, del } from "./client";
 
-const BASE = "/api/v1/schedules";
+const BASE = "/schedules";
 
 /** 予定のメンバー一覧を取得 */
 export async function getMembers(scheduleId: number): Promise<ScheduleMember[]> {

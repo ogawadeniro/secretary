@@ -1,7 +1,7 @@
 import type { UserSettings } from "../types/settings";
 import { get, put, del } from "./client";
 
-const BASE = "/api/v1/settings";
+const BASE = "/settings";
 
 /** 設定を取得（なければデフォルト値が返る） */
 export async function fetchSettings(): Promise<UserSettings> {

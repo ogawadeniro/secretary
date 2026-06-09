@@ -1,7 +1,7 @@
 import { Schedule } from "../types/schedule";
 import { get, post, patch, del } from "./client";
 
-const BASE = "/api/v1/schedules";
+const BASE = "/schedules";
 
 /** 全予定を取得 */
 export async function fetchSchedules(): Promise<Schedule[]> {
