@@ -122,6 +122,7 @@ export default function TimePicker({ value, onChange, stepMinutes = 5 }: TimePic
           fontFamily: "inherit",
           cursor: "pointer",
           caretColor: "transparent",
+          textAlign: "center",
           boxSizing: "border-box",
         }}
       />
