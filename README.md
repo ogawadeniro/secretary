@@ -82,12 +82,14 @@ frontend/src/
 │   ├── share.ts                 # CalendarShare型定義
 │   └── settings.ts              # UserSettings型定義
 ├── api/
-│   ├── scheduleApi.ts           # 予定REST APIクライアント
-│   ├── shareApi.ts              # 共有設定APIクライアント
-│   ├── memberApi.ts             # メンバー管理APIクライアント
-│   ├── userApi.ts               # ユーザー検索APIクライアント
-│   ├── settingsApi.ts           # 設定APIクライアント
-│   └── authApi.ts               # 認証APIクライアント
+│   ├── client.ts                # 共通APIクライアント（fetchラッパー）
+│   ├── scheduleApi.ts           # 予定CRUD API
+│   ├── shareApi.ts              # カレンダー共有API
+│   ├── memberApi.ts             # 予定メンバーAPI
+│   ├── settingsApi.ts           # ユーザー設定API
+│   └── userApi.ts               # ユーザー検索API
+├── hooks/
+│   └── useDateTimeCorrection.ts # 日時補正カスタムフック
 ├── utils/
 │   ├── dateUtils.ts             # 日付ユーティリティ（スロット計算、アクティブ期間、ポジション判定）
 │   ├── dateUtils.test.ts        # 45テスト
@@ -98,9 +100,14 @@ frontend/src/
     ├── WeekRow.tsx              # 週単位の行
     ├── DayCell.tsx              # 日付セル
     ├── ScheduleDialog.tsx       # 予定CRUDダイアログ
+    ├── MemberManager.tsx        # 予定メンバー管理（追加・削除・補完）
+    ├── TimePicker.tsx           # 時刻選択ポップアップ
     ├── SettingsDialog.tsx       # 設定ダイアログ（色・表示・アカウント）
     ├── ShareDialog.tsx          # カレンダー共有管理ダイアログ
-    └── LoginPage.tsx            # ログインページ
+    ├── LoginPage.tsx            # ログインページ
+    ├── AccountDialog.tsx        # アカウント管理ダイアログ
+    ├── ForgotPasswordPage.tsx   # パスワード忘れページ
+    └── ResetPasswordPage.tsx    # パスワードリセットページ
 ```
 
 ## 開発
@@ -142,7 +149,7 @@ mvn test
 
 | テストクラス | 種別 | 備考 |
 |------------|------|------|
-| `ScheduleTest` | 単体テスト | domain model |
+| `ScheduleServiceTest` | サービス | JUnit 5 + Mockito |
 | `OwnerColorUtilTest` | 単体テスト | 色ユーティリティ（back） |
 | `ScheduleServiceTest` | サービス | JUnit 5 + Mockito |
 | `ScheduleControllerTest` | RESTコントローラ | Spring MockMvc + Mockito |

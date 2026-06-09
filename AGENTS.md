@@ -57,6 +57,15 @@ frontend/src/
 │   ├── memberApi.ts             # 予定メンバーAPI
 │   ├── settingsApi.ts           # ユーザー設定API
 │   └── userApi.ts               # ユーザー検索API
+├── api/
+│   ├── client.ts                # 共通APIクライアント（fetchラッパー）
+│   ├── scheduleApi.ts           # 予定CRUD API
+│   ├── shareApi.ts              # カレンダー共有API
+│   ├── memberApi.ts             # 予定メンバーAPI
+│   ├── settingsApi.ts           # ユーザー設定API
+│   └── userApi.ts               # ユーザー検索API
+├── hooks/
+│   └── useDateTimeCorrection.ts # 日時補正カスタムフック
 ├── utils/
 │   ├── dateUtils.ts             # 日付ユーティリティ（スロット計算・複数日またぎ・アクティブ期間）
 │   └── colorUtils.ts            # 色ユーティリティ（減法混色・パレット・hex変換）
@@ -65,10 +74,15 @@ frontend/src/
     ├── InfiniteCalendar.tsx     # 無限スクロールカレンダー（IntersectionObserver）
     ├── WeekRow.tsx              # 週単位の行（useMemoでスロットキャッシュ）
     ├── DayCell.tsx              # 日付セル（チップ・プレースホルダー・+N）
-    ├── ScheduleDialog.tsx       # 予定CRUD + メンバー管理ダイアログ
+    ├── ScheduleDialog.tsx       # 予定CRUDダイアログ
+    ├── MemberManager.tsx        # 予定メンバー管理コンポーネント（追加・削除・補完）
+    ├── TimePicker.tsx           # 時刻選択ポップアップ
     ├── SettingsDialog.tsx       # 設定ダイアログ（色・初回曜日・表示名）
     ├── ShareDialog.tsx          # カレンダー共有管理ダイアログ
-    └── LoginPage.tsx            # ログインページ
+    ├── LoginPage.tsx            # ログインページ
+    ├── AccountDialog.tsx        # アカウント管理ダイアログ
+    ├── ForgotPasswordPage.tsx   # パスワード忘れページ
+    └── ResetPasswordPage.tsx    # パスワードリセットページ
 ```
 
 ### 主要エントリーポイント
