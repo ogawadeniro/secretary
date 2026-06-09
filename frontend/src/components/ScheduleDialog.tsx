@@ -622,6 +622,7 @@ function ScheduleFormComponent({
             開始時刻
             <input
               type="time"
+              step="300"
               ref={startTimeRef}
               value={startTime}
               onChange={handleStartTimeChange}
@@ -631,6 +632,7 @@ function ScheduleFormComponent({
             終了時刻
             <input
               type="time"
+              step="300"
               ref={endTimeRef}
               value={endTime}
               onChange={handleEndTimeChange}
