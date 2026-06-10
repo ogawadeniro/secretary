@@ -35,9 +35,9 @@ domain/ → application/ → infrastructure/ ← frontend/ (React)
 
 | レイヤー | 役割 | キーファイル |
 |----------|------|-------------|
-| `domain/` | エンティティ、リポジトリポート | `Schedule`, `ScheduleRepository`, `CalendarShare`, `CalendarShareRepository`, `User`, `UserSetting` |
-| `application/` | ユースケース（アプリケーションサービス） | `ScheduleUseCase`, `ScheduleService` |
-| `infrastructure/` | JPA永続化、RESTエンドポイント | `JpaSchedule`, `SchedulePersistenceAdapter`, `ScheduleController`, `ScheduleDto`, `CalendarShareController` |
+| `domain/` | エンティティ、リポジトリポート | `Schedule`, `ScheduleRepository`, `Shareman`, `SharemanRepository`, `Group`, `GroupRepository`, `User`, `UserSetting` |
+| `application/` | ユースケース（アプリケーションサービス） | `ScheduleUseCase`, `ScheduleService`, `SharemanService`, `GroupService` |
+| `infrastructure/` | JPA永続化、RESTエンドポイント | `JpaSchedule`, `SchedulePersistenceAdapter`, `ScheduleController`, `ScheduleDto`, `SharemanController`, `GroupController` |
 
 ### フロントエンド（React + Vite + TypeScript）
 
@@ -49,18 +49,13 @@ frontend/src/
 ├── types/
 │   ├── schedule.ts              # Schedule / ScheduleMember 型定義
 │   ├── share.ts                 # CalendarShare 型定義
+│   ├── group.ts                 # Group / GroupMember 型定義
 │   └── settings.ts              # UserSettings 型定義
 ├── api/
 │   ├── authApi.ts               # 認証API（login / register / logout / me）
 │   ├── scheduleApi.ts           # 予定CRUD API
-│   ├── shareApi.ts              # カレンダー共有API
-│   ├── memberApi.ts             # 予定メンバーAPI
-│   ├── settingsApi.ts           # ユーザー設定API
-│   └── userApi.ts               # ユーザー検索API
-├── api/
-│   ├── client.ts                # 共通APIクライアント（fetchラッパー）
-│   ├── scheduleApi.ts           # 予定CRUD API
-│   ├── shareApi.ts              # カレンダー共有API
+│   ├── shareApi.ts              # シェアメン招待API
+│   ├── groupApi.ts              # グループAPI
 │   ├── memberApi.ts             # 予定メンバーAPI
 │   ├── settingsApi.ts           # ユーザー設定API
 │   └── userApi.ts               # ユーザー検索API
@@ -78,7 +73,8 @@ frontend/src/
     ├── MemberManager.tsx        # 予定メンバー管理コンポーネント（追加・削除・補完）
     ├── TimePicker.tsx           # 時刻選択ポップアップ
     ├── SettingsDialog.tsx       # 設定ダイアログ（色・初回曜日・表示名）
-    ├── ShareDialog.tsx          # カレンダー共有管理ダイアログ
+    ├── ShareDialog.tsx          # シェアメン招待管理ダイアログ
+    ├── GroupDialog.tsx          # グループ管理ダイアログ
     ├── LoginPage.tsx            # ログインページ
     ├── AccountDialog.tsx        # アカウント管理ダイアログ
     ├── ForgotPasswordPage.tsx   # パスワード忘れページ
@@ -97,18 +93,14 @@ frontend/src/
 
 ## アクセス権限
 
-### 閲覧可能
-- 自分が作成した予定である
-- 自分に共有されている予定である（`shared=true` かつカレンダー共有済み）
+### グループに属する予定
+- グループのメンバーであれば閲覧・編集・削除すべて可能
+- `ScheduleService.isGroupMember()` で判定
 
-### 編集・削除可能
-- 自分が作成した予定である
-- または以下の3条件を全て満たす:
-  1. 予定のメンバーに自分が含まれている
-  2. 予定に含まれるメンバー全員に予定を共有している
-  3. 予定に含まれるメンバー全員から予定を共有されている
+### 個人予定（グループ未所属）
+- **閲覧可能**: 自分が作成した予定、または自分に共有されている予定（`shared=true` かつシェアメンが承諾済み）
+- **編集・削除可能**: 自分が作成した予定のみ
 
-`ScheduleService.canEditSchedule()` で判定。自分自身は共有チェック対象から除外。
 フロントエンドは API 応答の `canEdit` フィールドでボタン表示を制御。
 
 ## 機能要件
@@ -158,10 +150,15 @@ frontend/src/
 - **表示名**: 任意の表示名を設定。バッジや予定カードに表示される。
 - **デフォルトに戻す**: 全設定を初期値にリセット。
 
-### カレンダー共有
-- ユーザー名を入力して共有設定を作成・削除。
-- 共有してくれている相手は一覧表示のみ（削除不可）。
-- 相互共有ユーザーは予定メンバーの検索候補として利用可能。
+### カレンダー共有（シェアメン）
+- ユーザー名を入力してシェアメン招待を作成。承諾制（招待→承認）。
+- シェアメン同士は互いの個人予定を閲覧可能（`shared=true` の場合）。
+- シェアメンはグループメンバーの選択候補として利用可能。
+
+### グループ
+- グループを作成・編集・削除可能（オーナーのみ）。
+- グループメンバーはシェアメンの中から選択。
+- グループに属する予定はメンバー全員がCRUD可能。
 
 ### PWA
 - **Manifest**: `display: standalone`、`background_color: #1a1a2e`、`theme_color: #16213e`。
@@ -174,6 +171,9 @@ frontend/src/
 - カレンダー共有管理（GET一覧/incoming、POST作成、DELETE削除）
 - ユーザー検索（GET search、ユーザー名・表示名両方で部分一致）
 - ユーザー設定（GET取得、PUT更新、DELETEリセット）
+- シェアメン管理（GET一覧/incoming、POST招待、PATCH承諾、DELETE削除）
+- グループ管理（GET一覧、POST作成、PATCH更新、DELETE削除）
+- グループメンバー管理（GET一覧、POST追加、DELETE削除）
 - 日付形式: `yyyy/MM/dd-HH:mm`（Jackson @JsonFormat）
 - `updateTime` はサーバー側で自動設定
 - 自分以外のユーザーの予定は `shared=true` のみ取得
@@ -313,7 +313,7 @@ create table schedules (
     shared boolean not null default true
 );
 
--- カレンダー共有設定
+-- カレンダー共有設定（シェアメン）
 create table calendar_shares (
     id bigserial primary key,
     owner_username text not null,
@@ -330,6 +330,25 @@ create table schedule_members (
     username text not null,
     created_at timestamptz not null default now(),
     unique(schedule_id, username)
+);
+
+-- グループ
+create table groups (
+    id bigserial primary key,
+    name text not null,
+    owner_username text not null,
+    created_at timestamptz not null default now(),
+    updated_at timestamptz not null default now()
+);
+
+-- グループメンバー
+create table group_members (
+    id bigserial primary key,
+    group_id bigint not null references groups(id) on delete cascade,
+    username text not null,
+    role text not null default 'MEMBER',
+    created_at timestamptz not null default now(),
+    unique(group_id, username)
 );
 
 -- ユーザー
