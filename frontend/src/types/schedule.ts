@@ -21,6 +21,8 @@ export interface Schedule {
   memberChipBgColors?: Record<string, string>;
   /** メンバーごとの表示名（username → displayName） */
   memberDisplayNames?: Record<string, string>;
+  /** グループID（グループ予定の場合のみ設定） */
+  groupId?: number;
   /** 現在のユーザーが編集可能か */
   canEdit?: boolean;
 }

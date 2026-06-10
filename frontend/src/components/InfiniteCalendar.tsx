@@ -1,9 +1,11 @@
 import { useState, useEffect, useRef, useCallback, useLayoutEffect, useMemo } from "react";
-import { CircleUser, Settings, LogOut, Share2, Users, User } from "lucide-react";
+import { CircleUser, Settings, LogOut, Share2, Users, User, Filter } from "lucide-react";
 import type { UserSettings } from "../types/settings";
 import type { Schedule } from "../types/schedule";
+import type { Group } from "../types/group";
 import { fetchSchedules } from "../api/scheduleApi";
 import { fetchSettings } from "../api/settingsApi";
+import { fetchGroups } from "../api/groupApi";
 import WeekRow from "./WeekRow";
 import ScheduleDialog from "./ScheduleDialog";
 import SettingsDialog from "./SettingsDialog";
@@ -57,6 +59,8 @@ export default function InfiniteCalendar() {
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [showShare, setShowShare] = useState(false);
   const [showGroup, setShowGroup] = useState(false);
+  const [groups, setGroups] = useState<Group[]>([]);
+  const [scheduleFilter, setScheduleFilter] = useState<"all" | "personal" | number>("all");
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
   const [toasts, setToasts] = useState<{ id: number; message: string; type: "success" | "error" }[]>([]);
@@ -87,8 +91,12 @@ export default function InfiniteCalendar() {
 
   /** 予定一覧を再取得 */
   const reloadSchedules = useCallback(async () => {
-    const data = await fetchSchedules();
+    const [data, groupsData] = await Promise.all([
+      fetchSchedules(),
+      fetchGroups(),
+    ]);
     setSchedules(data);
+    setGroups(groupsData);
   }, []);
 
   // 初回読み込み
@@ -233,9 +241,26 @@ export default function InfiniteCalendar() {
     await logout();
   };
 
+  /** フィルタ済み予定 */
+  const filteredSchedules = useMemo(() => {
+    if (scheduleFilter === "all") return schedules;
+    if (scheduleFilter === "personal") return schedules.filter((s) => s.groupId == null);
+    return schedules.filter((s) => s.groupId === scheduleFilter);
+  }, [schedules, scheduleFilter]);
+
+  /** フィルター選択肢 */
+  const filterOptions = useMemo(() => {
+    const options: { value: "all" | "personal" | number; label: string }[] = [
+      { value: "all", label: "すべての予定" },
+      { value: "personal", label: "個人の予定" },
+    ];
+    groups.forEach((g) => options.push({ value: g.id, label: g.name }));
+    return options;
+  }, [groups]);
+
   // 選択された日付に紐づく予定をフィルタ
   const selectedSchedules = dialogDate
-    ? schedules.filter((s) => {
+    ? filteredSchedules.filter((s) => {
         const startMatch = s.startDatetime.match(
           /^(\d{4})\/(\d{2})\/(\d{2})/
         );
@@ -265,6 +290,37 @@ export default function InfiniteCalendar() {
     <div className="calendar-container">
       <div className="calendar-header">
         <h1>{monthLabel}</h1>
+        <div className="calendar-header-center">
+          <div className="filter-selector">
+            <Filter size={14} />
+            <select
+              value={scheduleFilter === "all" ? "all" : scheduleFilter === "personal" ? "personal" : scheduleFilter}
+              onChange={(e) => {
+                const v = e.target.value;
+                if (v === "all" || v === "personal") {
+                  setScheduleFilter(v);
+                } else {
+                  setScheduleFilter(Number(v));
+                }
+              }}
+              style={{
+                background: "var(--color-surface2)",
+                color: "var(--color-text)",
+                border: "1px solid var(--color-border)",
+                borderRadius: "6px",
+                padding: "4px 8px",
+                fontSize: "0.8rem",
+                cursor: "pointer",
+              }}
+            >
+              {filterOptions.map((opt) => (
+                <option key={String(opt.value)} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
         <div className="calendar-header-right">
           <span className="header-user" style={{ background: settings.chipBgColor, borderRadius: "4px", padding: "2px 6px", color: "#e0e0e0" }}>{user?.displayName ?? user?.username}</span>
           <div className="account-menu-container" ref={accountMenuRef}>
@@ -359,7 +415,7 @@ export default function InfiniteCalendar() {
           <WeekRow
             key={formatDateKey(dates[0])}
             dates={dates}
-            schedules={schedules}
+            schedules={filteredSchedules}
             currentMonth={currentMonth}
             chipBgColor={settings.chipBgColor}
             currentUsername={user?.username ?? ""}

@@ -94,15 +94,8 @@ EOSQL
             shared BOOLEAN NOT NULL DEFAULT true
         );
 
-        -- カレンダー共有設定
-        CREATE TABLE IF NOT EXISTS calendar_shares (
-            id BIGSERIAL PRIMARY KEY,
-            owner_username TEXT NOT NULL,
-            shared_with_username TEXT NOT NULL,
-            permission TEXT NOT NULL DEFAULT 'READ',
-            created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-            UNIQUE(owner_username, shared_with_username)
-        );
+        -- 旧 calendar_shares テーブルを削除（sharemen に移行済み）
+        DROP TABLE IF EXISTS calendar_shares;
 
         -- 予定メンバー
         CREATE TABLE IF NOT EXISTS schedule_members (

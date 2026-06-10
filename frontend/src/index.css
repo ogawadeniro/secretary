@@ -70,6 +70,21 @@ body {
   font-weight: 600;
 }
 
+.calendar-header-center {
+  margin-left: auto;
+  margin-right: auto;
+  display: flex;
+  align-items: center;
+}
+
+.filter-selector {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--color-text-muted);
+  font-size: 0.8rem;
+}
+
 .calendar-header-right {
   position: absolute;
   right: 12px;

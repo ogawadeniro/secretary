@@ -53,17 +53,11 @@ psql -h "$DB_HOST" -U "$DB_USER" -d "$DB_NAME" <<-EOSQL
     -- 7. schedules に group_id カラムを追加
     ALTER TABLE schedules ADD COLUMN IF NOT EXISTS group_id BIGINT;
 
-    -- 8. 不足しているテーブルをまとめて作成
-    CREATE TABLE IF NOT EXISTS calendar_shares (
-        id BIGSERIAL PRIMARY KEY,
-        owner_username TEXT NOT NULL,
-        shared_with_username TEXT NOT NULL,
-        permission TEXT NOT NULL DEFAULT 'READ',
-        created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-        UNIQUE(owner_username, shared_with_username)
-    );
+    -- 8. 旧 calendar_shares テーブルを削除（sharemen に移行済み）
+    DROP TABLE IF EXISTS calendar_shares;
 
-    -- シェアメン（カレンダー共有の置き換え）
+    -- 9. 不足しているテーブルをまとめて作成
+    -- シェアメン（旧 calendar_shares の置き換え）
     CREATE TABLE IF NOT EXISTS sharemen (
         id BIGSERIAL PRIMARY KEY,
         inviter_username TEXT NOT NULL,
