@@ -9,7 +9,6 @@ import com.rogawa.secretary.domain.model.ScheduleMember;
 import com.rogawa.secretary.domain.repository.GroupRepository;
 import com.rogawa.secretary.domain.repository.ScheduleMemberRepository;
 import com.rogawa.secretary.domain.repository.ScheduleRepository;
-import com.rogawa.secretary.domain.repository.SharemanRepository;
 import com.rogawa.secretary.domain.repository.UserRepository;
 import com.rogawa.secretary.domain.repository.UserSettingRepository;
 import java.time.LocalDateTime;
@@ -28,7 +27,6 @@ import org.springframework.transaction.annotation.Transactional;
 public class ScheduleService implements ScheduleUseCase {
 
     private final ScheduleRepository scheduleRepository;
-    private final SharemanRepository sharemanRepository;
     private final GroupRepository groupRepository;
     private final UserRepository userRepository;
     private final UserSettingRepository userSettingRepository;
@@ -36,13 +34,11 @@ public class ScheduleService implements ScheduleUseCase {
 
     public ScheduleService(
             ScheduleRepository scheduleRepository,
-            SharemanRepository sharemanRepository,
             GroupRepository groupRepository,
             UserRepository userRepository,
             UserSettingRepository userSettingRepository,
             ScheduleMemberRepository scheduleMemberRepository) {
         this.scheduleRepository = scheduleRepository;
-        this.sharemanRepository = sharemanRepository;
         this.groupRepository = groupRepository;
         this.userRepository = userRepository;
         this.userSettingRepository = userSettingRepository;
@@ -51,11 +47,8 @@ public class ScheduleService implements ScheduleUseCase {
 
     @Override
     public List<Schedule> getSchedules(String owner) {
-        // 自分の予定（公開・非公開含む全て）
+        // 自分の予定
         List<Schedule> ownSchedules = scheduleRepository.findByOwner(owner);
-        // シェアメン（承諾済み）から共有された予定（shared=true のみ）
-        List<String> sharedOwners = sharemanRepository.findAcceptedUsernames(owner);
-        List<Schedule> sharedSchedules = scheduleRepository.findByOwnersShared(sharedOwners);
         // メンバーとして参加している予定
         List<Long> memberScheduleIds = scheduleMemberRepository.findScheduleIdsByUsername(owner);
         List<Schedule> memberSchedules = scheduleRepository.findByIds(memberScheduleIds);
@@ -69,7 +62,6 @@ public class ScheduleService implements ScheduleUseCase {
         Set<Long> seen = new HashSet<>();
         List<Schedule> all = new ArrayList<>();
         for (Schedule s : ownSchedules) { all.add(s); seen.add(s.getId()); }
-        for (Schedule s : sharedSchedules) { if (!seen.contains(s.getId())) { all.add(s); seen.add(s.getId()); } }
         for (Schedule s : memberSchedules) { if (!seen.contains(s.getId())) { all.add(s); seen.add(s.getId()); } }
         for (Schedule s : groupSchedules) { if (!seen.contains(s.getId())) { all.add(s); seen.add(s.getId()); } }
         all.sort(Comparator.comparing(Schedule::getStartDatetime));

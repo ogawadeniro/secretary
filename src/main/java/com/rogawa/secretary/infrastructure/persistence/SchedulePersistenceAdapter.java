@@ -29,13 +29,6 @@ public class SchedulePersistenceAdapter implements ScheduleRepository {
     }
 
     @Override
-    public List<Schedule> findByOwnersShared(List<String> owners) {
-        return jpaScheduleRepository.findByOwnersShared(owners).stream()
-                .map(JpaSchedule::toDomain)
-                .collect(Collectors.toList());
-    }
-
-    @Override
     public List<Schedule> findByIds(List<Long> ids) {
         return jpaScheduleRepository.findByIdIn(ids).stream()
                 .map(JpaSchedule::toDomain)

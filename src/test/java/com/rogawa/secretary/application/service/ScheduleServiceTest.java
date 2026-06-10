@@ -7,11 +7,9 @@ import com.rogawa.secretary.domain.exception.ScheduleAuthorizationException;
 import com.rogawa.secretary.domain.exception.ScheduleNotFoundException;
 import com.rogawa.secretary.domain.model.GroupMember;
 import com.rogawa.secretary.domain.model.Schedule;
-import com.rogawa.secretary.domain.model.ScheduleMember;
 import com.rogawa.secretary.domain.repository.GroupRepository;
 import com.rogawa.secretary.domain.repository.ScheduleMemberRepository;
 import com.rogawa.secretary.domain.repository.ScheduleRepository;
-import com.rogawa.secretary.domain.repository.SharemanRepository;
 import com.rogawa.secretary.domain.repository.UserRepository;
 import com.rogawa.secretary.domain.repository.UserSettingRepository;
 import java.time.LocalDateTime;
@@ -30,9 +28,6 @@ public class ScheduleServiceTest {
 
     @Mock
     private ScheduleRepository scheduleRepository;
-
-    @Mock
-    private SharemanRepository sharemanRepository;
 
     @Mock
     private GroupRepository groupRepository;
@@ -65,7 +60,6 @@ public class ScheduleServiceTest {
 
     @Test
     public void testGetSchedules() {
-        when(sharemanRepository.findAcceptedUsernames("rogawa")).thenReturn(Collections.emptyList());
         when(scheduleRepository.findByOwner("rogawa")).thenReturn(List.of(testSchedule));
         when(userRepository.findByUsername("rogawa")).thenReturn(Optional.empty());
         when(userSettingRepository.findByUsername("rogawa")).thenReturn(Optional.empty());
@@ -75,30 +69,6 @@ public class ScheduleServiceTest {
         List<Schedule> result = scheduleService.getSchedules("rogawa");
         assertEquals(1, result.size());
         assertEquals("test", result.get(0).getTitle());
-    }
-
-    @Test
-    public void testGetSchedulesWithShared() {
-        Schedule sharedSchedule = new Schedule();
-        sharedSchedule.setId(2L);
-        sharedSchedule.setTitle("shared event");
-        sharedSchedule.setStartDatetime(LocalDateTime.of(2025, 3, 7, 14, 0));
-        sharedSchedule.setEndDatetime(LocalDateTime.of(2025, 3, 7, 15, 0));
-        sharedSchedule.setOwner("user2");
-
-        when(sharemanRepository.findAcceptedUsernames("rogawa")).thenReturn(List.of("user2"));
-        when(scheduleRepository.findByOwner("rogawa")).thenReturn(List.of(testSchedule));
-        when(scheduleRepository.findByOwnersShared(List.of("user2"))).thenReturn(List.of(sharedSchedule));
-        when(userRepository.findByUsername("rogawa")).thenReturn(Optional.empty());
-        when(userRepository.findByUsername("user2")).thenReturn(Optional.empty());
-        when(userSettingRepository.findByUsername("rogawa")).thenReturn(Optional.empty());
-        when(userSettingRepository.findByUsername("user2")).thenReturn(Optional.empty());
-        when(scheduleMemberRepository.findScheduleIdsByUsername("rogawa")).thenReturn(Collections.emptyList());
-        when(scheduleMemberRepository.findByScheduleIdIn(any())).thenReturn(Collections.emptyList());
-        when(groupRepository.findByMemberUsername("rogawa")).thenReturn(Collections.emptyList());
-
-        List<Schedule> result = scheduleService.getSchedules("rogawa");
-        assertEquals(2, result.size());
     }
 
     @Test

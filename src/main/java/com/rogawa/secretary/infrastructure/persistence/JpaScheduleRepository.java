@@ -14,9 +14,6 @@ public interface JpaScheduleRepository extends JpaRepository<JpaSchedule, Long> 
     @Query("SELECT s FROM JpaSchedule s WHERE s.endDatetime >= ?1 AND s.startDatetime <= ?2 ORDER BY s.startDatetime")
     List<JpaSchedule> findAllByDateRange(LocalDateTime start, LocalDateTime end);
 
-    @Query("SELECT s FROM JpaSchedule s WHERE s.owner IN ?1 AND s.shared = true ORDER BY s.startDatetime")
-    List<JpaSchedule> findByOwnersShared(List<String> owners);
-
     List<JpaSchedule> findByIdIn(List<Long> ids);
 
     List<JpaSchedule> findByGroupIdIn(List<Long> groupIds);

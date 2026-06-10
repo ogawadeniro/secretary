@@ -244,9 +244,9 @@ export default function InfiniteCalendar() {
   /** フィルタ済み予定 */
   const filteredSchedules = useMemo(() => {
     if (scheduleFilter === "all") return schedules;
-    if (scheduleFilter === "personal") return schedules.filter((s) => s.groupId == null);
+    if (scheduleFilter === "personal") return schedules.filter((s) => s.groupId == null && s.owner === user?.username);
     return schedules.filter((s) => s.groupId === scheduleFilter);
-  }, [schedules, scheduleFilter]);
+  }, [schedules, scheduleFilter, user?.username]);
 
   /** フィルター選択肢 */
   const filterOptions = useMemo(() => {

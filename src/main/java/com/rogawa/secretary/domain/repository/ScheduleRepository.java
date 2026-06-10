@@ -9,9 +9,6 @@ public interface ScheduleRepository {
 
     Optional<Schedule> findById(Long id);
 
-    /** 指定したオーナー一覧のうち shared=true の予定を取得 */
-    List<Schedule> findByOwnersShared(List<String> owners);
-
     /** ID一覧で予定を取得 */
     List<Schedule> findByIds(List<Long> ids);
 
