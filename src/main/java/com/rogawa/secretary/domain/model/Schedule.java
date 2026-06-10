@@ -18,6 +18,9 @@ public class Schedule {
     /** 他のユーザーと共有するかどうか（デフォルト true） */
     private Boolean shared = true;
 
+    /** 所属グループID（NULL=個人予定） */
+    private Long groupId;
+
     /** オーナーのチップ背景色（API応答用、永続化しない） */
     private String ownerChipBgColor;
 

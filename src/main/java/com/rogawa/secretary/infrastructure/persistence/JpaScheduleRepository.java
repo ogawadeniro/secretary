@@ -18,4 +18,6 @@ public interface JpaScheduleRepository extends JpaRepository<JpaSchedule, Long> 
     List<JpaSchedule> findByOwnersShared(List<String> owners);
 
     List<JpaSchedule> findByIdIn(List<Long> ids);
+
+    List<JpaSchedule> findByGroupIdIn(List<Long> groupIds);
 }

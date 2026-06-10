@@ -37,6 +37,9 @@ public class ScheduleDto {
     /** 他のユーザーと共有するかどうか（デフォルト true） */
     private Boolean shared = true;
 
+    /** 所属グループID */
+    private Long groupId;
+
     /** オーナーのチップ背景色 */
     private String ownerChipBgColor;
 
@@ -66,6 +69,7 @@ public class ScheduleDto {
         dto.setDescription(schedule.getDescription());
         dto.setUpdateTime(schedule.getUpdateTime());
         dto.setShared(schedule.getShared());
+        dto.setGroupId(schedule.getGroupId());
         dto.setOwnerChipBgColor(schedule.getOwnerChipBgColor());
         dto.setOwnerDisplayName(schedule.getOwnerDisplayName());
         dto.setMemberUsernames(schedule.getMemberUsernames());
@@ -86,6 +90,7 @@ public class ScheduleDto {
         schedule.setDescription(this.description);
         schedule.setUpdateTime(this.updateTime);
         schedule.setShared(this.shared);
+        schedule.setGroupId(this.groupId);
         return schedule;
     }
 }

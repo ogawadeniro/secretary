@@ -43,6 +43,13 @@ public class SchedulePersistenceAdapter implements ScheduleRepository {
     }
 
     @Override
+    public List<Schedule> findByGroupIds(List<Long> groupIds) {
+        return jpaScheduleRepository.findByGroupIdIn(groupIds).stream()
+                .map(JpaSchedule::toDomain)
+                .collect(Collectors.toList());
+    }
+
+    @Override
     public Schedule save(Schedule schedule) {
         JpaSchedule entity = JpaSchedule.fromDomain(schedule);
         JpaSchedule saved = jpaScheduleRepository.save(entity);

@@ -15,6 +15,9 @@ public interface ScheduleRepository {
     /** ID一覧で予定を取得 */
     List<Schedule> findByIds(List<Long> ids);
 
+    /** グループID一覧で予定を取得 */
+    List<Schedule> findByGroupIds(List<Long> groupIds);
+
     Schedule save(Schedule schedule);
 
     void deleteById(Long id);

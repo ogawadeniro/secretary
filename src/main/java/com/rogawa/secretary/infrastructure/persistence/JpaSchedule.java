@@ -41,6 +41,9 @@ public class JpaSchedule {
     /** 他のユーザーと共有するかどうか（デフォルト true） */
     private Boolean shared = true;
 
+    /** 所属グループID */
+    private Long groupId;
+
     public static JpaSchedule fromDomain(Schedule schedule) {
         JpaSchedule entity = new JpaSchedule();
         entity.setId(schedule.getId());
@@ -52,6 +55,7 @@ public class JpaSchedule {
         entity.setDescription(schedule.getDescription());
         entity.setUpdateTime(schedule.getUpdateTime());
         entity.setShared(schedule.getShared());
+        entity.setGroupId(schedule.getGroupId());
         return entity;
     }
 
@@ -66,6 +70,7 @@ public class JpaSchedule {
         schedule.setDescription(this.description);
         schedule.setUpdateTime(this.updateTime);
         schedule.setShared(this.shared);
+        schedule.setGroupId(this.groupId);
         return schedule;
     }
 }

@@ -3,12 +3,13 @@ package com.rogawa.secretary.application.service;
 import com.rogawa.secretary.application.port.ScheduleUseCase;
 import com.rogawa.secretary.domain.exception.ScheduleAuthorizationException;
 import com.rogawa.secretary.domain.exception.ScheduleNotFoundException;
-import com.rogawa.secretary.domain.model.CalendarShare;
+import com.rogawa.secretary.domain.model.Group;
 import com.rogawa.secretary.domain.model.Schedule;
 import com.rogawa.secretary.domain.model.ScheduleMember;
-import com.rogawa.secretary.domain.repository.CalendarShareRepository;
+import com.rogawa.secretary.domain.repository.GroupRepository;
 import com.rogawa.secretary.domain.repository.ScheduleMemberRepository;
 import com.rogawa.secretary.domain.repository.ScheduleRepository;
+import com.rogawa.secretary.domain.repository.SharemanRepository;
 import com.rogawa.secretary.domain.repository.UserRepository;
 import com.rogawa.secretary.domain.repository.UserSettingRepository;
 import java.time.LocalDateTime;
@@ -27,19 +28,22 @@ import org.springframework.transaction.annotation.Transactional;
 public class ScheduleService implements ScheduleUseCase {
 
     private final ScheduleRepository scheduleRepository;
-    private final CalendarShareRepository calendarShareRepository;
+    private final SharemanRepository sharemanRepository;
+    private final GroupRepository groupRepository;
     private final UserRepository userRepository;
     private final UserSettingRepository userSettingRepository;
     private final ScheduleMemberRepository scheduleMemberRepository;
 
     public ScheduleService(
             ScheduleRepository scheduleRepository,
-            CalendarShareRepository calendarShareRepository,
+            SharemanRepository sharemanRepository,
+            GroupRepository groupRepository,
             UserRepository userRepository,
             UserSettingRepository userSettingRepository,
             ScheduleMemberRepository scheduleMemberRepository) {
         this.scheduleRepository = scheduleRepository;
-        this.calendarShareRepository = calendarShareRepository;
+        this.sharemanRepository = sharemanRepository;
+        this.groupRepository = groupRepository;
         this.userRepository = userRepository;
         this.userSettingRepository = userSettingRepository;
         this.scheduleMemberRepository = scheduleMemberRepository;
@@ -49,12 +53,17 @@ public class ScheduleService implements ScheduleUseCase {
     public List<Schedule> getSchedules(String owner) {
         // 自分の予定（公開・非公開含む全て）
         List<Schedule> ownSchedules = scheduleRepository.findByOwner(owner);
-        // 共有ユーザーの予定（shared=true のみ）
-        List<String> sharedOwners = calendarShareRepository.findSharedOwnerUsernames(owner);
+        // シェアメン（承諾済み）から共有された予定（shared=true のみ）
+        List<String> sharedOwners = sharemanRepository.findAcceptedUsernames(owner);
         List<Schedule> sharedSchedules = scheduleRepository.findByOwnersShared(sharedOwners);
         // メンバーとして参加している予定
         List<Long> memberScheduleIds = scheduleMemberRepository.findScheduleIdsByUsername(owner);
         List<Schedule> memberSchedules = scheduleRepository.findByIds(memberScheduleIds);
+        // グループに属する予定（そのグループのメンバーであれば閲覧可能）
+        List<Group> myGroups = groupRepository.findByMemberUsername(owner);
+        List<Long> groupIds = myGroups.stream().map(Group::getId).collect(Collectors.toList());
+        List<Schedule> groupSchedules = groupIds.isEmpty()
+                ? List.of() : scheduleRepository.findByGroupIds(groupIds);
 
         // マージして開始日時順にソート
         Set<Long> seen = new HashSet<>();
@@ -62,6 +71,7 @@ public class ScheduleService implements ScheduleUseCase {
         for (Schedule s : ownSchedules) { all.add(s); seen.add(s.getId()); }
         for (Schedule s : sharedSchedules) { if (!seen.contains(s.getId())) { all.add(s); seen.add(s.getId()); } }
         for (Schedule s : memberSchedules) { if (!seen.contains(s.getId())) { all.add(s); seen.add(s.getId()); } }
+        for (Schedule s : groupSchedules) { if (!seen.contains(s.getId())) { all.add(s); seen.add(s.getId()); } }
         all.sort(Comparator.comparing(Schedule::getStartDatetime));
 
         // オーナーとメンバーのチップ背景色・表示名を収集
@@ -254,37 +264,19 @@ public class ScheduleService implements ScheduleUseCase {
 
     /**
      * 編集権限を判定する。
-     * 以下の3条件を全て満たす場合のみ編集を許可:
-     * 1. 予定のメンバーに自分が含まれている
-     * 2. 予定に含まれるメンバー全員に予定を共有している
-     * 3. 予定に含まれるメンバー全員から予定を共有されている
-     * 自分自身は共有チェック対象から除外する。
-     * オーナーは常に編集可能（上記チェックよりも優先）。
+     * - グループに属する予定: グループメンバーなら編集可能
+     * - 個人予定: オーナーのみ編集可能
      */
     private boolean canEditSchedule(Schedule schedule, String username) {
-        // 条件1: 自分がオーナー
+        // 自分がオーナー
         if (schedule.getOwner().equals(username)) {
             return true;
         }
-        // 条件2: メンバーに含まれている AND 全メンバーと相互共有
-        List<ScheduleMember> members = scheduleMemberRepository.findByScheduleId(schedule.getId());
-        boolean isMember = members.stream().anyMatch(m -> m.getUsername().equals(username));
-        if (!isMember) {
-            return false;
+        // グループ予定: グループメンバーなら編集可能
+        if (schedule.getGroupId() != null) {
+            return groupRepository.findGroupMember(schedule.getGroupId(), username).isPresent();
         }
-        // 全メンバー（オーナー含む、自分を除く）のユーザー名一覧
-        Set<String> allUsernames = members.stream()
-                .map(ScheduleMember::getUsername)
-                .collect(Collectors.toSet());
-        allUsernames.add(schedule.getOwner());
-        allUsernames.remove(username);
-        Set<String> sharedTo = calendarShareRepository.findByOwnerUsername(username)
-                .stream()
-                .map(CalendarShare::getSharedWithUsername)
-                .collect(Collectors.toSet());
-        Set<String> sharedFrom = calendarShareRepository.findSharedOwnerUsernames(username)
-                .stream().collect(Collectors.toSet());
-        return allUsernames.stream().allMatch(u -> sharedTo.contains(u) && sharedFrom.contains(u));
+        return false;
     }
 
     @Override
