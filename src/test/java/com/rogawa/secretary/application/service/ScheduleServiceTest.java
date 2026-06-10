@@ -5,12 +5,13 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 import com.rogawa.secretary.domain.exception.ScheduleAuthorizationException;
 import com.rogawa.secretary.domain.exception.ScheduleNotFoundException;
-import com.rogawa.secretary.domain.model.CalendarShare;
+import com.rogawa.secretary.domain.model.GroupMember;
 import com.rogawa.secretary.domain.model.Schedule;
 import com.rogawa.secretary.domain.model.ScheduleMember;
-import com.rogawa.secretary.domain.repository.CalendarShareRepository;
+import com.rogawa.secretary.domain.repository.GroupRepository;
 import com.rogawa.secretary.domain.repository.ScheduleMemberRepository;
 import com.rogawa.secretary.domain.repository.ScheduleRepository;
+import com.rogawa.secretary.domain.repository.SharemanRepository;
 import com.rogawa.secretary.domain.repository.UserRepository;
 import com.rogawa.secretary.domain.repository.UserSettingRepository;
 import java.time.LocalDateTime;
@@ -31,7 +32,10 @@ public class ScheduleServiceTest {
     private ScheduleRepository scheduleRepository;
 
     @Mock
-    private CalendarShareRepository calendarShareRepository;
+    private SharemanRepository sharemanRepository;
+
+    @Mock
+    private GroupRepository groupRepository;
 
     @Mock
     private UserRepository userRepository;
@@ -61,12 +65,13 @@ public class ScheduleServiceTest {
 
     @Test
     public void testGetSchedules() {
-        when(calendarShareRepository.findSharedOwnerUsernames("rogawa")).thenReturn(Collections.emptyList());
+        when(sharemanRepository.findAcceptedUsernames("rogawa")).thenReturn(Collections.emptyList());
         when(scheduleRepository.findByOwner("rogawa")).thenReturn(List.of(testSchedule));
         when(userRepository.findByUsername("rogawa")).thenReturn(Optional.empty());
         when(userSettingRepository.findByUsername("rogawa")).thenReturn(Optional.empty());
         when(scheduleMemberRepository.findScheduleIdsByUsername("rogawa")).thenReturn(Collections.emptyList());
         when(scheduleMemberRepository.findByScheduleIdIn(any())).thenReturn(Collections.emptyList());
+        when(groupRepository.findByMemberUsername("rogawa")).thenReturn(Collections.emptyList());
         List<Schedule> result = scheduleService.getSchedules("rogawa");
         assertEquals(1, result.size());
         assertEquals("test", result.get(0).getTitle());
@@ -74,7 +79,6 @@ public class ScheduleServiceTest {
 
     @Test
     public void testGetSchedulesWithShared() {
-        // 共有ユーザー "user2" がいる場合、自分の予定＋共有ユーザーの予定が返る
         Schedule sharedSchedule = new Schedule();
         sharedSchedule.setId(2L);
         sharedSchedule.setTitle("shared event");
@@ -82,7 +86,7 @@ public class ScheduleServiceTest {
         sharedSchedule.setEndDatetime(LocalDateTime.of(2025, 3, 7, 15, 0));
         sharedSchedule.setOwner("user2");
 
-        when(calendarShareRepository.findSharedOwnerUsernames("rogawa")).thenReturn(List.of("user2"));
+        when(sharemanRepository.findAcceptedUsernames("rogawa")).thenReturn(List.of("user2"));
         when(scheduleRepository.findByOwner("rogawa")).thenReturn(List.of(testSchedule));
         when(scheduleRepository.findByOwnersShared(List.of("user2"))).thenReturn(List.of(sharedSchedule));
         when(userRepository.findByUsername("rogawa")).thenReturn(Optional.empty());
@@ -91,6 +95,7 @@ public class ScheduleServiceTest {
         when(userSettingRepository.findByUsername("user2")).thenReturn(Optional.empty());
         when(scheduleMemberRepository.findScheduleIdsByUsername("rogawa")).thenReturn(Collections.emptyList());
         when(scheduleMemberRepository.findByScheduleIdIn(any())).thenReturn(Collections.emptyList());
+        when(groupRepository.findByMemberUsername("rogawa")).thenReturn(Collections.emptyList());
 
         List<Schedule> result = scheduleService.getSchedules("rogawa");
         assertEquals(2, result.size());
@@ -152,7 +157,6 @@ public class ScheduleServiceTest {
         request.setTitle("hacked");
 
         when(scheduleRepository.findById(1L)).thenReturn(Optional.of(existing));
-        when(scheduleMemberRepository.findByScheduleId(1L)).thenReturn(Collections.emptyList());
 
         assertThrows(ScheduleAuthorizationException.class,
                 () -> scheduleService.updateSchedule(1L, request, "rogawa"));
@@ -173,36 +177,29 @@ public class ScheduleServiceTest {
         existing.setOwner("other_user");
 
         when(scheduleRepository.findById(1L)).thenReturn(Optional.of(existing));
-        when(scheduleMemberRepository.findByScheduleId(1L)).thenReturn(Collections.emptyList());
 
         assertThrows(ScheduleAuthorizationException.class,
                 () -> scheduleService.deleteSchedule(1L, "rogawa"));
     }
 
     @Test
-    public void testUpdateScheduleAsMemberWithMutualShare() {
+    public void testUpdateScheduleAsGroupMember() {
         Schedule existing = new Schedule();
         existing.setId(1L);
         existing.setTitle("original");
         existing.setIsAllDay(false);
         existing.setOwner("other_user");
+        existing.setGroupId(10L);
 
         Schedule request = new Schedule();
         request.setTitle("updated");
 
-        ScheduleMember member = new ScheduleMember();
-        member.setScheduleId(1L);
-        member.setUsername("rogawa");
-
-        CalendarShare toMember = new CalendarShare();
-        toMember.setSharedWithUsername("other_user");
-        CalendarShare fromMember = new CalendarShare();
-        fromMember.setOwnerUsername("other_user");
+        GroupMember gm = new GroupMember();
+        gm.setGroupId(10L);
+        gm.setUsername("rogawa");
 
         when(scheduleRepository.findById(1L)).thenReturn(Optional.of(existing));
-        when(scheduleMemberRepository.findByScheduleId(1L)).thenReturn(List.of(member));
-        when(calendarShareRepository.findByOwnerUsername("rogawa")).thenReturn(List.of(toMember));
-        when(calendarShareRepository.findSharedOwnerUsernames("rogawa")).thenReturn(List.of("other_user"));
+        when(groupRepository.findGroupMember(10L, "rogawa")).thenReturn(Optional.of(gm));
         when(scheduleRepository.save(any(Schedule.class))).thenAnswer(inv -> inv.getArgument(0));
 
         Schedule result = scheduleService.updateSchedule(1L, request, "rogawa");
@@ -210,7 +207,7 @@ public class ScheduleServiceTest {
     }
 
     @Test
-    public void testUpdateScheduleAsMemberWithoutMutualShare() {
+    public void testUpdateScheduleAsMemberNotInGroup() {
         Schedule existing = new Schedule();
         existing.setId(1L);
         existing.setTitle("original");
@@ -220,14 +217,7 @@ public class ScheduleServiceTest {
         Schedule request = new Schedule();
         request.setTitle("hacked");
 
-        ScheduleMember member = new ScheduleMember();
-        member.setScheduleId(1L);
-        member.setUsername("rogawa");
-
         when(scheduleRepository.findById(1L)).thenReturn(Optional.of(existing));
-        when(scheduleMemberRepository.findByScheduleId(1L)).thenReturn(List.of(member));
-        when(calendarShareRepository.findByOwnerUsername("rogawa")).thenReturn(Collections.emptyList());
-        when(calendarShareRepository.findSharedOwnerUsernames("rogawa")).thenReturn(Collections.emptyList());
 
         assertThrows(ScheduleAuthorizationException.class,
                 () -> scheduleService.updateSchedule(1L, request, "rogawa"));

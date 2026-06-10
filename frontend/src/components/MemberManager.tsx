@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useMemo, forwardRef, useImperativeHandle } from "react";
 import { ScheduleMember as ScheduleMemberType } from "../types/schedule";
 import { getMembers, addMember, removeMember } from "../api/memberApi";
-import { fetchMyShares, fetchIncomingShares } from "../api/shareApi";
+import { fetchAcceptedUsernames } from "../api/sharemanApi";
 import { searchUsers } from "../api/userApi";
 
 export interface MemberManagerHandle {
@@ -51,24 +51,17 @@ export const MemberManager = forwardRef<MemberManagerHandle, MemberManagerProps>
       getPendingMembers: () => pendingMembers,
     }), [pendingMembers]);
 
-    // 相互共有ユーザー一覧を取得（表示名付き）
+    // シェアメン一覧を取得（承諾済みユーザーを候補として表示）
     useEffect(() => {
       (async () => {
         try {
-          const [myShares, incomingShares, allUsers] = await Promise.all([
-            fetchMyShares(),
-            fetchIncomingShares(),
+          const [accepted, allUsers] = await Promise.all([
+            fetchAcceptedUsernames(),
             searchUsers(""),
           ]);
-          const usernames = new Set<string>();
-          myShares.forEach((s) => usernames.add(s.sharedWithUsername));
-          incomingShares.forEach((s) => usernames.add(s.ownerUsername));
-          usernames.delete(currentUsername);
-          const displayNameMap = new Map<string, string>();
-          allUsers.forEach((u) => displayNameMap.set(u.username, u.displayName));
-          const candidates = Array.from(usernames).sort().map((username) => ({
+          const candidates = accepted.filter((u) => u !== currentUsername).sort().map((username) => ({
             username,
-            displayName: displayNameMap.get(username) ?? username,
+            displayName: allUsers.find((u) => u.username === username)?.displayName ?? username,
             chipBgColor: allUsers.find((u) => u.username === username)?.chipBgColor,
           }));
           setShareCandidates(candidates);

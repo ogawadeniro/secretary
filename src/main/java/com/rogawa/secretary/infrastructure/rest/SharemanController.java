@@ -6,6 +6,7 @@ import com.rogawa.secretary.domain.repository.UserRepository;
 import com.rogawa.secretary.infrastructure.rest.dto.SharemanResponse;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -111,7 +112,9 @@ public class SharemanController {
     private Map<String, String> loadDisplayNames(Set<String> usernames) {
         if (usernames.isEmpty()) return Map.of();
         return userRepository.findByUsernames(List.copyOf(usernames)).stream()
-                .collect(Collectors.toMap(u -> u.getUsername(), u -> u.getDisplayName(), (a, b) -> a));
+                .collect(HashMap::new,
+                        (map, u) -> map.put(u.getUsername(), u.getDisplayName()),
+                        HashMap::putAll);
     }
 
     @Data
