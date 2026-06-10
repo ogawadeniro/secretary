@@ -239,6 +239,9 @@ public class ScheduleService implements ScheduleUseCase {
         if (requestBody.getShared() != null) {
             schedule.setShared(requestBody.getShared());
         }
+        if (requestBody.getGroupId() != null) {
+            schedule.setGroupId(requestBody.getGroupId());
+        }
 
         schedule.setUpdateTime(LocalDateTime.now());
         return scheduleRepository.save(schedule);

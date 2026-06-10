@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Schedule } from "../types/schedule";
 import {
   createSchedule,
@@ -6,6 +6,8 @@ import {
   deleteSchedule,
 } from "../api/scheduleApi";
 import { addMember } from "../api/memberApi";
+import { fetchGroups } from "../api/groupApi";
+import type { Group } from "../types/group";
 import { ownerColor, scheduleColor } from "../utils/colorUtils";
 import { PartyPopper, Users } from "lucide-react";
 import TimePicker from "./TimePicker";
@@ -101,6 +103,7 @@ export default function ScheduleDialog({
           owner: "",
           description: form.description ?? "",
           shared: form.shared ?? true,
+          groupId: form.groupId,
         });
         // 新規作成後に保留中のメンバーを追加
         if (pendingMembers && pendingMembers.length > 0) {
@@ -263,6 +266,7 @@ interface ScheduleFormData {
   endDatetime?: string;
   description?: string;
   shared?: boolean;
+  groupId?: number;
 }
 
 /** 予定の新規作成・編集フォーム */
@@ -289,7 +293,8 @@ function ScheduleFormComponent({
   const [title, setTitle] = useState(initial?.title ?? "");
   const [isAllDay, setIsAllDay] = useState(initial?.isAllDay ?? false);
   const [description, setDescription] = useState(initial?.description ?? "");
-  const [shared, setShared] = useState(initial?.shared ?? true);
+  const [groupId, setGroupId] = useState<number | undefined>(initial?.groupId ?? undefined);
+  const [groups, setGroups] = useState<Group[]>([]);
   const [saving, setSaving] = useState(false);
 
   const initialStartDate = initial
@@ -307,6 +312,11 @@ function ScheduleFormComponent({
     startTime, setStartTime,
     endTime, setEndTime,
   } = useDateTimeCorrection(initialStartDate, initialEndDate, initialStartTime, initialEndTime);
+
+  // 所属グループ一覧を取得
+  useEffect(() => {
+    fetchGroups().then(setGroups).catch(() => {});
+  }, []);
 
   const scheduleId = initial?.id;
   const isNew = !scheduleId;
@@ -327,7 +337,8 @@ function ScheduleFormComponent({
             ? `${endDate.replace(/-/g, "/")}-00:00`
             : `${endDate.replace(/-/g, "/")}-${endTime}`,
           description,
-          shared,
+          shared: true,
+          groupId,
         },
         isNew ? memberManagerRef.current?.getPendingMembers() : undefined,
       );
@@ -368,15 +379,33 @@ function ScheduleFormComponent({
           />
           終日
         </label>
-        <label style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: "4px", fontSize: "0.8rem", color: "var(--color-text-muted)", fontWeight: 600, cursor: "pointer" }}>
-          <input
-            type="checkbox"
-            checked={shared}
-            onChange={(e) => setShared(e.target.checked)}
-            style={{ margin: 0 }}
-          />
-          他のユーザーと共有する
-        </label>
+      </div>
+      <div className="settings-section" style={{ borderBottom: "none", paddingBottom: 0 }}>
+        <div className="settings-section-title">公開先</div>
+        <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+          <label style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: "6px", fontSize: "0.85rem", cursor: "pointer" }}>
+            <input
+              type="radio"
+              name="visibility"
+              checked={groupId === undefined}
+              onChange={() => setGroupId(undefined)}
+              style={{ margin: 0 }}
+            />
+            個人
+          </label>
+          {groups.map((g) => (
+            <label key={g.id} style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: "6px", fontSize: "0.85rem", cursor: "pointer" }}>
+              <input
+                type="radio"
+                name="visibility"
+                checked={groupId === g.id}
+                onChange={() => setGroupId(g.id)}
+                style={{ margin: 0 }}
+              />
+              {g.name}
+            </label>
+          ))}
+        </div>
       </div>
       <div className="date-fields">
         <label>
