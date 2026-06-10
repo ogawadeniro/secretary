@@ -1,7 +1,13 @@
 import { useState, useEffect, useMemo } from "react";
-import { X, Trash2 } from "lucide-react";
-import type { CalendarShare } from "../types/share";
-import { fetchMyShares, fetchIncomingShares, createShare, deleteShare } from "../api/shareApi";
+import { X, Trash2, Check } from "lucide-react";
+import type { Shareman } from "../types/group";
+import {
+  fetchMySharemen,
+  fetchIncomingSharemen,
+  inviteShareman,
+  acceptShareman,
+  removeShareman,
+} from "../api/sharemanApi";
 
 interface ShareDialogProps {
   onClose: () => void;
@@ -18,8 +24,8 @@ function formatDisplay(name: string | undefined | null, username: string): strin
 }
 
 export default function ShareDialog({ onClose, onError, onNotify }: ShareDialogProps) {
-  const [myShares, setMyShares] = useState<CalendarShare[]>([]);
-  const [incomingShares, setIncomingShares] = useState<CalendarShare[]>([]);
+  const [myInvitations, setMyInvitations] = useState<Shareman[]>([]);
+  const [incomingInvitations, setIncomingInvitations] = useState<Shareman[]>([]);
   const [username, setUsername] = useState("");
   const [adding, setAdding] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -30,77 +36,77 @@ export default function ShareDialog({ onClose, onError, onNotify }: ShareDialogP
     onError?.(msg);
   };
 
-  const loadShares = async () => {
+  const load = async () => {
     try {
       const [my, incoming] = await Promise.all([
-        fetchMyShares(),
-        fetchIncomingShares(),
+        fetchMySharemen(),
+        fetchIncomingSharemen(),
       ]);
-      setMyShares(my);
-      setIncomingShares(incoming);
+      setMyInvitations(my);
+      setIncomingInvitations(incoming);
     } catch {
-      showError("共有設定を読み込めなかったよ");
+      showError("シェアメン一覧を読み込めなかったよ");
     }
   };
 
   useEffect(() => {
-    loadShares();
+    load();
   }, []);
 
-  /** 相互共有（自分→相手 かつ 相手→自分 の両方が存在） */
-  const mutualUsernames = useMemo(() => {
-    const myTargets = new Set(myShares.map((s) => s.sharedWithUsername));
-    const incomingOwners = new Set(incomingShares.map((s) => s.ownerUsername));
-    const mutual = new Set<string>();
-    for (const u of myTargets) {
-      if (incomingOwners.has(u)) mutual.add(u);
-    }
-    return mutual;
-  }, [myShares, incomingShares]);
-
-  /** 相互共有でない自分→相手のみの一覧 */
-  const outgoingOnly = useMemo(
-    () => myShares.filter((s) => !mutualUsernames.has(s.sharedWithUsername)),
-    [myShares, mutualUsernames],
+  /** 承諾済み（自分→相手） */
+  const acceptedOutgoing = useMemo(
+    () => myInvitations.filter((s) => s.status === "ACCEPTED"),
+    [myInvitations],
   );
 
-  /** 相互共有でない相手→自分のみの一覧 */
-  const incomingOnly = useMemo(
-    () => incomingShares.filter((s) => !mutualUsernames.has(s.ownerUsername)),
-    [incomingShares, mutualUsernames],
+  /** 保留中（自分→相手） */
+  const pendingOutgoing = useMemo(
+    () => myInvitations.filter((s) => s.status === "PENDING"),
+    [myInvitations],
   );
 
-  /** 相互共有の詳細情報（myShares 側のエントリを使う） */
-  const mutualShares = useMemo(
-    () => myShares.filter((s) => mutualUsernames.has(s.sharedWithUsername)),
-    [myShares, mutualUsernames],
+  /** 保留中（相手→自分） */
+  const pendingIncoming = useMemo(
+    () => incomingInvitations.filter((s) => s.status === "PENDING"),
+    [incomingInvitations],
   );
 
-  const handleAdd = async () => {
+  const handleInvite = async () => {
     const trimmed = username.trim();
     if (!trimmed) return;
     setAdding(true);
     setError(null);
     try {
-      await createShare(trimmed);
+      await inviteShareman(trimmed);
       setUsername("");
-      await loadShares();
-      onNotify("カレンダーを共有したよ");
+      await load();
+      onNotify("招待を送信したよ");
     } catch (e) {
-      showError(e instanceof Error ? e.message : "共有設定の追加に失敗したよ");
+      showError(e instanceof Error ? e.message : "招待に失敗したよ");
     } finally {
       setAdding(false);
+    }
+  };
+
+  const handleAccept = async (id: number) => {
+    setError(null);
+    try {
+      await acceptShareman(id);
+      await load();
+      onNotify("シェアメンを承諾したよ");
+    } catch {
+      showError("承諾に失敗したよ");
     }
   };
 
   const handleRemove = async (id: number) => {
     setError(null);
     try {
-      await deleteShare(id);
-      await loadShares();
-      onNotify("共有を解除したよ");
+      await removeShareman(id);
+      await load();
+      onNotify("削除したよ");
     } catch {
-      showError("共有の解除に失敗したよ");
+      showError("削除に失敗したよ");
     }
   };
 
@@ -109,26 +115,55 @@ export default function ShareDialog({ onClose, onError, onNotify }: ShareDialogP
     setTimeout(onClose, 200);
   };
 
+  const sharemanItem = (
+    shareman: Shareman,
+    actions?: React.ReactNode,
+  ) => (
+    <div
+      key={shareman.id}
+      style={{
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "center",
+        padding: "8px 10px",
+        background: "var(--color-surface2)",
+        borderRadius: "6px",
+      }}
+    >
+      <span style={{ fontSize: "0.85rem" }}>
+        {formatDisplay(
+          shareman.inviterUsername === shareman.inviteeUsername
+            ? shareman.inviteeDisplayName
+            : shareman.inviteeDisplayName ?? shareman.inviterDisplayName,
+          shareman.inviterUsername === shareman.inviteeUsername
+            ? shareman.inviteeUsername
+            : shareman.inviteeUsername ?? shareman.inviterUsername,
+        )}
+      </span>
+      {actions}
+    </div>
+  );
+
   return (
     <div className="dialog-overlay" onClick={handleClose}>
       <div className={`dialog${closing ? " closing" : ""}`} onClick={(e) => e.stopPropagation()}>
         <div className="dialog-header">
-          <h2>カレンダー共有</h2>
+          <h2>シェアメン管理</h2>
           <button className="close-btn" onClick={handleClose}><X size={20} /></button>
         </div>
         <div className="dialog-body" style={{ gap: "16px" }}>
           {error && <div className="dialog-error">{error}</div>}
 
-          {/* 共有追加 */}
+          {/* 招待追加 */}
           <div className="settings-section">
-            <div className="settings-section-title">共有を追加</div>
+            <div className="settings-section-title">シェアメンを招待</div>
             <div style={{ display: "flex", gap: "8px" }}>
               <input
                 type="text"
-                placeholder="共有するユーザー名を入力..."
+                placeholder="ユーザー名を入力..."
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                onKeyDown={(e) => { if (e.key === "Enter") handleAdd(); }}
+                onKeyDown={(e) => { if (e.key === "Enter") handleInvite(); }}
                 style={{
                   flex: 1,
                   background: "var(--color-surface2)",
@@ -143,33 +178,20 @@ export default function ShareDialog({ onClose, onError, onNotify }: ShareDialogP
                 className="save-btn"
                 style={{ padding: "8px 16px", fontSize: "0.85rem" }}
                 disabled={adding || !username.trim()}
-                onClick={handleAdd}
+                onClick={handleInvite}
               >
-                {adding ? "追加中..." : "追加"}
+                {adding ? "送信中..." : "招待"}
               </button>
             </div>
           </div>
 
-          {/* 相互共有している相手 */}
-          {mutualShares.length > 0 && (
+          {/* 承認済みシェアメン */}
+          {acceptedOutgoing.length > 0 && (
             <div className="settings-section">
-              <div className="settings-section-title">相互共有している相手</div>
+              <div className="settings-section-title">シェアメン</div>
               <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-                {mutualShares.map((share) => (
-                  <div
-                    key={share.id}
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                      padding: "8px 10px",
-                      background: "var(--color-surface2)",
-                      borderRadius: "6px",
-                    }}
-                  >
-                    <span style={{ fontSize: "0.85rem" }}>
-                      {formatDisplay(share.sharedWithDisplayName, share.sharedWithUsername)}
-                    </span>
+                {acceptedOutgoing.map((s) =>
+                  sharemanItem(s, (
                     <button
                       className="icon-btn delete-btn-icon"
                       style={{
@@ -180,93 +202,83 @@ export default function ShareDialog({ onClose, onError, onNotify }: ShareDialogP
                         padding: "4px",
                         display: "flex",
                       }}
-                      onClick={() => handleRemove(share.id)}
-                      title="共有を解除"
+                      onClick={() => handleRemove(s.id)}
+                      title="削除"
                     >
                       <Trash2 size={16} />
                     </button>
-                  </div>
-                ))}
+                  ))
+                )}
               </div>
             </div>
           )}
 
-          {/* 共有している相手（相互以外） */}
-          {outgoingOnly.length > 0 && (
+          {/* 送信した招待（保留中） */}
+          {pendingOutgoing.length > 0 && (
             <div className="settings-section">
-              <div className="settings-section-title">共有している相手</div>
+              <div className="settings-section-title">送信した招待（承認待ち）</div>
               <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-                {outgoingOnly.map((share) => (
-                  <div
-                    key={share.id}
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                      padding: "8px 10px",
-                      background: "var(--color-surface2)",
-                      borderRadius: "6px",
-                    }}
-                  >
-                    <span style={{ fontSize: "0.85rem" }}>
-                      {formatDisplay(share.sharedWithDisplayName, share.sharedWithUsername)}
+                {pendingOutgoing.map((s) =>
+                  sharemanItem(s, (
+                    <span style={{ fontSize: "0.75rem", color: "var(--color-text-muted)" }}>
+                      承認待ち
                     </span>
-                    <button
-                      className="icon-btn delete-btn-icon"
-                      style={{
-                        background: "none",
-                        border: "none",
-                        cursor: "pointer",
-                        color: "var(--color-sun)",
-                        padding: "4px",
-                        display: "flex",
-                      }}
-                      onClick={() => handleRemove(share.id)}
-                      title="共有を解除"
-                    >
-                      <Trash2 size={16} />
-                    </button>
-                  </div>
-                ))}
+                  ))
+                )}
               </div>
             </div>
           )}
 
-          {myShares.length === 0 && (
+          {/* 受信した招待 */}
+          {pendingIncoming.length > 0 && (
+            <div className="settings-section">
+              <div className="settings-section-title">受信した招待</div>
+              <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                {pendingIncoming.map((s) =>
+                  sharemanItem(s, (
+                    <div style={{ display: "flex", gap: "4px" }}>
+                      <button
+                        className="icon-btn"
+                        style={{
+                          background: "none",
+                          border: "none",
+                          cursor: "pointer",
+                          color: "var(--color-accent)",
+                          padding: "4px",
+                          display: "flex",
+                        }}
+                        onClick={() => handleAccept(s.id)}
+                        title="承諾"
+                      >
+                        <Check size={16} />
+                      </button>
+                      <button
+                        className="icon-btn"
+                        style={{
+                          background: "none",
+                          border: "none",
+                          cursor: "pointer",
+                          color: "var(--color-sun)",
+                          padding: "4px",
+                          display: "flex",
+                        }}
+                        onClick={() => handleRemove(s.id)}
+                        title="拒否"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          )}
+
+          {myInvitations.length === 0 && incomingInvitations.length === 0 && (
             <p style={{ fontSize: "0.8rem", color: "var(--color-text-muted)" }}>
-              まだ誰とも共有していないよ
+              まだシェアメンがいないよ。ユーザー名を入力して招待しよう！
             </p>
           )}
-
-          {/* 共有してくれている相手（相互以外） */}
-          <div className="settings-section" style={{ borderBottom: "none", paddingBottom: 0 }}>
-            <div className="settings-section-title">共有してくれている相手</div>
-            {incomingShares.length === 0 ? (
-              <p style={{ fontSize: "0.8rem", color: "var(--color-text-muted)" }}>
-                まだ誰にも共有されていないよ
-              </p>
-            ) : incomingOnly.length === 0 ? (
-              <p style={{ fontSize: "0.8rem", color: "var(--color-text-muted)" }}>
-                誰にも共有されていないよ
-              </p>
-            ) : (
-              <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-                {incomingOnly.map((share) => (
-                  <div
-                    key={share.id}
-                    style={{
-                      padding: "8px 10px",
-                      background: "var(--color-surface2)",
-                      borderRadius: "6px",
-                      fontSize: "0.85rem",
-                    }}
-                  >
-                    {formatDisplay(share.ownerDisplayName, share.ownerUsername)}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
         </div>
       </div>
     </div>

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback, useLayoutEffect, useMemo } from "react";
-import { CircleUser, Settings, LogOut, Share2, User } from "lucide-react";
+import { CircleUser, Settings, LogOut, Share2, Users, User } from "lucide-react";
 import type { UserSettings } from "../types/settings";
 import type { Schedule } from "../types/schedule";
 import { fetchSchedules } from "../api/scheduleApi";
@@ -9,6 +9,7 @@ import ScheduleDialog from "./ScheduleDialog";
 import SettingsDialog from "./SettingsDialog";
 import AccountDialog from "./AccountDialog";
 import ShareDialog from "./ShareDialog";
+import GroupDialog from "./GroupDialog";
 import { addDays, getWeekStart, formatDateKey, toEpochDay } from "../utils/dateUtils";
 import { getHolidaysInRange } from "../utils/holidayUtils";
 import type { HolidayMap } from "../utils/holidayUtils";
@@ -55,6 +56,7 @@ export default function InfiniteCalendar() {
   const [showAccountMenu, setShowAccountMenu] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [showShare, setShowShare] = useState(false);
+  const [showGroup, setShowGroup] = useState(false);
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
   const [toasts, setToasts] = useState<{ id: number; message: string; type: "success" | "error" }[]>([]);
@@ -303,7 +305,17 @@ export default function InfiniteCalendar() {
                   }}
                 >
                   <Share2 size={16} />
-                  <span>カレンダー共有</span>
+                  <span>シェアメン管理</span>
+                </button>
+                <button
+                  className="account-dropdown-item"
+                  onClick={() => {
+                    setShowAccountMenu(false);
+                    setShowGroup(true);
+                  }}
+                >
+                  <Users size={16} />
+                  <span>グループ管理</span>
                 </button>
                 <button
                   className="account-dropdown-item"
@@ -391,6 +403,10 @@ export default function InfiniteCalendar() {
 
       {showShare && (
         <ShareDialog onClose={() => setShowShare(false)} onNotify={notify} />
+      )}
+
+      {showGroup && (
+        <GroupDialog onClose={() => setShowGroup(false)} onNotify={notify} />
       )}
 
       {dialogDate && (
