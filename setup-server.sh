@@ -142,6 +142,39 @@ EOSQL
 
         -- メールアドレスカラム追加（既存テーブルへの追記。なければ追加）
         ALTER TABLE users ADD COLUMN IF NOT EXISTS email TEXT;
+
+        -- schedules に group_id カラム追加
+        ALTER TABLE schedules ADD COLUMN IF NOT EXISTS group_id BIGINT;
+
+        -- シェアメン（カレンダー共有の置き換え）
+        CREATE TABLE IF NOT EXISTS sharemen (
+            id BIGSERIAL PRIMARY KEY,
+            inviter_username TEXT NOT NULL,
+            invitee_username TEXT NOT NULL,
+            status TEXT NOT NULL DEFAULT 'PENDING',
+            created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+            updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+            UNIQUE(inviter_username, invitee_username)
+        );
+
+        -- グループ
+        CREATE TABLE IF NOT EXISTS groups (
+            id BIGSERIAL PRIMARY KEY,
+            name TEXT NOT NULL,
+            owner_username TEXT NOT NULL,
+            created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+            updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+        );
+
+        -- グループメンバー
+        CREATE TABLE IF NOT EXISTS group_members (
+            id BIGSERIAL PRIMARY KEY,
+            group_id BIGINT NOT NULL REFERENCES groups(id) ON DELETE CASCADE,
+            username TEXT NOT NULL,
+            role TEXT NOT NULL DEFAULT 'MEMBER',
+            created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+            UNIQUE(group_id, username)
+        );
 EOSQL
     echo "=== Database setup complete ==="
 }

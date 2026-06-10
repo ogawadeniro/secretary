@@ -50,7 +50,10 @@ psql -h "$DB_HOST" -U "$DB_USER" -d "$DB_NAME" <<-EOSQL
     --    Hibernate が Long 型として認識するため validation に通す
     ALTER TABLE schedules ALTER COLUMN id TYPE BIGINT;
 
-    -- 7. 不足しているテーブルをまとめて作成
+    -- 7. schedules に group_id カラムを追加
+    ALTER TABLE schedules ADD COLUMN IF NOT EXISTS group_id BIGINT;
+
+    -- 8. 不足しているテーブルをまとめて作成
     CREATE TABLE IF NOT EXISTS calendar_shares (
         id BIGSERIAL PRIMARY KEY,
         owner_username TEXT NOT NULL,
@@ -58,6 +61,17 @@ psql -h "$DB_HOST" -U "$DB_USER" -d "$DB_NAME" <<-EOSQL
         permission TEXT NOT NULL DEFAULT 'READ',
         created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
         UNIQUE(owner_username, shared_with_username)
+    );
+
+    -- シェアメン（カレンダー共有の置き換え）
+    CREATE TABLE IF NOT EXISTS sharemen (
+        id BIGSERIAL PRIMARY KEY,
+        inviter_username TEXT NOT NULL,
+        invitee_username TEXT NOT NULL,
+        status TEXT NOT NULL DEFAULT 'PENDING',
+        created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+        UNIQUE(inviter_username, invitee_username)
     );
 
     CREATE TABLE IF NOT EXISTS schedule_members (
@@ -74,6 +88,25 @@ psql -h "$DB_HOST" -U "$DB_USER" -d "$DB_NAME" <<-EOSQL
         chip_bg_color TEXT,
         first_day_of_week INTEGER,
         time_interval INTEGER NOT NULL DEFAULT 5
+    );
+
+    -- グループ
+    CREATE TABLE IF NOT EXISTS groups (
+        id BIGSERIAL PRIMARY KEY,
+        name TEXT NOT NULL,
+        owner_username TEXT NOT NULL,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+    );
+
+    -- グループメンバー
+    CREATE TABLE IF NOT EXISTS group_members (
+        id BIGSERIAL PRIMARY KEY,
+        group_id BIGINT NOT NULL REFERENCES groups(id) ON DELETE CASCADE,
+        username TEXT NOT NULL,
+        role TEXT NOT NULL DEFAULT 'MEMBER',
+        created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+        UNIQUE(group_id, username)
     );
 EOSQL
 
