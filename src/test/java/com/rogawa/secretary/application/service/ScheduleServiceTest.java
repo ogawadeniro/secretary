@@ -159,7 +159,7 @@ public class ScheduleServiceTest {
         existing.setTitle("original");
         existing.setIsAllDay(false);
         existing.setOwner("other_user");
-        existing.setGroupId(10L);
+        existing.setGroupIds(List.of(10L));
 
         Schedule request = new Schedule();
         request.setTitle("updated");
