@@ -60,7 +60,13 @@ export default function InfiniteCalendar() {
   const [showShare, setShowShare] = useState(false);
   const [showGroup, setShowGroup] = useState(false);
   const [groups, setGroups] = useState<Group[]>([]);
-  const [scheduleFilter, setScheduleFilter] = useState<Set<string | number>>(new Set(["personal"]));
+  const [scheduleFilter, setScheduleFilter] = useState<Set<string | number>>(() => {
+    try {
+      const saved = localStorage.getItem("calendar_filter");
+      if (saved) return new Set(JSON.parse(saved));
+    } catch { /* ignore */ }
+    return new Set(["personal"]);
+  });
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
@@ -115,6 +121,11 @@ export default function InfiniteCalendar() {
   useEffect(() => {
     setWeeks(generateWeeks(new Date(), INITIAL_WEEKS / 2, settings.firstDayOfWeek));
   }, [settings.firstDayOfWeek]);
+
+  // フィルターを localStorage に保存
+  useEffect(() => {
+    localStorage.setItem("calendar_filter", JSON.stringify([...scheduleFilter]));
+  }, [scheduleFilter]);
 
   // チップ色を CSS 変数に反映
   useEffect(() => {
