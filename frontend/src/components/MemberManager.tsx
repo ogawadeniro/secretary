@@ -115,7 +115,6 @@ export const MemberManager = forwardRef<MemberManagerHandle, MemberManagerProps>
       const trimmed = username.trim();
       if (!trimmed) return;
       setMemberError(null);
-      setShowSuggestions(false);
 
       const alreadyMember = scheduleId
         ? members.some((m) => m.username === trimmed)
