@@ -149,7 +149,7 @@ export default function ScheduleDialog({
       <div className={`dialog ${closing ? "closing" : ""}`} onClick={(e) => e.stopPropagation()}>
         <div className="dialog-header">
           <h2>
-            {date.getMonth() + 1}月{date.getDate()}日の予定
+            {date.getFullYear()}年{date.getMonth() + 1}月{date.getDate()}日の予定
             {holidayName && (
               <span className="dialog-holiday-name">
                 <PartyPopper size={12} />
@@ -416,64 +416,6 @@ function ScheduleFormComponent({
           終日
         </label>
       </div>
-      <div className="settings-section" style={{ borderBottom: "none", paddingBottom: 0 }}>
-        <div className="settings-section-title">公開先</div>
-        <div style={{ position: "relative" }} ref={dropdownRef}>
-          <div
-            style={{
-              width: "100%", background: "var(--color-surface2)",
-              border: "1px solid var(--color-border)", color: "var(--color-text)",
-              padding: "6px 8px", borderRadius: "6px", fontFamily: "inherit",
-              cursor: "pointer", fontSize: "0.85rem",
-            }}
-            onClick={() => setShowGroupDropdown((p) => !p)}
-          >
-            {(() => {
-              if (selectedGroupId === undefined) return "個人（自分のみ）";
-              const g = groups.find((gr) => gr.id === selectedGroupId);
-              return (
-                <span style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                  {g?.iconData && <img src={g.iconData} alt="" style={{ width: "16px", height: "16px", borderRadius: "3px", objectFit: "cover" }} />}
-                  {g?.name ?? "グループ"}
-                </span>
-              );
-            })()}
-          </div>
-          {showGroupDropdown && (
-            <div style={{
-              position: "absolute", top: "100%", left: 0, right: 0, zIndex: 100,
-              background: "var(--color-surface2)", border: "1px solid var(--color-border)",
-              borderRadius: "6px", marginTop: "4px", maxHeight: "200px", overflowY: "auto",
-            }}>
-              <div style={{
-                padding: "8px 10px", cursor: "pointer", fontSize: "0.85rem",
-                borderBottom: "1px solid var(--color-border)",
-                background: selectedGroupId === undefined ? "var(--color-hover)" : "transparent",
-              }}
-                onMouseDown={(e) => { e.preventDefault(); setSelectedGroupId(undefined); setShowGroupDropdown(false); }}
-                onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--color-hover)"; }}
-                onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = selectedGroupId === undefined ? "var(--color-hover)" : "transparent"; }}
-              >個人（自分のみ）</div>
-              {groups.map((g) => (
-                <div key={g.id} style={{
-                  padding: "8px 10px", cursor: "pointer", fontSize: "0.85rem",
-                  borderBottom: "1px solid var(--color-border)",
-                  background: selectedGroupId === g.id ? "var(--color-hover)" : "transparent",
-                }}
-                  onMouseDown={(e) => { e.preventDefault(); setSelectedGroupId(g.id); setShowGroupDropdown(false); }}
-                  onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--color-hover)"; }}
-                  onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = selectedGroupId === g.id ? "var(--color-hover)" : "transparent"; }}
-                >
-                  <span style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                    {g.iconData && <img src={g.iconData} alt="" style={{ width: "16px", height: "16px", borderRadius: "3px", objectFit: "cover" }} />}
-                    {g.name}
-                  </span>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
       <div className="date-fields">
         <label>
           開始日
@@ -504,7 +446,64 @@ function ScheduleFormComponent({
           </label>
         </div>
       )}
-
+      <div className="settings-section" style={{ borderBottom: "none", paddingBottom: 0 }}>
+        <div className="settings-section-title">共有グループ</div>
+        <div style={{ position: "relative" }} ref={dropdownRef}>
+          <div
+            style={{
+              width: "100%", background: "var(--color-surface2)",
+              border: "1px solid var(--color-border)", color: "var(--color-text)",
+              padding: "6px 8px", borderRadius: "6px", fontFamily: "inherit",
+              cursor: "pointer", fontSize: "0.85rem",
+            }}
+            onClick={() => setShowGroupDropdown((p) => !p)}
+          >
+            {(() => {
+              if (selectedGroupId === undefined) return "プライベート";
+              const g = groups.find((gr) => gr.id === selectedGroupId);
+              return (
+                <span style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                  {g?.iconData && <img src={g.iconData} alt="" style={{ width: "16px", height: "16px", borderRadius: "3px", objectFit: "cover" }} />}
+                  {g?.name ?? "グループ"}
+                </span>
+              );
+            })()}
+          </div>
+          {showGroupDropdown && (
+            <div style={{
+              position: "absolute", top: "100%", left: 0, right: 0, zIndex: 100,
+              background: "var(--color-surface2)", border: "1px solid var(--color-border)",
+              borderRadius: "6px", marginTop: "4px", maxHeight: "200px", overflowY: "auto",
+            }}>
+              <div style={{
+                padding: "8px 10px", cursor: "pointer", fontSize: "0.85rem",
+                borderBottom: "1px solid var(--color-border)",
+                background: selectedGroupId === undefined ? "var(--color-hover)" : "transparent",
+              }}
+                onMouseDown={(e) => { e.preventDefault(); setSelectedGroupId(undefined); setShowGroupDropdown(false); }}
+                onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--color-hover)"; }}
+                onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = selectedGroupId === undefined ? "var(--color-hover)" : "transparent"; }}
+              >プライベート</div>
+              {groups.map((g) => (
+                <div key={g.id} style={{
+                  padding: "8px 10px", cursor: "pointer", fontSize: "0.85rem",
+                  borderBottom: "1px solid var(--color-border)",
+                  background: selectedGroupId === g.id ? "var(--color-hover)" : "transparent",
+                }}
+                  onMouseDown={(e) => { e.preventDefault(); setSelectedGroupId(g.id); setShowGroupDropdown(false); }}
+                  onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--color-hover)"; }}
+                  onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = selectedGroupId === g.id ? "var(--color-hover)" : "transparent"; }}
+                >
+                  <span style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                    {g.iconData && <img src={g.iconData} alt="" style={{ width: "16px", height: "16px", borderRadius: "3px", objectFit: "cover" }} />}
+                    {g.name}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
       {selectedGroupId && (
         <MemberManager
           ref={memberManagerRef}
