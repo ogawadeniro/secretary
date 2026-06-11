@@ -107,9 +107,11 @@ export const MemberManager = forwardRef<MemberManagerHandle, MemberManagerProps>
     useEffect(() => {
       if (!showSuggestions) return;
       const handleClick = (e: MouseEvent) => {
-        if (suggestionsRef.current && !suggestionsRef.current.contains(e.target as Node)) {
-          setShowSuggestions(false);
-        }
+        const target = e.target as Node;
+        const inputEl = memberInputRef.current;
+        if (inputEl?.contains(target)) return;
+        if (suggestionsRef.current && suggestionsRef.current.contains(target)) return;
+        setShowSuggestions(false);
       };
       document.addEventListener("mousedown", handleClick);
       return () => document.removeEventListener("mousedown", handleClick);
@@ -334,6 +336,7 @@ export const MemberManager = forwardRef<MemberManagerHandle, MemberManagerProps>
                   }}
                   onMouseDown={(e) => {
                     e.preventDefault();
+                    e.nativeEvent.stopPropagation();
                     handleAddMember(c.username);
                   }}
                   onMouseEnter={(e) => {
