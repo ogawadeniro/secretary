@@ -81,8 +81,8 @@ public class GroupService {
     public GroupMember addMember(Long groupId, String memberUsername, String username) {
         Group group = groupRepository.findById(groupId)
                 .orElseThrow(() -> new IllegalArgumentException("グループが見つかりません"));
-        if (!group.getOwnerUsername().equals(username)) {
-            throw new IllegalArgumentException("メンバーを追加できるのはオーナーのみです");
+        if (!isGroupMember(groupId, username)) {
+            throw new IllegalArgumentException("メンバーを追加できるのはグループメンバーのみです");
         }
         if (groupRepository.findGroupMember(groupId, memberUsername).isPresent()) {
             throw new IllegalArgumentException("既にメンバーです");
