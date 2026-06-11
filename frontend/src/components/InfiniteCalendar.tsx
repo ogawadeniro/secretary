@@ -263,7 +263,7 @@ export default function InfiniteCalendar() {
   const filteredSchedules = useMemo(() => {
     if (scheduleFilter.size === 0) return [];
     return schedules.filter((s) => {
-      if (scheduleFilter.has("personal") && s.owner === user?.username) return true;
+      if (scheduleFilter.has("personal") && s.owner === user?.username && (!s.groupIds || s.groupIds.length === 0)) return true;
       if (s.groupIds?.some((gid) => scheduleFilter.has(gid))) return true;
       return false;
     });
@@ -278,7 +278,7 @@ export default function InfiniteCalendar() {
     return options;
   }, [groups]);
 
-  // 選択された日付に紐づく予定をフィルタ
+  // 選択された日付に紐づく予定をフィルタ（filteredSchedules をベースに）
   const selectedSchedules = dialogDate
     ? filteredSchedules.filter((s) => {
         const startMatch = s.startDatetime.match(
