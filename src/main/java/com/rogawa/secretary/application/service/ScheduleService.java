@@ -239,8 +239,8 @@ public class ScheduleService implements ScheduleUseCase {
         if (requestBody.getShared() != null) {
             schedule.setShared(requestBody.getShared());
         }
-        if (requestBody.getGroupId() != null) {
-            schedule.setGroupId(requestBody.getGroupId());
+        if (requestBody.getGroupIds() != null) {
+            schedule.setGroupIds(new ArrayList<>(requestBody.getGroupIds()));
         }
 
         schedule.setUpdateTime(LocalDateTime.now());
@@ -267,9 +267,13 @@ public class ScheduleService implements ScheduleUseCase {
         if (schedule.getOwner().equals(username)) {
             return true;
         }
-        // グループ予定: グループメンバーなら編集可能
-        if (schedule.getGroupId() != null) {
-            return groupRepository.findGroupMember(schedule.getGroupId(), username).isPresent();
+        // グループ予定: いずれかのグループのメンバーなら編集可能
+        if (schedule.getGroupIds() != null && !schedule.getGroupIds().isEmpty()) {
+            for (Long groupId : schedule.getGroupIds()) {
+                if (groupRepository.findGroupMember(groupId, username).isPresent()) {
+                    return true;
+                }
+            }
         }
         return false;
     }

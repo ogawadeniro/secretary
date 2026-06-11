@@ -5,6 +5,7 @@ import com.rogawa.secretary.domain.model.Schedule;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import lombok.Data;
@@ -37,8 +38,8 @@ public class ScheduleDto {
     /** 他のユーザーと共有するかどうか（デフォルト true） */
     private Boolean shared = true;
 
-    /** 所属グループID */
-    private Long groupId;
+    /** 所属グループID一覧 */
+    private List<Long> groupIds;
 
     /** オーナーのチップ背景色 */
     private String ownerChipBgColor;
@@ -69,7 +70,8 @@ public class ScheduleDto {
         dto.setDescription(schedule.getDescription());
         dto.setUpdateTime(schedule.getUpdateTime());
         dto.setShared(schedule.getShared());
-        dto.setGroupId(schedule.getGroupId());
+        dto.setGroupIds(schedule.getGroupIds() != null
+                ? new ArrayList<>(schedule.getGroupIds()) : new ArrayList<>());
         dto.setOwnerChipBgColor(schedule.getOwnerChipBgColor());
         dto.setOwnerDisplayName(schedule.getOwnerDisplayName());
         dto.setMemberUsernames(schedule.getMemberUsernames());
@@ -90,7 +92,8 @@ public class ScheduleDto {
         schedule.setDescription(this.description);
         schedule.setUpdateTime(this.updateTime);
         schedule.setShared(this.shared);
-        schedule.setGroupId(this.groupId);
+        schedule.setGroupIds(this.groupIds != null
+                ? new ArrayList<>(this.groupIds) : new ArrayList<>());
         return schedule;
     }
 }

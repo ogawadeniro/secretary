@@ -1,6 +1,7 @@
 package com.rogawa.secretary.domain.model;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import lombok.Data;
@@ -18,8 +19,8 @@ public class Schedule {
     /** 他のユーザーと共有するかどうか（デフォルト true） */
     private Boolean shared = true;
 
-    /** 所属グループID（NULL=個人予定） */
-    private Long groupId;
+    /** 所属グループID一覧（空=個人予定） */
+    private List<Long> groupIds = new ArrayList<>();
 
     /** オーナーのチップ背景色（API応答用、永続化しない） */
     private String ownerChipBgColor;

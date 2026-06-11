@@ -37,7 +37,7 @@ public class SchedulePersistenceAdapter implements ScheduleRepository {
 
     @Override
     public List<Schedule> findByGroupIds(List<Long> groupIds) {
-        return jpaScheduleRepository.findByGroupIdIn(groupIds).stream()
+        return jpaScheduleRepository.findByGroupIds(groupIds).stream()
                 .map(JpaSchedule::toDomain)
                 .collect(Collectors.toList());
     }

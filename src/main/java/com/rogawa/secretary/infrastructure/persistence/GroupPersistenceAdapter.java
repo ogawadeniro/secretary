@@ -34,6 +34,12 @@ public class GroupPersistenceAdapter implements GroupRepository {
     }
 
     @Override
+    public List<Group> findByInvitedUsername(String username) {
+        return jpaGroupRepository.findByInvitedUsername(username)
+                .stream().map(JpaGroup::toDomain).collect(Collectors.toList());
+    }
+
+    @Override
     public Optional<Group> findById(Long id) {
         return jpaGroupRepository.findById(id).map(JpaGroup::toDomain);
     }
@@ -53,6 +59,12 @@ public class GroupPersistenceAdapter implements GroupRepository {
     @Override
     public List<GroupMember> findMembersByGroupId(Long groupId) {
         return jpaGroupMemberRepository.findByGroupId(groupId)
+                .stream().map(JpaGroupMember::toDomain).collect(Collectors.toList());
+    }
+
+    @Override
+    public List<GroupMember> findAcceptedMembersByGroupId(Long groupId) {
+        return jpaGroupMemberRepository.findByGroupIdAndStatus(groupId, "ACCEPTED")
                 .stream().map(JpaGroupMember::toDomain).collect(Collectors.toList());
     }
 

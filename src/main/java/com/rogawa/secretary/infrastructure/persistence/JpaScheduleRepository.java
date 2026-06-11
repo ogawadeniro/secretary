@@ -16,5 +16,6 @@ public interface JpaScheduleRepository extends JpaRepository<JpaSchedule, Long> 
 
     List<JpaSchedule> findByIdIn(List<Long> ids);
 
-    List<JpaSchedule> findByGroupIdIn(List<Long> groupIds);
+    @Query("SELECT DISTINCT s FROM JpaSchedule s JOIN s.groupIds g WHERE g IN ?1")
+    List<JpaSchedule> findByGroupIds(List<Long> groupIds);
 }

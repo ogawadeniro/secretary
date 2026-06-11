@@ -12,6 +12,7 @@ public class GroupMemberResponse {
     private String username;
     private String displayName;
     private String role;
+    private String status;
     private LocalDateTime createdAt;
 
     public static GroupMemberResponse fromDomain(GroupMember member, String displayName) {
@@ -21,6 +22,7 @@ public class GroupMemberResponse {
         res.setUsername(member.getUsername());
         res.setDisplayName(displayName);
         res.setRole(member.getRole());
+        res.setStatus(member.getStatus());
         res.setCreatedAt(member.getCreatedAt());
         return res;
     }

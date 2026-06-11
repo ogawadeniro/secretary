@@ -10,7 +10,11 @@ public interface JpaGroupMemberRepository extends JpaRepository<JpaGroupMember, 
 
     List<JpaGroupMember> findByGroupId(Long groupId);
 
+    List<JpaGroupMember> findByGroupIdAndStatus(Long groupId, String status);
+
     Optional<JpaGroupMember> findByGroupIdAndUsername(Long groupId, String username);
+
+    List<JpaGroupMember> findByUsernameAndStatus(String username, String status);
 
     void deleteByGroupIdAndUsername(Long groupId, String username);
 }

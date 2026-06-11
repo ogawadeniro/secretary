@@ -1,14 +1,20 @@
 package com.rogawa.secretary.infrastructure.persistence;
 
 import com.rogawa.secretary.domain.model.Schedule;
+import jakarta.persistence.CollectionTable;
+import jakarta.persistence.Column;
+import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import lombok.Data;
 
 @Entity
@@ -41,8 +47,11 @@ public class JpaSchedule {
     /** 他のユーザーと共有するかどうか（デフォルト true） */
     private Boolean shared = true;
 
-    /** 所属グループID */
-    private Long groupId;
+    /** 所属グループID一覧 */
+    @ElementCollection
+    @CollectionTable(name = "schedule_groups", joinColumns = @JoinColumn(name = "schedule_id"))
+    @Column(name = "group_id")
+    private List<Long> groupIds = new ArrayList<>();
 
     public static JpaSchedule fromDomain(Schedule schedule) {
         JpaSchedule entity = new JpaSchedule();
@@ -55,7 +64,7 @@ public class JpaSchedule {
         entity.setDescription(schedule.getDescription());
         entity.setUpdateTime(schedule.getUpdateTime());
         entity.setShared(schedule.getShared());
-        entity.setGroupId(schedule.getGroupId());
+        entity.setGroupIds(schedule.getGroupIds());
         return entity;
     }
 
@@ -70,7 +79,7 @@ public class JpaSchedule {
         schedule.setDescription(this.description);
         schedule.setUpdateTime(this.updateTime);
         schedule.setShared(this.shared);
-        schedule.setGroupId(this.groupId);
+        schedule.setGroupIds(this.groupIds);
         return schedule;
     }
 }

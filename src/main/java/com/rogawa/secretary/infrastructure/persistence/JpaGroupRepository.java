@@ -12,6 +12,10 @@ public interface JpaGroupRepository extends JpaRepository<JpaGroup, Long> {
     List<JpaGroup> findByOwnerUsernameOrderByCreatedAtDesc(String ownerUsername);
 
     @Query("SELECT g FROM JpaGroup g JOIN JpaGroupMember m ON g.id = m.groupId "
-            + "WHERE m.username = :username ORDER BY g.createdAt DESC")
+            + "WHERE m.username = :username AND m.status = 'ACCEPTED' ORDER BY g.createdAt DESC")
     List<JpaGroup> findByMemberUsername(@Param("username") String username);
+
+    @Query("SELECT g FROM JpaGroup g JOIN JpaGroupMember m ON g.id = m.groupId "
+            + "WHERE m.username = :username AND m.status = 'INVITED' ORDER BY g.createdAt DESC")
+    List<JpaGroup> findByInvitedUsername(@Param("username") String username);
 }

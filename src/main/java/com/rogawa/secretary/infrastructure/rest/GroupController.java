@@ -51,6 +51,15 @@ public class GroupController {
         return ResponseEntity.ok(owned.stream().map(GroupResponse::fromDomain).collect(Collectors.toList()));
     }
 
+    /** 自分への招待一覧 */
+    @GetMapping("/api/v1/groups/invitations")
+    public ResponseEntity<List<GroupResponse>> getInvitations(Authentication auth) {
+        return ResponseEntity.ok(
+                groupService.getInvitations(auth.getName()).stream()
+                        .map(GroupResponse::fromDomain)
+                        .collect(Collectors.toList()));
+    }
+
     /** グループ作成 */
     @PostMapping("/api/v1/groups")
     public ResponseEntity<?> createGroup(
@@ -98,7 +107,21 @@ public class GroupController {
                 .collect(Collectors.toList()));
     }
 
-    /** グループメンバー追加 */
+    /** グループ招待を承諾 */
+    @PatchMapping("/api/v1/groups/{id}/accept")
+    public ResponseEntity<?> acceptInvitation(
+            @PathVariable Long id, Authentication auth) {
+        try {
+            GroupMember member = groupService.acceptInvitation(id, auth.getName());
+            String displayName = userRepository.findByUsername(auth.getName())
+                    .map(u -> u.getDisplayName()).orElse(null);
+            return ResponseEntity.ok(GroupMemberResponse.fromDomain(member, displayName));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+        }
+    }
+
+    /** グループメンバー追加（招待） */
     @PostMapping("/api/v1/groups/{id}/members")
     public ResponseEntity<?> addMember(
             @PathVariable Long id,

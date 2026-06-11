@@ -9,8 +9,11 @@ import java.util.Optional;
 public interface GroupRepository {
     List<Group> findByOwnerUsername(String ownerUsername);
 
-    /** 自分がメンバーとして参加しているグループ一覧 */
+    /** ACCEPTEDメンバーとして参加しているグループ一覧 */
     List<Group> findByMemberUsername(String username);
+
+    /** INVITED（招待中）のグループ一覧 */
+    List<Group> findByInvitedUsername(String username);
 
     Optional<Group> findById(Long id);
 
@@ -20,6 +23,8 @@ public interface GroupRepository {
 
     // GroupMember
     List<GroupMember> findMembersByGroupId(Long groupId);
+
+    List<GroupMember> findAcceptedMembersByGroupId(Long groupId);
 
     Optional<GroupMember> findGroupMember(Long groupId, String username);
 

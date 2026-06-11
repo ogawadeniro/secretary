@@ -36,11 +36,12 @@ public class GroupService {
         group.setCreatedAt(LocalDateTime.now());
         group.setUpdatedAt(LocalDateTime.now());
         Group saved = groupRepository.save(group);
-        // オーナーを自動的にメンバー追加
+        // オーナーを自動的にメンバー追加（承諾済み）
         GroupMember ownerMember = new GroupMember();
         ownerMember.setGroupId(saved.getId());
         ownerMember.setUsername(ownerUsername);
         ownerMember.setRole("OWNER");
+        ownerMember.setStatus("ACCEPTED");
         ownerMember.setCreatedAt(LocalDateTime.now());
         groupRepository.saveMember(ownerMember);
         return saved;
@@ -75,7 +76,7 @@ public class GroupService {
         return groupRepository.findMembersByGroupId(groupId);
     }
 
-    /** グループメンバー追加 */
+    /** グループメンバー追加（招待） */
     @Transactional
     public GroupMember addMember(Long groupId, String memberUsername, String username) {
         Group group = groupRepository.findById(groupId)
@@ -90,8 +91,26 @@ public class GroupService {
         member.setGroupId(groupId);
         member.setUsername(memberUsername);
         member.setRole("MEMBER");
+        member.setStatus("INVITED");
         member.setCreatedAt(LocalDateTime.now());
         return groupRepository.saveMember(member);
+    }
+
+    /** グループ招待を承諾 */
+    @Transactional
+    public GroupMember acceptInvitation(Long groupId, String username) {
+        GroupMember member = groupRepository.findGroupMember(groupId, username)
+                .orElseThrow(() -> new IllegalArgumentException("招待が見つかりません"));
+        if (!"INVITED".equals(member.getStatus())) {
+            throw new IllegalArgumentException("承諾可能な招待がありません");
+        }
+        member.setStatus("ACCEPTED");
+        return groupRepository.saveMember(member);
+    }
+
+    /** 自分への招待一覧 */
+    public List<Group> getInvitations(String username) {
+        return groupRepository.findByInvitedUsername(username);
     }
 
     /** グループメンバー削除 */
@@ -108,8 +127,10 @@ public class GroupService {
         groupRepository.deleteMember(groupId, memberUsername);
     }
 
-    /** ユーザーがグループメンバーか判定 */
+    /** ユーザーがグループの承諾済みメンバーか判定 */
     public boolean isGroupMember(Long groupId, String username) {
-        return groupRepository.findGroupMember(groupId, username).isPresent();
+        return groupRepository.findGroupMember(groupId, username)
+                .filter(m -> "ACCEPTED".equals(m.getStatus()))
+                .isPresent();
     }
 }

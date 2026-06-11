@@ -10,5 +10,6 @@ public class GroupMember {
     private Long groupId;
     private String username;
     private String role; // OWNER / MEMBER
+    private String status; // INVITED / ACCEPTED
     private LocalDateTime createdAt;
 }

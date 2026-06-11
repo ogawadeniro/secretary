@@ -24,6 +24,8 @@ public class JpaGroupMember {
 
     private String role;
 
+    private String status;
+
     private LocalDateTime createdAt;
 
     public static JpaGroupMember fromDomain(GroupMember member) {
@@ -32,6 +34,7 @@ public class JpaGroupMember {
         entity.setGroupId(member.getGroupId());
         entity.setUsername(member.getUsername());
         entity.setRole(member.getRole());
+        entity.setStatus(member.getStatus());
         entity.setCreatedAt(member.getCreatedAt());
         return entity;
     }
@@ -42,6 +45,7 @@ public class JpaGroupMember {
         member.setGroupId(this.groupId);
         member.setUsername(this.username);
         member.setRole(this.role);
+        member.setStatus(this.status);
         member.setCreatedAt(this.createdAt);
         return member;
     }
