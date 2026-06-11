@@ -67,7 +67,7 @@ export const MemberManager = forwardRef<MemberManagerHandle, MemberManagerProps>
               .map((m) => ({
                 username: m.username,
                 displayName: m.displayName ?? m.username,
-                chipBgColor: undefined as string | undefined,
+                chipBgColor: m.chipBgColor,
               }));
             setShareCandidates(candidates);
           } else {

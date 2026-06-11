@@ -3,7 +3,9 @@ package com.rogawa.secretary.infrastructure.rest;
 import com.rogawa.secretary.application.service.GroupService;
 import com.rogawa.secretary.domain.model.Group;
 import com.rogawa.secretary.domain.model.GroupMember;
+import com.rogawa.secretary.domain.model.UserSetting;
 import com.rogawa.secretary.domain.repository.UserRepository;
+import com.rogawa.secretary.domain.repository.UserSettingRepository;
 import com.rogawa.secretary.infrastructure.rest.dto.GroupMemberResponse;
 import com.rogawa.secretary.infrastructure.rest.dto.GroupResponse;
 import jakarta.validation.Valid;
@@ -31,10 +33,12 @@ public class GroupController {
 
     private final GroupService groupService;
     private final UserRepository userRepository;
+    private final UserSettingRepository userSettingRepository;
 
-    public GroupController(GroupService groupService, UserRepository userRepository) {
+    public GroupController(GroupService groupService, UserRepository userRepository, UserSettingRepository userSettingRepository) {
         this.groupService = groupService;
         this.userRepository = userRepository;
+        this.userSettingRepository = userSettingRepository;
     }
 
     /** 自分のグループ一覧（オーナー＋メンバー） */
@@ -102,8 +106,10 @@ public class GroupController {
         List<GroupMember> members = groupService.getMembers(id);
         Map<String, String> displayNames = loadDisplayNames(
                 members.stream().map(GroupMember::getUsername).collect(Collectors.toSet()));
+        Map<String, String> chipBgColors = loadChipBgColors(
+                members.stream().map(GroupMember::getUsername).collect(Collectors.toList()));
         return ResponseEntity.ok(members.stream()
-                .map(m -> GroupMemberResponse.fromDomain(m, displayNames.get(m.getUsername())))
+                .map(m -> GroupMemberResponse.fromDomain(m, displayNames.get(m.getUsername()), chipBgColors.get(m.getUsername())))
                 .collect(Collectors.toList()));
     }
 
@@ -115,7 +121,9 @@ public class GroupController {
             GroupMember member = groupService.acceptInvitation(id, auth.getName());
             String displayName = userRepository.findByUsername(auth.getName())
                     .map(u -> u.getDisplayName()).orElse(null);
-            return ResponseEntity.ok(GroupMemberResponse.fromDomain(member, displayName));
+            String chipBgColor = userSettingRepository.findByUsername(auth.getName())
+                    .map(UserSetting::getChipBgColor).orElse(null);
+            return ResponseEntity.ok(GroupMemberResponse.fromDomain(member, displayName, chipBgColor));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
         }
@@ -131,8 +139,10 @@ public class GroupController {
             GroupMember member = groupService.addMember(id, request.getUsername(), auth.getName());
             String displayName = userRepository.findByUsername(request.getUsername())
                     .map(u -> u.getDisplayName()).orElse(null);
+            String chipBgColor = userSettingRepository.findByUsername(request.getUsername())
+                    .map(UserSetting::getChipBgColor).orElse(null);
             return ResponseEntity.status(HttpStatus.CREATED)
-                    .body(GroupMemberResponse.fromDomain(member, displayName));
+                    .body(GroupMemberResponse.fromDomain(member, displayName, chipBgColor));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
         }
@@ -157,6 +167,14 @@ public class GroupController {
         return userRepository.findByUsernames(List.copyOf(usernames)).stream()
                 .collect(HashMap::new,
                         (map, u) -> map.put(u.getUsername(), u.getDisplayName()),
+                        HashMap::putAll);
+    }
+
+    private Map<String, String> loadChipBgColors(List<String> usernames) {
+        if (usernames.isEmpty()) return Map.of();
+        return userSettingRepository.findByUsernameIn(usernames).stream()
+                .collect(HashMap::new,
+                        (map, s) -> map.put(s.getUsername(), s.getChipBgColor()),
                         HashMap::putAll);
     }
 

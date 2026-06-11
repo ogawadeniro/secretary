@@ -23,6 +23,7 @@ export interface GroupMember {
   groupId: number;
   username: string;
   displayName: string | null;
+  chipBgColor?: string;
   role: "OWNER" | "MEMBER";
   status: "INVITED" | "ACCEPTED";
   createdAt: string;

@@ -11,16 +11,18 @@ public class GroupMemberResponse {
     private Long groupId;
     private String username;
     private String displayName;
+    private String chipBgColor;
     private String role;
     private String status;
     private LocalDateTime createdAt;
 
-    public static GroupMemberResponse fromDomain(GroupMember member, String displayName) {
+    public static GroupMemberResponse fromDomain(GroupMember member, String displayName, String chipBgColor) {
         GroupMemberResponse res = new GroupMemberResponse();
         res.setId(member.getId());
         res.setGroupId(member.getGroupId());
         res.setUsername(member.getUsername());
         res.setDisplayName(displayName);
+        res.setChipBgColor(chipBgColor);
         res.setRole(member.getRole());
         res.setStatus(member.getStatus());
         res.setCreatedAt(member.getCreatedAt());
