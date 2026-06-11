@@ -8,7 +8,6 @@ import {
 import { addMember, removeMember } from "../api/memberApi";
 import { fetchGroups } from "../api/groupApi";
 import type { Group } from "../types/group";
-import { ownerColor } from "../utils/colorUtils";
 import { PartyPopper } from "lucide-react";
 import TimePicker from "./TimePicker";
 import { useDateTimeCorrection } from "../hooks/useDateTimeCorrection";
@@ -27,14 +26,8 @@ interface ScheduleDialogProps {
 }
 
 /** 予定のタイトル背景色を計算（DayCellのチップ色と一致させる） */
-function scheduleTitleColor(s: Schedule, currentUsername: string, chipBgColor: string): string {
-  const memberColors = (s.memberUsernames ?? []).map(
-    (u) => s.memberChipBgColors?.[u] ?? ownerColor(u)
-  );
-  if (memberColors.length > 1) return "var(--color-surface2)";
-  return s.owner === currentUsername
-    ? chipBgColor
-    : (s.ownerChipBgColor ?? ownerColor(s.owner));
+function scheduleTitleColor(): string {
+  return "var(--color-surface2)";
 }
 
 /** 選択した日付の予定一覧を表示し、追加・編集・削除を行うダイアログ */
@@ -174,7 +167,7 @@ export default function ScheduleDialog({
                 <div className="schedule-card-info">
                   <strong
                     style={{
-                      background: scheduleTitleColor(s, currentUsername, chipBgColor),
+                      background: scheduleTitleColor(),
                       borderRadius: "4px",
                       padding: "2px 6px",
                       color: "#e0e0e0",

@@ -58,19 +58,9 @@ export default function DayCell({
           }
           const pos = getSchedulePosition(s, date);
           const showTitle = shouldShowTitle(s, date);
-          // メンバーがいる予定はメンバー一覧から決定論的な色
-          // 自分の予定（メンバーなし）は chipBgColor
-          // 共有予定（メンバーなし）はオーナーの設定色（なければ fallback）
           const memberColors = (s.memberUsernames ?? []).map(
             (u) => s.memberChipBgColors?.[u] ?? ownerColor(u)
           );
-          const isMultiMember = memberColors.length > 1;
-          // 複数メンバーの予定はデフォルト背景色＋メンバー色の下線グラデーション
-          const chipBg = isMultiMember
-            ? "var(--color-surface2)"
-            : s.owner === currentUsername
-              ? chipBgColor
-              : (s.ownerChipBgColor ?? ownerColor(s.owner));
           const colorStops = memberColors.map((c, i, arr) => {
             const start = (i / arr.length) * 100;
             const end = ((i + 1) / arr.length) * 100;
@@ -85,15 +75,11 @@ export default function DayCell({
               className={`schedule-chip schedule-${pos}`}
               style={{
                 color: "#e0e0e0",
-                ...(isMultiMember
-                  ? {
-                      backgroundColor: "var(--color-surface2)",
-                      backgroundImage: `linear-gradient(to right, ${colorStops})`,
-                      backgroundRepeat: "no-repeat",
-                      backgroundPosition: "0 100%",
-                      backgroundSize: "100% 2px",
-                    }
-                  : { backgroundColor: chipBg }),
+                backgroundColor: "var(--color-surface2)",
+                backgroundImage: `linear-gradient(to right, ${colorStops})`,
+                backgroundRepeat: "no-repeat",
+                backgroundPosition: "0 100%",
+                backgroundSize: "100% 2px",
               }}
             >
               {showTitle && groupIcon && (
