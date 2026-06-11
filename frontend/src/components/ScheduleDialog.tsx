@@ -408,9 +408,16 @@ function ScheduleFormComponent({
             }}
             onClick={() => setShowGroupDropdown((p) => !p)}
           >
-            {selectedGroupId === undefined
-              ? "個人（自分のみ）"
-              : groups.find((g) => g.id === selectedGroupId)?.name ?? "グループ"}
+            {(() => {
+              if (selectedGroupId === undefined) return "個人（自分のみ）";
+              const g = groups.find((gr) => gr.id === selectedGroupId);
+              return (
+                <span style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                  {g?.iconData && <img src={g.iconData} alt="" style={{ width: "16px", height: "16px", borderRadius: "3px", objectFit: "cover" }} />}
+                  {g?.name ?? "グループ"}
+                </span>
+              );
+            })()}
           </div>
           {showGroupDropdown && (
             <div style={{
@@ -436,7 +443,12 @@ function ScheduleFormComponent({
                   onMouseDown={(e) => { e.preventDefault(); setSelectedGroupId(g.id); setShowGroupDropdown(false); }}
                   onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--color-hover)"; }}
                   onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = selectedGroupId === g.id ? "var(--color-hover)" : "transparent"; }}
-                >{g.name}</div>
+                >
+                  <span style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                    {g.iconData && <img src={g.iconData} alt="" style={{ width: "16px", height: "16px", borderRadius: "3px", objectFit: "cover" }} />}
+                    {g.name}
+                  </span>
+                </div>
               ))}
             </div>
           )}
