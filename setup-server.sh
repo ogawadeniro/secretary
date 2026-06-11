@@ -159,12 +159,20 @@ EOSQL
             updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
         );
 
+        -- 予定-グループ結合テーブル
+        CREATE TABLE IF NOT EXISTS schedule_groups (
+            schedule_id BIGINT NOT NULL REFERENCES schedules(id) ON DELETE CASCADE,
+            group_id BIGINT NOT NULL,
+            PRIMARY KEY (schedule_id, group_id)
+        );
+
         -- グループメンバー
         CREATE TABLE IF NOT EXISTS group_members (
             id BIGSERIAL PRIMARY KEY,
             group_id BIGINT NOT NULL REFERENCES groups(id) ON DELETE CASCADE,
             username TEXT NOT NULL,
             role TEXT NOT NULL DEFAULT 'MEMBER',
+            status TEXT NOT NULL DEFAULT 'ACCEPTED',
             created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
             UNIQUE(group_id, username)
         );
