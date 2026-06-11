@@ -374,7 +374,7 @@ export default function InfiniteCalendar() {
                   }}
                 >
                   <Users size={16} />
-                  <span>グループ管理</span>
+                  <span>共有グループ管理</span>
                 </button>
                 <button
                   className="account-dropdown-item"
@@ -450,7 +450,7 @@ export default function InfiniteCalendar() {
             }}>
               {filterOptions.filter((o) => o.value !== "personal").length === 0 ? (
                 <div style={{ padding: "12px", fontSize: "0.8rem", color: "var(--color-text-muted)" }}>
-                  参加しているグループはありません
+                  参加している共有グループはありません
                 </div>
               ) : (
                 filterOptions.filter((o) => o.value !== "personal").map((opt) => {

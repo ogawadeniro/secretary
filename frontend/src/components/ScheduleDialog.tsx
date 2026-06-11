@@ -464,7 +464,7 @@ function ScheduleFormComponent({
               return (
                 <span style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                   {g?.iconData && <img src={g.iconData} alt="" style={{ width: "16px", height: "16px", borderRadius: "3px", objectFit: "cover" }} />}
-                  {g?.name ?? "グループ"}
+                  {g?.name ?? "共有グループ"}
                 </span>
               );
             })()}

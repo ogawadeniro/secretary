@@ -44,7 +44,7 @@ export default function GroupDialog({ onClose, onNotify }: GroupDialogProps) {
       setInvitations(inv);
       setSharemen(s);
     } catch {
-      setError("グループ一覧を読み込めなかったよ");
+      setError("共有グループ一覧を読み込めなかったよ");
     }
   };
 
@@ -73,7 +73,7 @@ export default function GroupDialog({ onClose, onNotify }: GroupDialogProps) {
       await load();
       setSelectedGroup(g);
       await loadMembers(g.id);
-      onNotify("グループを作成したよ");
+      onNotify("共有グループを作成したよ");
     } catch (e) {
       setError(e instanceof Error ? e.message : "作成に失敗したよ");
     } finally {
@@ -82,7 +82,7 @@ export default function GroupDialog({ onClose, onNotify }: GroupDialogProps) {
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm("本当にこのグループを削除する？")) return;
+    if (!confirm("本当にこの共有グループを削除する？")) return;
     try {
       await deleteGroup(id);
       if (selectedGroup?.id === id) {
@@ -90,7 +90,7 @@ export default function GroupDialog({ onClose, onNotify }: GroupDialogProps) {
         setMembers([]);
       }
       await load();
-      onNotify("グループを削除したよ");
+      onNotify("共有グループを削除したよ");
     } catch {
       setError("削除に失敗したよ");
     }
@@ -130,7 +130,7 @@ export default function GroupDialog({ onClose, onNotify }: GroupDialogProps) {
     try {
       await acceptGroupInvitation(groupId);
       await load();
-      onNotify("グループに参加したよ");
+      onNotify("共有グループに参加したよ");
     } catch (e) {
       setError(e instanceof Error ? e.message : "承諾に失敗したよ");
     } finally {
@@ -151,7 +151,7 @@ export default function GroupDialog({ onClose, onNotify }: GroupDialogProps) {
     <div className="dialog-overlay" onClick={handleClose}>
       <div className={`dialog${closing ? " closing" : ""}`} onClick={(e) => e.stopPropagation()}>
         <div className="dialog-header">
-          <h2>グループ管理</h2>
+          <h2>共有グループ管理</h2>
           <button className="close-btn" onClick={handleClose}><X size={20} /></button>
         </div>
         <div className="dialog-body" style={{ gap: "16px" }}>
@@ -162,7 +162,7 @@ export default function GroupDialog({ onClose, onNotify }: GroupDialogProps) {
             <div className="settings-section">
               <div className="settings-section-title">
                 <UserPlus size={14} style={{ marginRight: "4px", verticalAlign: "middle" }} />
-                グループ招待
+                共有グループ招待
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
                 {invitations.map((g) => (
@@ -191,12 +191,12 @@ export default function GroupDialog({ onClose, onNotify }: GroupDialogProps) {
 
           {/* グループ作成 */}
           <div className="settings-section">
-            <div className="settings-section-title">グループを作成</div>
+            <div className="settings-section-title">共有グループを作成</div>
             <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
               <div style={{ display: "flex", gap: "8px" }}>
                 <input
                   type="text"
-                  placeholder="グループ名を入力..."
+                  placeholder="共有グループ名を入力..."
                   value={groupName}
                   onChange={(e) => setGroupName(e.target.value)}
                   onKeyDown={(e) => { if (e.key === "Enter") handleCreate(); }}
@@ -264,10 +264,10 @@ export default function GroupDialog({ onClose, onNotify }: GroupDialogProps) {
 
           {/* グループ一覧 */}
           <div className="settings-section">
-            <div className="settings-section-title">グループ一覧</div>
+            <div className="settings-section-title">共有グループ一覧</div>
             {groups.length === 0 ? (
               <p style={{ fontSize: "0.8rem", color: "var(--color-text-muted)" }}>
-                まだグループがないよ
+                まだ共有グループがないよ
               </p>
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
@@ -302,7 +302,7 @@ export default function GroupDialog({ onClose, onNotify }: GroupDialogProps) {
                         display: "flex",
                       }}
                       onClick={(e) => { e.stopPropagation(); handleDelete(g.id); }}
-                      title="グループを削除"
+                      title="共有グループを削除"
                     >
                       <Trash2 size={16} />
                     </button>
