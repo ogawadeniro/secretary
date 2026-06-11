@@ -283,7 +283,7 @@ export default function InfiniteCalendar() {
   /** フィルター選択肢 */
   const filterOptions = useMemo(() => {
     const options: { value: "personal" | number; label: string }[] = [
-      { value: "personal", label: "個人の予定" },
+      { value: "personal", label: "プライベート" },
     ];
     groups.forEach((g) => options.push({ value: g.id, label: g.name }));
     return options;
@@ -393,14 +393,14 @@ export default function InfiniteCalendar() {
       <div className="calendar-header" style={{
         display: "flex", alignItems: "center", gap: "8px",
         paddingTop: "4px", paddingBottom: "8px",
-        borderBottom: "1px solid var(--color-border)",
       }}>
         <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", flex: 1 }}>
           <span style={{
-            fontSize: "0.8rem", color: "var(--color-text-muted)",
-            padding: "3px 0", display: "inline-flex", alignItems: "center",
+            display: "inline-flex", alignItems: "center", gap: "4px",
+            padding: "2px 8px", background: "var(--color-surface2)",
+            borderRadius: "999px", fontSize: "0.8rem",
           }}>
-            個人の予定
+            プライベート
           </span>
           {selectedGroupIds.map((gid) => {
             const g = groups.find((gr) => gr.id === gid);
