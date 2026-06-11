@@ -52,6 +52,26 @@ export async function fetchGroupMembers(groupId: number): Promise<GroupMember[]>
   return res.json();
 }
 
+/** グループ招待一覧 */
+export async function fetchGroupInvitations(): Promise<Group[]> {
+  const res = await fetch(`${BASE}/invitations`, { credentials: "include" });
+  if (!res.ok) throw new Error("招待一覧の取得に失敗しました");
+  return res.json();
+}
+
+/** グループ招待を承諾 */
+export async function acceptGroupInvitation(groupId: number): Promise<GroupMember> {
+  const res = await fetch(`${BASE}/${groupId}/accept`, {
+    method: "PATCH",
+    credentials: "include",
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => null);
+    throw new Error(body?.message ?? "招待の承諾に失敗しました");
+  }
+  return res.json();
+}
+
 /** グループメンバー追加 */
 export async function addGroupMember(groupId: number, username: string): Promise<GroupMember> {
   const res = await fetch(`${BASE}/${groupId}/members`, {

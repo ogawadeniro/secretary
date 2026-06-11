@@ -103,7 +103,7 @@ export default function ScheduleDialog({
           owner: "",
           description: form.description ?? "",
           shared: form.shared ?? true,
-          groupId: form.groupId,
+          groupIds: form.groupIds,
         });
         // 新規作成後に保留中のメンバーを追加
         if (pendingMembers && pendingMembers.length > 0) {
@@ -266,7 +266,7 @@ interface ScheduleFormData {
   endDatetime?: string;
   description?: string;
   shared?: boolean;
-  groupId?: number;
+  groupIds?: number[];
 }
 
 /** 予定の新規作成・編集フォーム */
@@ -293,8 +293,11 @@ function ScheduleFormComponent({
   const [title, setTitle] = useState(initial?.title ?? "");
   const [isAllDay, setIsAllDay] = useState(initial?.isAllDay ?? false);
   const [description, setDescription] = useState(initial?.description ?? "");
-  const [groupId, setGroupId] = useState<number | undefined>(initial?.groupId ?? undefined);
+  const [selectedGroupId, setSelectedGroupId] = useState<number | undefined>(
+    initial?.groupIds && initial.groupIds.length > 0 ? initial.groupIds[0] : undefined
+  );
   const [groups, setGroups] = useState<Group[]>([]);
+  const [showGroupDropdown, setShowGroupDropdown] = useState(false);
   const [saving, setSaving] = useState(false);
 
   const initialStartDate = initial
@@ -321,6 +324,19 @@ function ScheduleFormComponent({
   const scheduleId = initial?.id;
   const isNew = !scheduleId;
   const memberManagerRef = useRef<MemberManagerHandle>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // グループドロップダウンの外側クリックで閉じる
+  useEffect(() => {
+    if (!showGroupDropdown) return;
+    const handleClick = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setShowGroupDropdown(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [showGroupDropdown]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -338,7 +354,7 @@ function ScheduleFormComponent({
             : `${endDate.replace(/-/g, "/")}-${endTime}`,
           description,
           shared: true,
-          groupId,
+          groupIds: selectedGroupId ? [selectedGroupId] : [],
         },
         isNew ? memberManagerRef.current?.getPendingMembers() : undefined,
       );
@@ -382,29 +398,48 @@ function ScheduleFormComponent({
       </div>
       <div className="settings-section" style={{ borderBottom: "none", paddingBottom: 0 }}>
         <div className="settings-section-title">公開先</div>
-        <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-          <label style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: "6px", fontSize: "0.85rem", cursor: "pointer" }}>
-            <input
-              type="radio"
-              name="visibility"
-              checked={groupId === undefined}
-              onChange={() => setGroupId(undefined)}
-              style={{ margin: 0 }}
-            />
-            個人
-          </label>
-          {groups.map((g) => (
-            <label key={g.id} style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: "6px", fontSize: "0.85rem", cursor: "pointer" }}>
-              <input
-                type="radio"
-                name="visibility"
-                checked={groupId === g.id}
-                onChange={() => setGroupId(g.id)}
-                style={{ margin: 0 }}
-              />
-              {g.name}
-            </label>
-          ))}
+        <div style={{ position: "relative" }} ref={dropdownRef}>
+          <div
+            style={{
+              width: "100%", background: "var(--color-surface2)",
+              border: "1px solid var(--color-border)", color: "var(--color-text)",
+              padding: "6px 8px", borderRadius: "6px", fontFamily: "inherit",
+              cursor: "pointer", fontSize: "0.85rem",
+            }}
+            onClick={() => setShowGroupDropdown((p) => !p)}
+          >
+            {selectedGroupId === undefined
+              ? "個人（自分のみ）"
+              : groups.find((g) => g.id === selectedGroupId)?.name ?? "グループ"}
+          </div>
+          {showGroupDropdown && (
+            <div style={{
+              position: "absolute", top: "100%", left: 0, right: 0, zIndex: 100,
+              background: "var(--color-surface2)", border: "1px solid var(--color-border)",
+              borderRadius: "6px", marginTop: "4px", maxHeight: "200px", overflowY: "auto",
+            }}>
+              <div style={{
+                padding: "8px 10px", cursor: "pointer", fontSize: "0.85rem",
+                borderBottom: "1px solid var(--color-border)",
+                background: selectedGroupId === undefined ? "var(--color-hover)" : "transparent",
+              }}
+                onMouseDown={(e) => { e.preventDefault(); setSelectedGroupId(undefined); setShowGroupDropdown(false); }}
+                onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--color-hover)"; }}
+                onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = selectedGroupId === undefined ? "var(--color-hover)" : "transparent"; }}
+              >個人（自分のみ）</div>
+              {groups.map((g) => (
+                <div key={g.id} style={{
+                  padding: "8px 10px", cursor: "pointer", fontSize: "0.85rem",
+                  borderBottom: "1px solid var(--color-border)",
+                  background: selectedGroupId === g.id ? "var(--color-hover)" : "transparent",
+                }}
+                  onMouseDown={(e) => { e.preventDefault(); setSelectedGroupId(g.id); setShowGroupDropdown(false); }}
+                  onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--color-hover)"; }}
+                  onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = selectedGroupId === g.id ? "var(--color-hover)" : "transparent"; }}
+                >{g.name}</div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
       <div className="date-fields">
@@ -438,17 +473,20 @@ function ScheduleFormComponent({
         </div>
       )}
 
-      <MemberManager
-        ref={memberManagerRef}
-        scheduleId={scheduleId ?? undefined}
-        currentUsername={currentUsername}
-        ownerUsername={initial?.owner ?? currentUsername}
-        ownerDisplayName={initial?.ownerDisplayName}
-        ownerChipBgColor={initial?.ownerChipBgColor}
-        existingMemberDisplayNames={initial?.memberDisplayNames}
-        existingMemberChipBgColors={initial?.memberChipBgColors}
-        onNotify={onNotify}
-      />
+      {selectedGroupId && (
+        <MemberManager
+          ref={memberManagerRef}
+          scheduleId={scheduleId ?? undefined}
+          groupId={selectedGroupId}
+          currentUsername={currentUsername}
+          ownerUsername={initial?.owner ?? currentUsername}
+          ownerDisplayName={initial?.ownerDisplayName}
+          ownerChipBgColor={initial?.ownerChipBgColor}
+          existingMemberDisplayNames={initial?.memberDisplayNames}
+          existingMemberChipBgColors={initial?.memberChipBgColors}
+          onNotify={onNotify}
+        />
+      )}
 
       <label>
         説明

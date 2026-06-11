@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { X, Trash2 } from "lucide-react";
+import { X, Trash2, Check, UserPlus } from "lucide-react";
 import type { Group, GroupMember } from "../types/group";
 import {
   fetchGroups,
@@ -8,6 +8,8 @@ import {
   fetchGroupMembers,
   addGroupMember,
   removeGroupMember,
+  fetchGroupInvitations,
+  acceptGroupInvitation,
 } from "../api/groupApi";
 import { fetchAcceptedUsernames } from "../api/sharemanApi";
 
@@ -18,22 +20,26 @@ interface GroupDialogProps {
 
 export default function GroupDialog({ onClose, onNotify }: GroupDialogProps) {
   const [groups, setGroups] = useState<Group[]>([]);
+  const [invitations, setInvitations] = useState<Group[]>([]);
   const [selectedGroup, setSelectedGroup] = useState<Group | null>(null);
   const [members, setMembers] = useState<GroupMember[]>([]);
   const [sharemen, setSharemen] = useState<string[]>([]);
   const [groupName, setGroupName] = useState("");
   const [memberUsername, setMemberUsername] = useState("");
   const [creating, setCreating] = useState(false);
+  const [accepting, setAccepting] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [closing, setClosing] = useState(false);
 
   const load = async () => {
     try {
-      const [g, s] = await Promise.all([
+      const [g, inv, s] = await Promise.all([
         fetchGroups(),
+        fetchGroupInvitations(),
         fetchAcceptedUsernames(),
       ]);
       setGroups(g);
+      setInvitations(inv);
       setSharemen(s);
     } catch {
       setError("グループ一覧を読み込めなかったよ");
@@ -98,9 +104,9 @@ export default function GroupDialog({ onClose, onNotify }: GroupDialogProps) {
       await addGroupMember(selectedGroup.id, memberUsername.trim());
       setMemberUsername("");
       await loadMembers(selectedGroup.id);
-      onNotify("メンバーを追加したよ");
+      onNotify("メンバーを招待したよ");
     } catch (e) {
-      setError(e instanceof Error ? e.message : "追加に失敗したよ");
+      setError(e instanceof Error ? e.message : "招待に失敗したよ");
     }
   };
 
@@ -112,6 +118,19 @@ export default function GroupDialog({ onClose, onNotify }: GroupDialogProps) {
       onNotify("メンバーを削除したよ");
     } catch {
       setError("削除に失敗したよ");
+    }
+  };
+
+  const handleAccept = async (groupId: number) => {
+    setAccepting(groupId);
+    try {
+      await acceptGroupInvitation(groupId);
+      await load();
+      onNotify("グループに参加したよ");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "承諾に失敗したよ");
+    } finally {
+      setAccepting(null);
     }
   };
 
@@ -133,6 +152,38 @@ export default function GroupDialog({ onClose, onNotify }: GroupDialogProps) {
         </div>
         <div className="dialog-body" style={{ gap: "16px" }}>
           {error && <div className="dialog-error">{error}</div>}
+
+          {/* 招待（自分が招待されたもの） */}
+          {invitations.length > 0 && (
+            <div className="settings-section">
+              <div className="settings-section-title">
+                <UserPlus size={14} style={{ marginRight: "4px", verticalAlign: "middle" }} />
+                グループ招待
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                {invitations.map((g) => (
+                  <div key={g.id} style={{
+                    display: "flex", justifyContent: "space-between", alignItems: "center",
+                    padding: "8px 10px", background: "var(--color-surface2)",
+                    borderRadius: "6px",
+                  }}>
+                    <span style={{ fontSize: "0.85rem" }}>
+                      {g.name}<span style={{ color: "var(--color-text-muted)", fontSize: "0.75rem", marginLeft: "6px" }}>by {g.ownerUsername}</span>
+                    </span>
+                    <button
+                      className="save-btn"
+                      style={{ padding: "4px 12px", fontSize: "0.8rem", display: "flex", alignItems: "center", gap: "4px" }}
+                      disabled={accepting === g.id}
+                      onClick={() => handleAccept(g.id)}
+                    >
+                      <Check size={14} />
+                      {accepting === g.id ? "..." : "承諾"}
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* グループ作成 */}
           <div className="settings-section">
@@ -219,7 +270,7 @@ export default function GroupDialog({ onClose, onNotify }: GroupDialogProps) {
                 {selectedGroup.name} のメンバー
               </div>
 
-              {/* メンバー追加 */}
+              {/* メンバー招待 */}
               {availableSharemen.length > 0 && (
                 <div style={{ display: "flex", gap: "8px", marginBottom: "8px" }}>
                   <select
@@ -247,14 +298,14 @@ export default function GroupDialog({ onClose, onNotify }: GroupDialogProps) {
                     disabled={!memberUsername}
                     onClick={handleAddMember}
                   >
-                    追加
+                    招待
                   </button>
                 </div>
               )}
 
               {members.length === 0 ? (
                 <p style={{ fontSize: "0.8rem", color: "var(--color-text-muted)" }}>
-                  メンバーがいないよ。シェアメンを追加しよう！
+                  メンバーがいないよ。シェアメンを招待しよう！
                 </p>
               ) : (
                 <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
@@ -268,6 +319,7 @@ export default function GroupDialog({ onClose, onNotify }: GroupDialogProps) {
                         padding: "8px 10px",
                         background: "var(--color-surface2)",
                         borderRadius: "6px",
+                        opacity: m.status === "INVITED" ? 0.5 : 1,
                       }}
                     >
                       <span style={{ fontSize: "0.85rem" }}>
@@ -279,6 +331,15 @@ export default function GroupDialog({ onClose, onNotify }: GroupDialogProps) {
                             marginLeft: "6px",
                           }}>
                             オーナー
+                          </span>
+                        )}
+                        {m.status === "INVITED" && (
+                          <span style={{
+                            fontSize: "0.7rem",
+                            color: "var(--color-text-muted)",
+                            marginLeft: "6px",
+                          }}>
+                            （招待中）
                           </span>
                         )}
                       </span>

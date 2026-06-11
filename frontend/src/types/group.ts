@@ -24,5 +24,6 @@ export interface GroupMember {
   username: string;
   displayName: string | null;
   role: "OWNER" | "MEMBER";
+  status: "INVITED" | "ACCEPTED";
   createdAt: string;
 }

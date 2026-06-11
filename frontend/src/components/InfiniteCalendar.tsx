@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback, useLayoutEffect, useMemo } from "react";
-import { CircleUser, Settings, LogOut, Share2, Users, User, Filter } from "lucide-react";
+import { CircleUser, Settings, LogOut, Share2, Users, User, Filter, X } from "lucide-react";
 import type { UserSettings } from "../types/settings";
 import type { Schedule } from "../types/schedule";
 import type { Group } from "../types/group";
@@ -60,11 +60,13 @@ export default function InfiniteCalendar() {
   const [showShare, setShowShare] = useState(false);
   const [showGroup, setShowGroup] = useState(false);
   const [groups, setGroups] = useState<Group[]>([]);
-  const [scheduleFilter, setScheduleFilter] = useState<"all" | "personal" | number>("all");
+  const [scheduleFilter, setScheduleFilter] = useState<Set<string | number>>(new Set(["personal"]));
+  const [showFilterDropdown, setShowFilterDropdown] = useState(false);
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
   const [toasts, setToasts] = useState<{ id: number; message: string; type: "success" | "error" }[]>([]);
   const toastId = useRef(0);
+  const filterDropdownRef = useRef<HTMLDivElement>(null);
 
   const notify = useCallback((message: string, type: "success" | "error" = "success") => {
     const id = ++toastId.current;
@@ -91,12 +93,16 @@ export default function InfiniteCalendar() {
 
   /** 予定一覧を再取得 */
   const reloadSchedules = useCallback(async () => {
-    const [data, groupsData] = await Promise.all([
-      fetchSchedules(),
-      fetchGroups(),
-    ]);
-    setSchedules(data);
-    setGroups(groupsData);
+    try {
+      const [data, groupsData] = await Promise.all([
+        fetchSchedules(),
+        fetchGroups(),
+      ]);
+      setSchedules(data);
+      setGroups(groupsData);
+    } catch (e) {
+      console.error("reloadSchedules error:", e);
+    }
   }, []);
 
   // 初回読み込み
@@ -126,6 +132,18 @@ export default function InfiniteCalendar() {
     document.addEventListener("mousedown", handleClick);
     return () => document.removeEventListener("mousedown", handleClick);
   }, [showAccountMenu]);
+
+  // フィルタードロップダウンの外側クリックで閉じる
+  useEffect(() => {
+    if (!showFilterDropdown) return;
+    const handleClick = (e: MouseEvent) => {
+      if (filterDropdownRef.current && !filterDropdownRef.current.contains(e.target as Node)) {
+        setShowFilterDropdown(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [showFilterDropdown]);
 
   // IntersectionObserver による無限スクロール
   useEffect(() => {
@@ -243,15 +261,17 @@ export default function InfiniteCalendar() {
 
   /** フィルタ済み予定 */
   const filteredSchedules = useMemo(() => {
-    if (scheduleFilter === "all") return schedules;
-    if (scheduleFilter === "personal") return schedules.filter((s) => s.groupId == null && s.owner === user?.username);
-    return schedules.filter((s) => s.groupId === scheduleFilter);
+    if (scheduleFilter.size === 0) return [];
+    return schedules.filter((s) => {
+      if (scheduleFilter.has("personal") && s.owner === user?.username) return true;
+      if (s.groupIds?.some((gid) => scheduleFilter.has(gid))) return true;
+      return false;
+    });
   }, [schedules, scheduleFilter, user?.username]);
 
   /** フィルター選択肢 */
   const filterOptions = useMemo(() => {
-    const options: { value: "all" | "personal" | number; label: string }[] = [
-      { value: "all", label: "すべての予定" },
+    const options: { value: "personal" | number; label: string }[] = [
       { value: "personal", label: "個人の予定" },
     ];
     groups.forEach((g) => options.push({ value: g.id, label: g.name }));
@@ -286,41 +306,13 @@ export default function InfiniteCalendar() {
 
   const monthLabel = `${currentYear}年 ${currentMonth + 1}月`;
 
+  const selectedGroupIds = [...scheduleFilter].filter((v) => v !== "personal") as number[];
+
   return (
     <div className="calendar-container">
-      <div className="calendar-header">
+      {/* 1行目: 月表示 + アカウント */}
+      <div className="calendar-header" style={{ paddingBottom: 0 }}>
         <h1>{monthLabel}</h1>
-        <div className="calendar-header-center">
-          <div className="filter-selector">
-            <Filter size={14} />
-            <select
-              value={scheduleFilter === "all" ? "all" : scheduleFilter === "personal" ? "personal" : scheduleFilter}
-              onChange={(e) => {
-                const v = e.target.value;
-                if (v === "all" || v === "personal") {
-                  setScheduleFilter(v);
-                } else {
-                  setScheduleFilter(Number(v));
-                }
-              }}
-              style={{
-                background: "var(--color-surface2)",
-                color: "var(--color-text)",
-                border: "1px solid var(--color-border)",
-                borderRadius: "6px",
-                padding: "4px 8px",
-                fontSize: "0.8rem",
-                cursor: "pointer",
-              }}
-            >
-              {filterOptions.map((opt) => (
-                <option key={String(opt.value)} value={opt.value}>
-                  {opt.label}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
         <div className="calendar-header-right">
           <span className="header-user" style={{ background: settings.chipBgColor, borderRadius: "4px", padding: "2px 6px", color: "#e0e0e0" }}>{user?.displayName ?? user?.username}</span>
           <div className="account-menu-container" ref={accountMenuRef}>
@@ -385,6 +377,110 @@ export default function InfiniteCalendar() {
           </div>
         </div>
       </div>
+
+      {/* 2行目: フィルターバッジ + フィルターアイコン */}
+      <div className="calendar-header" style={{
+        display: "flex", alignItems: "center", gap: "8px",
+        paddingTop: "4px", paddingBottom: "8px",
+        borderBottom: "1px solid var(--color-border)",
+      }}>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", flex: 1 }}>
+          <span style={{
+            fontSize: "0.8rem", color: "var(--color-text-muted)",
+            padding: "3px 0", display: "inline-flex", alignItems: "center",
+          }}>
+            個人の予定
+          </span>
+          {selectedGroupIds.map((gid) => {
+            const g = groups.find((gr) => gr.id === gid);
+            return (
+              <span key={gid} style={{
+                display: "inline-flex", alignItems: "center", gap: "4px",
+                padding: "2px 4px 2px 10px", background: "var(--color-surface2)",
+                borderRadius: "999px", fontSize: "0.8rem",
+              }}>
+                {g?.name ?? gid}
+                <button type="button" onClick={() => {
+                  const next = new Set(scheduleFilter);
+                  next.delete(gid);
+                  setScheduleFilter(next);
+                }}
+                  style={{
+                    display: "inline-flex", alignItems: "center", justifyContent: "center",
+                    width: "18px", height: "18px", padding: 0, border: "none",
+                    borderRadius: "50%", background: "var(--color-border)",
+                    color: "var(--color-text-muted)", cursor: "pointer", fontSize: "11px", lineHeight: 1, flexShrink: 0,
+                  }}
+                >
+                  <X size={11} />
+                </button>
+              </span>
+            );
+          })}
+        </div>
+
+        <div style={{ position: "relative" }} ref={filterDropdownRef}>
+          <button
+            type="button"
+            className="icon-btn"
+            onClick={() => setShowFilterDropdown((p) => !p)}
+            title="フィルター"
+            style={{ display: "flex", padding: "4px", borderRadius: "6px", cursor: "pointer", border: "none", background: "var(--color-surface2)", color: "var(--color-text)" }}
+          >
+            <Filter size={18} />
+          </button>
+          {showFilterDropdown && (
+            <div style={{
+              position: "absolute", right: 0, top: "100%", zIndex: 100,
+              background: "var(--color-surface2)", border: "1px solid var(--color-border)",
+              borderRadius: "6px", marginTop: "4px", minWidth: "180px",
+              overflow: "hidden",
+            }}>
+              {filterOptions.filter((o) => o.value !== "personal").length === 0 ? (
+                <div style={{ padding: "12px", fontSize: "0.8rem", color: "var(--color-text-muted)" }}>
+                  参加しているグループはありません
+                </div>
+              ) : (
+                filterOptions.filter((o) => o.value !== "personal").map((opt) => {
+                const isActive = scheduleFilter.has(opt.value);
+                return (
+                  <div key={String(opt.value)} style={{
+                    padding: "8px 12px", cursor: "pointer", fontSize: "0.85rem",
+                    background: isActive ? "var(--color-hover)" : "transparent",
+                    borderBottom: "1px solid var(--color-border)",
+                    display: "flex", alignItems: "center", gap: "8px",
+                  }}
+                    onMouseDown={(e) => {
+                      e.preventDefault();
+                      const next = new Set(scheduleFilter);
+                      if (isActive) {
+                        next.delete(opt.value);
+                      } else {
+                        next.add(opt.value);
+                      }
+                      setScheduleFilter(next);
+                    }}
+                    onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--color-hover)"; }}
+                    onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = isActive ? "var(--color-hover)" : "transparent"; }}
+                  >
+                    <div style={{
+                      width: "14px", height: "14px", borderRadius: "3px",
+                      border: "2px solid var(--color-border)",
+                      background: isActive ? "var(--color-accent)" : "transparent",
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      flexShrink: 0,
+                    }}>
+                      {isActive && <X size={10} style={{ color: "#fff" }} />}
+                    </div>
+                    {opt.label}
+                  </div>
+                );
+              })
+            )}
+          </div>
+        )}
+      </div>
+    </div>
 
       <div className="day-labels">
         {Array.from({ length: 7 }, (_, i) => {

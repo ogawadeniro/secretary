@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useMemo, forwardRef, useImperativeHandle }
 import { ScheduleMember as ScheduleMemberType } from "../types/schedule";
 import { getMembers, addMember, removeMember } from "../api/memberApi";
 import { fetchAcceptedUsernames } from "../api/sharemanApi";
+import { fetchGroupMembers } from "../api/groupApi";
 import { searchUsers } from "../api/userApi";
 
 export interface MemberManagerHandle {
@@ -11,6 +12,7 @@ export interface MemberManagerHandle {
 
 interface MemberManagerProps {
   scheduleId?: number;
+  groupId?: number;
   currentUsername: string;
   ownerUsername: string;
   ownerDisplayName?: string;
@@ -27,6 +29,7 @@ interface MemberManagerProps {
 export const MemberManager = forwardRef<MemberManagerHandle, MemberManagerProps>(
   function MemberManager({
     scheduleId,
+    groupId,
     currentUsername,
     ownerUsername,
     ownerDisplayName: ownerDisplayNameProp,
@@ -55,21 +58,35 @@ export const MemberManager = forwardRef<MemberManagerHandle, MemberManagerProps>
     useEffect(() => {
       (async () => {
         try {
-          const [accepted, allUsers] = await Promise.all([
-            fetchAcceptedUsernames(),
-            searchUsers(""),
-          ]);
-          const candidates = accepted.filter((u) => u !== currentUsername).sort().map((username) => ({
-            username,
-            displayName: allUsers.find((u) => u.username === username)?.displayName ?? username,
-            chipBgColor: allUsers.find((u) => u.username === username)?.chipBgColor,
-          }));
-          setShareCandidates(candidates);
+          if (groupId) {
+            // グループが選択されている場合はグループメンバーを候補にする
+            const members = await fetchGroupMembers(groupId);
+            const candidates = members
+              .filter((m) => m.username !== currentUsername)
+              .sort((a, b) => a.username.localeCompare(b.username))
+              .map((m) => ({
+                username: m.username,
+                displayName: m.displayName ?? m.username,
+                chipBgColor: undefined as string | undefined,
+              }));
+            setShareCandidates(candidates);
+          } else {
+            const [accepted, allUsers] = await Promise.all([
+              fetchAcceptedUsernames(),
+              searchUsers(""),
+            ]);
+            const candidates = accepted.filter((u) => u !== currentUsername).sort().map((username) => ({
+              username,
+              displayName: allUsers.find((u) => u.username === username)?.displayName ?? username,
+              chipBgColor: allUsers.find((u) => u.username === username)?.chipBgColor,
+            }));
+            setShareCandidates(candidates);
+          }
         } catch {
           // 候補一覧がなくても機能に影響なし
         }
       })();
-    }, [currentUsername]);
+    }, [currentUsername, groupId]);
 
     // 既存予定の編集時はメンバー一覧をロード
     useEffect(() => {
