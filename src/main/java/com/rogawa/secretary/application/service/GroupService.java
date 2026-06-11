@@ -29,9 +29,10 @@ public class GroupService {
 
     /** グループ作成 */
     @Transactional
-    public Group create(String name, String ownerUsername) {
+    public Group create(String name, String iconData, String ownerUsername) {
         Group group = new Group();
         group.setName(name);
+        group.setIconData(iconData);
         group.setOwnerUsername(ownerUsername);
         group.setCreatedAt(LocalDateTime.now());
         group.setUpdatedAt(LocalDateTime.now());
@@ -49,13 +50,14 @@ public class GroupService {
 
     /** グループ更新 */
     @Transactional
-    public Group update(Long id, String name, String username) {
+    public Group update(Long id, String name, String iconData, String username) {
         Group group = groupRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("グループが見つかりません"));
         if (!group.getOwnerUsername().equals(username)) {
             throw new IllegalArgumentException("グループを編集できるのはオーナーのみです");
         }
         group.setName(name);
+        group.setIconData(iconData);
         group.setUpdatedAt(LocalDateTime.now());
         return groupRepository.save(group);
     }

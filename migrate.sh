@@ -110,6 +110,9 @@ psql -h "$DB_HOST" -U "$DB_USER" -d "$DB_NAME" <<-EOSQL
         created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
         UNIQUE(group_id, username)
     );
+
+    -- groups に icon_data カラム追加
+    ALTER TABLE groups ADD COLUMN IF NOT EXISTS icon_data TEXT;
 EOSQL
 
 echo "--- Upgrading existing tables ---"

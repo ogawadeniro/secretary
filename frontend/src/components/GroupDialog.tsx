@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { X, Trash2, Check, UserPlus } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { X, Trash2, Check, UserPlus, Image as ImageIcon } from "lucide-react";
 import type { Group, GroupMember } from "../types/group";
 import {
   fetchGroups,
@@ -25,11 +25,13 @@ export default function GroupDialog({ onClose, onNotify }: GroupDialogProps) {
   const [members, setMembers] = useState<GroupMember[]>([]);
   const [sharemen, setSharemen] = useState<string[]>([]);
   const [groupName, setGroupName] = useState("");
+  const [groupIcon, setGroupIcon] = useState("");
   const [memberUsername, setMemberUsername] = useState("");
   const [creating, setCreating] = useState(false);
   const [accepting, setAccepting] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [closing, setClosing] = useState(false);
+  const iconInputRef = useRef<HTMLInputElement>(null);
 
   const load = async () => {
     try {
@@ -61,11 +63,13 @@ export default function GroupDialog({ onClose, onNotify }: GroupDialogProps) {
   const handleCreate = async () => {
     const trimmed = groupName.trim();
     if (!trimmed) return;
+    if (!groupIcon) { setError("アイコン画像を選択してください"); return; }
     setCreating(true);
     setError(null);
     try {
-      const g = await createGroup(trimmed);
+      const g = await createGroup(trimmed, groupIcon);
       setGroupName("");
+      setGroupIcon("");
       await load();
       setSelectedGroup(g);
       await loadMembers(g.id);
@@ -188,31 +192,73 @@ export default function GroupDialog({ onClose, onNotify }: GroupDialogProps) {
           {/* グループ作成 */}
           <div className="settings-section">
             <div className="settings-section-title">グループを作成</div>
-            <div style={{ display: "flex", gap: "8px" }}>
-              <input
-                type="text"
-                placeholder="グループ名を入力..."
-                value={groupName}
-                onChange={(e) => setGroupName(e.target.value)}
-                onKeyDown={(e) => { if (e.key === "Enter") handleCreate(); }}
-                style={{
-                  flex: 1,
-                  background: "var(--color-surface2)",
-                  border: "1px solid var(--color-border)",
-                  color: "var(--color-text)",
-                  padding: "8px 10px",
-                  borderRadius: "6px",
-                  fontFamily: "inherit",
-                }}
-              />
-              <button
-                className="save-btn"
-                style={{ padding: "8px 16px", fontSize: "0.85rem" }}
-                disabled={creating || !groupName.trim()}
-                onClick={handleCreate}
-              >
-                {creating ? "作成中..." : "作成"}
-              </button>
+            <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+              <div style={{ display: "flex", gap: "8px" }}>
+                <input
+                  type="text"
+                  placeholder="グループ名を入力..."
+                  value={groupName}
+                  onChange={(e) => setGroupName(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === "Enter") handleCreate(); }}
+                  style={{
+                    flex: 1,
+                    background: "var(--color-surface2)",
+                    border: "1px solid var(--color-border)",
+                    color: "var(--color-text)",
+                    padding: "8px 10px",
+                    borderRadius: "6px",
+                    fontFamily: "inherit",
+                  }}
+                />
+                <button
+                  className="save-btn"
+                  style={{ padding: "8px 16px", fontSize: "0.85rem" }}
+                  disabled={creating || !groupName.trim() || !groupIcon}
+                  onClick={handleCreate}
+                >
+                  {creating ? "作成中..." : "作成"}
+                </button>
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <input
+                  ref={iconInputRef}
+                  type="file"
+                  accept="image/*"
+                  style={{ display: "none" }}
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    const reader = new FileReader();
+                    reader.onload = () => setGroupIcon(reader.result as string);
+                    reader.readAsDataURL(file);
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={() => iconInputRef.current?.click()}
+                  style={{
+                    display: "flex", alignItems: "center", gap: "6px",
+                    padding: "6px 12px", background: "var(--color-surface2)",
+                    border: "1px solid var(--color-border)", borderRadius: "6px",
+                    color: "var(--color-text)", cursor: "pointer", fontFamily: "inherit", fontSize: "0.8rem",
+                  }}
+                >
+                  <ImageIcon size={16} />
+                  {groupIcon ? "画像を変更" : "アイコン画像を選択"}
+                </button>
+                {groupIcon && (
+                  <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                    <img src={groupIcon} alt="" style={{ width: "28px", height: "28px", borderRadius: "4px", objectFit: "cover" }} />
+                    <button
+                      type="button"
+                      onClick={() => setGroupIcon("")}
+                      style={{ background: "none", border: "none", cursor: "pointer", color: "var(--color-sun)", padding: "2px", display: "flex" }}
+                    >
+                      <X size={14} />
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
@@ -241,7 +287,10 @@ export default function GroupDialog({ onClose, onNotify }: GroupDialogProps) {
                     }}
                     onClick={() => selectGroup(g)}
                   >
-                    <span style={{ fontSize: "0.85rem" }}>{g.name}</span>
+                    <span style={{ fontSize: "0.85rem", display: "flex", alignItems: "center", gap: "6px" }}>
+                      {g.iconData && <img src={g.iconData} alt="" style={{ width: "20px", height: "20px", borderRadius: "3px", objectFit: "cover" }} />}
+                      {g.name}
+                    </span>
                     <button
                       className="icon-btn delete-btn-icon"
                       style={{

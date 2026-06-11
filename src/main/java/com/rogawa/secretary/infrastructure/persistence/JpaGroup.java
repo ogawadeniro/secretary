@@ -1,10 +1,12 @@
 package com.rogawa.secretary.infrastructure.persistence;
 
 import com.rogawa.secretary.domain.model.Group;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Lob;
 import jakarta.persistence.Table;
 import java.time.LocalDateTime;
 import lombok.Data;
@@ -22,6 +24,10 @@ public class JpaGroup {
 
     private String ownerUsername;
 
+    @Lob
+    @Column(columnDefinition = "TEXT")
+    private String iconData;
+
     private LocalDateTime createdAt;
 
     private LocalDateTime updatedAt;
@@ -31,6 +37,7 @@ public class JpaGroup {
         entity.setId(group.getId());
         entity.setName(group.getName());
         entity.setOwnerUsername(group.getOwnerUsername());
+        entity.setIconData(group.getIconData());
         entity.setCreatedAt(group.getCreatedAt());
         entity.setUpdatedAt(group.getUpdatedAt());
         return entity;
@@ -41,6 +48,7 @@ public class JpaGroup {
         group.setId(this.id);
         group.setName(this.name);
         group.setOwnerUsername(this.ownerUsername);
+        group.setIconData(this.iconData);
         group.setCreatedAt(this.createdAt);
         group.setUpdatedAt(this.updatedAt);
         return group;

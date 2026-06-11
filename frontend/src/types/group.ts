@@ -14,6 +14,7 @@ export interface Group {
   id: number;
   name: string;
   ownerUsername: string;
+  iconData?: string;
   createdAt: string;
 }
 

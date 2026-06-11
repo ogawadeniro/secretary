@@ -10,12 +10,12 @@ export async function fetchGroups(): Promise<Group[]> {
 }
 
 /** グループ作成 */
-export async function createGroup(name: string): Promise<Group> {
+export async function createGroup(name: string, iconData: string): Promise<Group> {
   const res = await fetch(BASE, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     credentials: "include",
-    body: JSON.stringify({ name }),
+    body: JSON.stringify({ name, iconData }),
   });
   if (!res.ok) {
     const body = await res.json().catch(() => null);
@@ -25,12 +25,12 @@ export async function createGroup(name: string): Promise<Group> {
 }
 
 /** グループ更新 */
-export async function updateGroup(id: number, name: string): Promise<Group> {
+export async function updateGroup(id: number, name: string, iconData?: string): Promise<Group> {
   const res = await fetch(`${BASE}/${id}`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
     credentials: "include",
-    body: JSON.stringify({ name }),
+    body: JSON.stringify({ name, iconData }),
   });
   if (!res.ok) throw new Error("グループの更新に失敗しました");
   return res.json();

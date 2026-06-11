@@ -9,6 +9,7 @@ public class Group {
     private Long id;
     private String name;
     private String ownerUsername;
+    private String iconData;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

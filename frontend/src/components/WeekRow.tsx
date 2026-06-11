@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import { Schedule } from "../types/schedule";
+import type { Group } from "../types/group";
 import {
   formatDateKey,
   isSameDay,
@@ -18,6 +19,7 @@ interface WeekRowProps {
   holidays: HolidayMap;
   onDateClick: (date: Date) => void;
   selectedDate: Date | null;
+  groups: Group[];
 }
 
 /** 1週間分（7日）の行を表示 */
@@ -30,6 +32,7 @@ export default function WeekRow({
   holidays,
   onDateClick,
   selectedDate,
+  groups,
 }: WeekRowProps) {
   const today = new Date();
 
@@ -63,6 +66,7 @@ export default function WeekRow({
             currentUsername={currentUsername}
             holidayName={holidays.get(key) ?? null}
             onDateClick={onDateClick}
+            groups={groups}
           />
         );
       })}

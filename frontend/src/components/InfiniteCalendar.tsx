@@ -407,9 +407,10 @@ export default function InfiniteCalendar() {
             return (
               <span key={gid} style={{
                 display: "inline-flex", alignItems: "center", gap: "4px",
-                padding: "2px 4px 2px 10px", background: "var(--color-surface2)",
+                padding: "2px 4px 2px 8px", background: "var(--color-surface2)",
                 borderRadius: "999px", fontSize: "0.8rem",
               }}>
+                {g?.iconData && <img src={g.iconData} alt="" style={{ width: "16px", height: "16px", borderRadius: "3px", objectFit: "cover" }} />}
                 {g?.name ?? gid}
                 <button type="button" onClick={() => {
                   const next = new Set(scheduleFilter);
@@ -529,6 +530,7 @@ export default function InfiniteCalendar() {
             holidays={holidays}
             onDateClick={handleDateClick}
             selectedDate={highlightDate}
+            groups={groups}
           />
         ))}
         <div ref={bottomSentinelRef} className="sentinel" />

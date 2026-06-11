@@ -69,7 +69,10 @@ public class GroupController {
     public ResponseEntity<?> createGroup(
             @Valid @RequestBody CreateGroupRequest request,
             Authentication auth) {
-        Group saved = groupService.create(request.getName(), auth.getName());
+        if (request.getIconData() == null || request.getIconData().isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of("message", "アイコン画像は必須です"));
+        }
+        Group saved = groupService.create(request.getName(), request.getIconData(), auth.getName());
         return ResponseEntity.status(HttpStatus.CREATED).body(GroupResponse.fromDomain(saved));
     }
 
@@ -80,7 +83,7 @@ public class GroupController {
             @Valid @RequestBody CreateGroupRequest request,
             Authentication auth) {
         try {
-            Group updated = groupService.update(id, request.getName(), auth.getName());
+            Group updated = groupService.update(id, request.getName(), request.getIconData(), auth.getName());
             return ResponseEntity.ok(GroupResponse.fromDomain(updated));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
@@ -182,6 +185,7 @@ public class GroupController {
     public static class CreateGroupRequest {
         @NotBlank
         private String name;
+        private String iconData;
     }
 
     @Data

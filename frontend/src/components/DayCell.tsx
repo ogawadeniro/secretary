@@ -1,6 +1,7 @@
 import { getSchedulePosition, shouldShowTitle } from "../utils/dateUtils";
 import { ownerColor, scheduleColor } from "../utils/colorUtils";
 import type { SlotInfo } from "../utils/dateUtils";
+import type { Group } from "../types/group";
 import { Users } from "lucide-react";
 
 interface DayCellProps {
@@ -14,6 +15,7 @@ interface DayCellProps {
   currentUsername: string;
   holidayName: string | null;
   onDateClick: (date: Date) => void;
+  groups: Group[];
 }
 
 /** 1日分のセル（日付番号 + 祝日ラベル + 予定チップ） */
@@ -28,6 +30,7 @@ export default function DayCell({
   currentUsername,
   holidayName,
   onDateClick,
+  groups,
 }: DayCellProps) {
   const dayOfWeek = date.getDay();
   // 日曜=ピンク、祝日=赤（祝日が優先）
@@ -67,6 +70,9 @@ export default function DayCell({
             : s.owner === currentUsername
               ? chipBgColor
               : (s.ownerChipBgColor ?? ownerColor(s.owner));
+          const groupIcon = s.groupIds && s.groupIds.length > 0
+            ? groups.find((g) => g.id === s.groupIds![0])?.iconData
+            : undefined;
           return (
             <div
               key={s.id}
@@ -76,6 +82,9 @@ export default function DayCell({
                 color: "#e0e0e0",
               }}
             >
+              {showTitle && groupIcon && (
+                <img src={groupIcon} alt="" style={{ width: "12px", height: "12px", borderRadius: "2px", objectFit: "cover", marginRight: "2px", flexShrink: 0 }} />
+              )}
               {showTitle && (s.memberUsernames ?? []).length > 1 && (
                 <Users size={10} fill="currentColor" style={{ marginRight: "2px", flexShrink: 0 }} />
               )}

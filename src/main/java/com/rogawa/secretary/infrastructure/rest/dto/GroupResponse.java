@@ -10,6 +10,7 @@ public class GroupResponse {
     private Long id;
     private String name;
     private String ownerUsername;
+    private String iconData;
     private LocalDateTime createdAt;
 
     public static GroupResponse fromDomain(Group group) {
@@ -17,6 +18,7 @@ public class GroupResponse {
         res.setId(group.getId());
         res.setName(group.getName());
         res.setOwnerUsername(group.getOwnerUsername());
+        res.setIconData(group.getIconData());
         res.setCreatedAt(group.getCreatedAt());
         return res;
     }
