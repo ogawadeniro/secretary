@@ -51,6 +51,7 @@ export const MemberManager = forwardRef<MemberManagerHandle, MemberManagerProps>
       { username: string; displayName: string; chipBgColor?: string }[]
     >([]);
     const suggestionsRef = useRef<HTMLDivElement>(null);
+    const memberInputRef = useRef<HTMLInputElement>(null);
     const isNew = !scheduleId;
 
     useImperativeHandle(ref, () => ({
@@ -138,6 +139,8 @@ export const MemberManager = forwardRef<MemberManagerHandle, MemberManagerProps>
       }
       setPendingMembers((prev) => [...prev, trimmed]);
       setMemberInput("");
+      setShowSuggestions(true);
+      memberInputRef.current?.focus();
     };
 
     // メンバー削除（遅延）
@@ -275,6 +278,7 @@ export const MemberManager = forwardRef<MemberManagerHandle, MemberManagerProps>
 
         <div style={{ position: "relative" }}>
           <input
+            ref={memberInputRef}
             type="text"
             placeholder="追加するユーザー名を入力..."
             value={memberInput}
