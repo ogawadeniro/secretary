@@ -34,8 +34,8 @@ function scheduleTitleColor(s: Schedule, currentUsername: string, chipBgColor: s
   return memberColors.length > 1
     ? scheduleColor(memberColors)
     : s.owner === currentUsername
-    ? chipBgColor
-    : (s.ownerChipBgColor ?? ownerColor(s.owner));
+      ? chipBgColor
+      : (s.ownerChipBgColor ?? ownerColor(s.owner));
 }
 
 /** 選択した日付の予定一覧を表示し、追加・編集・削除を行うダイアログ */
@@ -149,7 +149,7 @@ export default function ScheduleDialog({
       <div className={`dialog ${closing ? "closing" : ""}`} onClick={(e) => e.stopPropagation()}>
         <div className="dialog-header">
           <h2>
-            {date.getFullYear()}年{date.getMonth() + 1}月{date.getDate()}日の予定
+            {date.getFullYear()}年 {date.getMonth() + 1}月 {date.getDate()}日の予定
             {holidayName && (
               <span className="dialog-holiday-name">
                 <PartyPopper size={12} />
@@ -337,7 +337,7 @@ function ScheduleFormComponent({
 
   // 所属グループ一覧を取得
   useEffect(() => {
-    fetchGroups().then(setGroups).catch(() => {});
+    fetchGroups().then(setGroups).catch(() => { });
   }, []);
 
   const scheduleId = initial?.id;
