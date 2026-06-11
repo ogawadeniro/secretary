@@ -5,7 +5,7 @@ import {
   updateSchedule,
   deleteSchedule,
 } from "../api/scheduleApi";
-import { addMember } from "../api/memberApi";
+import { addMember, removeMember } from "../api/memberApi";
 import { fetchGroups } from "../api/groupApi";
 import type { Group } from "../types/group";
 import { ownerColor, scheduleColor } from "../utils/colorUtils";
@@ -84,11 +84,30 @@ export default function ScheduleDialog({
   };
 
   /** 予定を保存（新規 or 更新） */
-  const handleSave = async (form: ScheduleFormData, pendingMembers?: string[]): Promise<void> => {
+  const handleSave = async (form: ScheduleFormData, pendingMembers?: string[], removedMembers?: string[]): Promise<void> => {
     setError(null);
     try {
       if (editing?.id) {
         await updateSchedule(editing.id, form);
+        // 編集時に保留中のメンバー変更を反映
+        if (removedMembers && removedMembers.length > 0) {
+          for (const username of removedMembers) {
+            try {
+              await removeMember(editing.id, username);
+            } catch {
+              // 個別の削除失敗は無視
+            }
+          }
+        }
+        if (pendingMembers && pendingMembers.length > 0) {
+          for (const username of pendingMembers) {
+            try {
+              await addMember(editing.id, username);
+            } catch {
+              // 個別の追加失敗は無視
+            }
+          }
+        }
         onSchedulesChanged();
         onNotify("予定を編集したよ");
         handleClose();
@@ -282,7 +301,7 @@ function ScheduleFormComponent({
   initial: Schedule | null;
   date: Date;
   currentUsername: string;
-  onSave: (data: ScheduleFormData, pendingMembers?: string[]) => Promise<void>;
+  onSave: (data: ScheduleFormData, pendingMembers?: string[], removedMembers?: string[]) => Promise<void>;
   onCancel: () => void;
   onNotify: (message: string, type?: "success" | "error") => void;
   timeInterval: number;
@@ -356,7 +375,8 @@ function ScheduleFormComponent({
           shared: true,
           groupIds: selectedGroupId ? [selectedGroupId] : [],
         },
-        isNew ? memberManagerRef.current?.getPendingMembers() : undefined,
+        isNew ? memberManagerRef.current?.getPendingMembers() : memberManagerRef.current?.getPendingMembers(),
+        isNew ? undefined : memberManagerRef.current?.getRemovedMembers(),
       );
     } finally {
       setSaving(false);

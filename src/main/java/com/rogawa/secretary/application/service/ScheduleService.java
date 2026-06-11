@@ -285,13 +285,13 @@ public class ScheduleService implements ScheduleUseCase {
 
     @Override
     @Transactional
-    public ScheduleMember addScheduleMember(Long scheduleId, String memberUsername, String owner) {
+    public ScheduleMember addScheduleMember(Long scheduleId, String memberUsername, String username) {
         Schedule schedule = getSchedule(scheduleId);
-        if (!schedule.getOwner().equals(owner)) {
-            throw new ScheduleAuthorizationException("メンバーを追加できるのは予定のオーナーのみです");
+        if (!canEditSchedule(schedule, username)) {
+            throw new ScheduleAuthorizationException("メンバーを追加できるのは予定のオーナーまたはグループメンバーのみです");
         }
-        if (memberUsername.equals(owner)) {
-            throw new IllegalArgumentException("オーナー自身をメンバーに追加できません");
+        if (memberUsername.equals(schedule.getOwner())) {
+            throw new IllegalArgumentException("オーナーをメンバーに追加できません");
         }
         ScheduleMember member = new ScheduleMember();
         member.setScheduleId(scheduleId);
@@ -302,10 +302,10 @@ public class ScheduleService implements ScheduleUseCase {
 
     @Override
     @Transactional
-    public void removeScheduleMember(Long scheduleId, String memberUsername, String owner) {
+    public void removeScheduleMember(Long scheduleId, String memberUsername, String username) {
         Schedule schedule = getSchedule(scheduleId);
-        if (!schedule.getOwner().equals(owner)) {
-            throw new ScheduleAuthorizationException("メンバーを削除できるのは予定のオーナーのみです");
+        if (!canEditSchedule(schedule, username)) {
+            throw new ScheduleAuthorizationException("メンバーを削除できるのは予定のオーナーまたはグループメンバーのみです");
         }
         scheduleMemberRepository.deleteByScheduleIdAndUsername(scheduleId, memberUsername);
     }

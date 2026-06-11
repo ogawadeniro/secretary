@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useMemo, forwardRef, useImperativeHandle } from "react";
 import { ScheduleMember as ScheduleMemberType } from "../types/schedule";
-import { getMembers, addMember, removeMember } from "../api/memberApi";
+import { getMembers } from "../api/memberApi";
 import { fetchAcceptedUsernames } from "../api/sharemanApi";
 import { fetchGroupMembers } from "../api/groupApi";
 import { searchUsers } from "../api/userApi";
@@ -8,6 +8,8 @@ import { searchUsers } from "../api/userApi";
 export interface MemberManagerHandle {
   /** 新規予定作成時にフォームに渡す保留中のメンバー一覧 */
   getPendingMembers: () => string[];
+  /** 編集時に削除予定のメンバー一覧 */
+  getRemovedMembers: () => string[];
 }
 
 interface MemberManagerProps {
@@ -40,6 +42,7 @@ export const MemberManager = forwardRef<MemberManagerHandle, MemberManagerProps>
   }, ref) {
     const [members, setMembers] = useState<ScheduleMemberType[]>([]);
     const [pendingMembers, setPendingMembers] = useState<string[]>([]);
+    const [pendingRemoves, setPendingRemoves] = useState<string[]>([]);
     const [memberInput, setMemberInput] = useState("");
     const [memberLoading, setMemberLoading] = useState(false);
     const [memberError, setMemberError] = useState<string | null>(null);
@@ -52,7 +55,8 @@ export const MemberManager = forwardRef<MemberManagerHandle, MemberManagerProps>
 
     useImperativeHandle(ref, () => ({
       getPendingMembers: () => pendingMembers,
-    }), [pendingMembers]);
+      getRemovedMembers: () => pendingRemoves,
+    }), [pendingMembers, pendingRemoves]);
 
     // シェアメン一覧を取得（承諾済みユーザーを候補として表示）
     useEffect(() => {
@@ -110,15 +114,16 @@ export const MemberManager = forwardRef<MemberManagerHandle, MemberManagerProps>
       return () => document.removeEventListener("mousedown", handleClick);
     }, [showSuggestions]);
 
-    // メンバー追加（新規: pending, 既存: API）
+    // メンバー追加（新規/編集とも遅延）
     const handleAddMember = async (username: string) => {
       const trimmed = username.trim();
       if (!trimmed) return;
       setMemberError(null);
 
-      const alreadyMember = scheduleId
-        ? members.some((m) => m.username === trimmed)
-        : pendingMembers.includes(trimmed);
+      const alreadyMember = isNew
+        ? pendingMembers.includes(trimmed)
+        : members.some((m) => m.username === trimmed && !pendingRemoves.includes(m.username))
+          || pendingMembers.includes(trimmed);
       if (alreadyMember) {
         setMemberError("すでにメンバーです");
         return;
@@ -128,30 +133,21 @@ export const MemberManager = forwardRef<MemberManagerHandle, MemberManagerProps>
         return;
       }
 
-      if (scheduleId) {
-        try {
-          const m = await addMember(scheduleId, trimmed);
-          setMembers((prev) => [...prev, m]);
-        } catch {
-          setMemberError("メンバーの追加に失敗したよ");
-          return;
-        }
-      } else {
-        setPendingMembers((prev) => [...prev, trimmed]);
+      if (!isNew) {
+        setPendingRemoves((prev) => prev.filter((u) => u !== trimmed));
       }
+      setPendingMembers((prev) => [...prev, trimmed]);
       setMemberInput("");
     };
 
-    // メンバー削除
+    // メンバー削除（遅延）
     const handleRemoveMember = async (username: string) => {
       setMemberError(null);
-      if (scheduleId) {
-        try {
-          await removeMember(scheduleId, username);
-          setMembers((prev) => prev.filter((m) => m.username !== username));
-          onNotify("メンバーを削除したよ");
-        } catch {
-          setMemberError("メンバーの削除に失敗したよ");
+      if (!isNew) {
+        if (pendingMembers.includes(username)) {
+          setPendingMembers((prev) => prev.filter((u) => u !== username));
+        } else {
+          setPendingRemoves((prev) => [...prev, username]);
         }
       } else {
         setPendingMembers((prev) => prev.filter((u) => u !== username));
@@ -164,9 +160,10 @@ export const MemberManager = forwardRef<MemberManagerHandle, MemberManagerProps>
       const matchesQuery = query === "" ||
         c.username.toLowerCase().includes(query) ||
         c.displayName.toLowerCase().includes(query);
-      const alreadyAdded = scheduleId
-        ? members.some((m) => m.username === c.username)
-        : pendingMembers.includes(c.username);
+      const alreadyAdded = isNew
+        ? pendingMembers.includes(c.username)
+        : members.some((m) => m.username === c.username && !pendingRemoves.includes(m.username))
+          || pendingMembers.includes(c.username);
       return matchesQuery && !alreadyAdded;
     });
 
@@ -194,9 +191,10 @@ export const MemberManager = forwardRef<MemberManagerHandle, MemberManagerProps>
         pending: false,
         chipBgColor: ownerChipBgColorProp,
       },
+      // 既存メンバー（削除予定のものを除外）
       ...(scheduleId
         ? members
-            .filter((m) => m.username !== ownerUsername)
+            .filter((m) => m.username !== ownerUsername && !pendingRemoves.includes(m.username))
             .map((m) => ({
               key: m.id.toString(),
               username: m.username,
@@ -205,16 +203,18 @@ export const MemberManager = forwardRef<MemberManagerHandle, MemberManagerProps>
               pending: false,
               chipBgColor: existingMemberChipBgColors?.[m.username] ?? memberChipBgColorMap.get(m.username),
             }))
-        : pendingMembers
-            .filter((u) => u !== ownerUsername)
-            .map((u) => ({
-              key: u,
-              username: u,
-              displayName: memberDisplayNameMap.get(u) ?? u,
-              isOwner: false,
-              pending: true,
-              chipBgColor: memberChipBgColorMap.get(u),
-            }))),
+        : []),
+      // 保留中の追加メンバー
+      ...pendingMembers
+        .filter((u) => u !== ownerUsername && !(scheduleId && members.some((m) => m.username === u && !pendingRemoves.includes(m.username))))
+        .map((u) => ({
+          key: u,
+          username: u,
+          displayName: memberDisplayNameMap.get(u) ?? u,
+          isOwner: false,
+          pending: true,
+          chipBgColor: memberChipBgColorMap.get(u),
+        })),
     ];
 
     return (
