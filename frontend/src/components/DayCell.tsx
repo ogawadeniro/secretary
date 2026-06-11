@@ -2,7 +2,6 @@ import { getSchedulePosition, shouldShowTitle } from "../utils/dateUtils";
 import { ownerColor } from "../utils/colorUtils";
 import type { SlotInfo } from "../utils/dateUtils";
 import type { Group } from "../types/group";
-import { Users } from "lucide-react";
 
 interface DayCellProps {
   date: Date;
@@ -99,9 +98,6 @@ export default function DayCell({
             >
               {showTitle && groupIcon && (
                 <img src={groupIcon} alt="" style={{ width: "12px", height: "12px", borderRadius: "2px", objectFit: "cover", marginRight: "2px", flexShrink: 0 }} />
-              )}
-              {showTitle && (s.memberUsernames ?? []).length > 1 && (
-                <Users size={10} fill="currentColor" style={{ marginRight: "2px", flexShrink: 0 }} />
               )}
               {showTitle ? s.title : ""}
             </div>

@@ -9,7 +9,7 @@ import { addMember, removeMember } from "../api/memberApi";
 import { fetchGroups } from "../api/groupApi";
 import type { Group } from "../types/group";
 import { ownerColor } from "../utils/colorUtils";
-import { PartyPopper, Users } from "lucide-react";
+import { PartyPopper } from "lucide-react";
 import TimePicker from "./TimePicker";
 import { useDateTimeCorrection } from "../hooks/useDateTimeCorrection";
 import { MemberManager, type MemberManagerHandle } from "./MemberManager";
@@ -182,7 +182,7 @@ export default function ScheduleDialog({
                     }}
                   >
                     {(s.memberUsernames ?? []).length > 1 && (
-                      <Users size={14} fill="currentColor" style={{ marginRight: "4px", verticalAlign: "middle" }} />
+                      <span style={{ marginRight: "4px", verticalAlign: "middle", fontSize: "0.85rem" }} />
                     )}
                     {s.title}
                   </strong>
