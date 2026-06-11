@@ -1,5 +1,5 @@
 import { getSchedulePosition, shouldShowTitle } from "../utils/dateUtils";
-import { ownerColor, scheduleColor } from "../utils/colorUtils";
+import { ownerColor } from "../utils/colorUtils";
 import type { SlotInfo } from "../utils/dateUtils";
 import type { Group } from "../types/group";
 import { Users } from "lucide-react";
@@ -65,11 +65,18 @@ export default function DayCell({
           const memberColors = (s.memberUsernames ?? []).map(
             (u) => s.memberChipBgColors?.[u] ?? ownerColor(u)
           );
-          const bgColor = memberColors.length > 1
-            ? scheduleColor(memberColors)
+          const isMultiMember = memberColors.length > 1;
+          // 複数メンバーの予定はデフォルト背景色＋メンバー色の下線グラデーション
+          const chipBg = isMultiMember
+            ? "var(--color-surface2)"
             : s.owner === currentUsername
               ? chipBgColor
               : (s.ownerChipBgColor ?? ownerColor(s.owner));
+          const colorStops = memberColors.map((c, i, arr) => {
+            const start = (i / arr.length) * 100;
+            const end = ((i + 1) / arr.length) * 100;
+            return `${c} ${start}% ${end}%`;
+          }).join(", ");
           const groupIcon = s.groupIds && s.groupIds.length > 0
             ? groups.find((g) => g.id === s.groupIds![0])?.iconData
             : undefined;
@@ -78,8 +85,16 @@ export default function DayCell({
               key={s.id}
               className={`schedule-chip schedule-${pos}`}
               style={{
-                backgroundColor: bgColor,
                 color: "#e0e0e0",
+                ...(isMultiMember
+                  ? {
+                      backgroundColor: "var(--color-surface2)",
+                      backgroundImage: `linear-gradient(to right, ${colorStops})`,
+                      backgroundRepeat: "no-repeat",
+                      backgroundPosition: "0 100%",
+                      backgroundSize: "100% 3px",
+                    }
+                  : { backgroundColor: chipBg }),
               }}
             >
               {showTitle && groupIcon && (

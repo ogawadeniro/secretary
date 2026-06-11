@@ -8,7 +8,7 @@ import {
 import { addMember, removeMember } from "../api/memberApi";
 import { fetchGroups } from "../api/groupApi";
 import type { Group } from "../types/group";
-import { ownerColor, scheduleColor } from "../utils/colorUtils";
+import { ownerColor } from "../utils/colorUtils";
 import { PartyPopper, Users } from "lucide-react";
 import TimePicker from "./TimePicker";
 import { useDateTimeCorrection } from "../hooks/useDateTimeCorrection";
@@ -31,11 +31,10 @@ function scheduleTitleColor(s: Schedule, currentUsername: string, chipBgColor: s
   const memberColors = (s.memberUsernames ?? []).map(
     (u) => s.memberChipBgColors?.[u] ?? ownerColor(u)
   );
-  return memberColors.length > 1
-    ? scheduleColor(memberColors)
-    : s.owner === currentUsername
-      ? chipBgColor
-      : (s.ownerChipBgColor ?? ownerColor(s.owner));
+  if (memberColors.length > 1) return "var(--color-surface2)";
+  return s.owner === currentUsername
+    ? chipBgColor
+    : (s.ownerChipBgColor ?? ownerColor(s.owner));
 }
 
 /** 選択した日付の予定一覧を表示し、追加・編集・削除を行うダイアログ */
