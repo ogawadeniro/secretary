@@ -263,7 +263,7 @@ export default function InfiniteCalendar() {
   const filteredSchedules = useMemo(() => {
     if (scheduleFilter.size === 0) return [];
     return schedules.filter((s) => {
-      if (scheduleFilter.has("personal") && s.owner === user?.username) return true;
+      if (scheduleFilter.has("personal") && s.owner === user?.username && (!s.groupIds || s.groupIds.length === 0)) return true;
       if (s.groupIds?.some((gid) => scheduleFilter.has(gid))) return true;
       return false;
     });
