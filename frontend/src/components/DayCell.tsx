@@ -91,7 +91,7 @@ export default function DayCell({
                       backgroundImage: `linear-gradient(to right, ${colorStops})`,
                       backgroundRepeat: "no-repeat",
                       backgroundPosition: "0 100%",
-                      backgroundSize: "100% 3px",
+                      backgroundSize: "100% 2px",
                     }
                   : { backgroundColor: chipBg }),
               }}
