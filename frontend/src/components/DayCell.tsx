@@ -83,7 +83,7 @@ export default function DayCell({
               }}
             >
               {showTitle && groupIcon && (
-                <img src={groupIcon} alt="" style={{ width: "12px", height: "12px", borderRadius: "2px", objectFit: "cover", marginRight: "2px", flexShrink: 0 }} />
+                <img src={groupIcon} alt="" style={{ width: "10px", height: "10px", borderRadius: "2px", objectFit: "cover", marginRight: "2px", flexShrink: 0 }} />
               )}
               {showTitle ? s.title : ""}
             </div>
