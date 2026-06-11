@@ -319,7 +319,7 @@ export const MemberManager = forwardRef<MemberManagerHandle, MemberManagerProps>
                 overflowY: "auto",
               }}
             >
-              {filteredSuggestions.map((c) => (
+              {filteredSuggestions.slice(0, 5).map((c) => (
                 <div
                   key={c.username}
                   style={{
