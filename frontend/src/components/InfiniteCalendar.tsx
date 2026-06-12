@@ -1,12 +1,13 @@
 import { useState, useEffect, useRef, useCallback, useLayoutEffect, useMemo } from "react";
-import { CircleUser, Settings, LogOut, Share2, Users, User, Filter, Check } from "lucide-react";
 import type { UserSettings } from "../types/settings";
 import type { Schedule } from "../types/schedule";
 import type { Group } from "../types/group";
 import { fetchSchedules } from "../api/scheduleApi";
 import { fetchSettings } from "../api/settingsApi";
 import { fetchGroups } from "../api/groupApi";
-import WeekRow from "./WeekRow";
+import AppHeader from "./AppHeader";
+import FilterBar from "./FilterBar";
+import CalendarGrid from "./CalendarGrid";
 import ScheduleDialog from "./ScheduleDialog";
 import SettingsDialog from "./SettingsDialog";
 import AccountDialog from "./AccountDialog";
@@ -280,15 +281,6 @@ export default function InfiniteCalendar() {
     });
   }, [schedules, scheduleFilter, user?.username]);
 
-  /** フィルター選択肢 */
-  const filterOptions = useMemo(() => {
-    const options: { value: "personal" | number; label: string }[] = [
-      { value: "personal", label: "プライベート" },
-    ];
-    groups.forEach((g) => options.push({ value: g.id, label: g.name }));
-    return options;
-  }, [groups]);
-
   // 選択された日付に紐づく予定をフィルタ
   const selectedSchedules = dialogDate
     ? filteredSchedules.filter((s) => {
@@ -317,221 +309,47 @@ export default function InfiniteCalendar() {
 
   const monthLabel = `${currentYear}年 ${currentMonth + 1}月`;
 
-  const selectedGroupIds = [...scheduleFilter].filter((v) => v !== "personal") as number[];
-
   return (
     <div className="calendar-container">
-      {/* 1行目: 月表示 + アカウント */}
-      <div className="calendar-header" style={{ paddingBottom: 0, borderBottom: "none" }}>
-        <h1>{monthLabel}</h1>
-        <div className="calendar-header-right">
-          <span className="header-user" style={{ background: settings.chipBgColor, borderRadius: "4px", padding: "2px 6px", color: "var(--color-text)" }}>{user?.displayName ?? user?.username}</span>
-          <div className="account-menu-container" ref={accountMenuRef}>
-            <button
-              className="account-icon-btn"
-              onClick={() => setShowAccountMenu(!showAccountMenu)}
-              title="アカウント"
-            >
-              <CircleUser size={22} />
-            </button>
-            {showAccountMenu && (
-              <div className="account-dropdown">
-                <button
-                  className="account-dropdown-item"
-                  onClick={() => {
-                    setShowAccountMenu(false);
-                    setShowSettings(true);
-                  }}
-                >
-                  <Settings size={16} />
-                  <span>設定</span>
-                </button>
-                <button
-                  className="account-dropdown-item"
-                  onClick={() => {
-                    setShowAccountMenu(false);
-                    setShowAccount(true);
-                  }}
-                >
-                  <User size={16} />
-                  <span>アカウント</span>
-                </button>
-                <button
-                  className="account-dropdown-item"
-                  onClick={() => {
-                    setShowAccountMenu(false);
-                    setShowShare(true);
-                  }}
-                >
-                  <Share2 size={16} />
-                  <span>シェアメン管理</span>
-                </button>
-                <button
-                  className="account-dropdown-item"
-                  onClick={() => {
-                    setShowAccountMenu(false);
-                    setShowGroup(true);
-                  }}
-                >
-                  <Users size={16} />
-                  <span>共有グループ管理</span>
-                </button>
-                <button
-                  className="account-dropdown-item"
-                  onClick={() => setShowLogoutConfirm(true)}
-                >
-                  <LogOut size={16} />
-                  <span>ログアウト</span>
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
+      <AppHeader
+        monthLabel={monthLabel}
+        settings={settings}
+        user={user}
+        showAccountMenu={showAccountMenu}
+        accountMenuRef={accountMenuRef}
+        onToggleAccountMenu={() => setShowAccountMenu((p) => !p)}
+        onShowSettings={() => { setShowAccountMenu(false); setShowSettings(true); }}
+        onShowAccount={() => { setShowAccountMenu(false); setShowAccount(true); }}
+        onShowShare={() => { setShowAccountMenu(false); setShowShare(true); }}
+        onShowGroup={() => { setShowAccountMenu(false); setShowGroup(true); }}
+        onLogoutClick={() => setShowLogoutConfirm(true)}
+      />
+      <FilterBar
+        groups={groups}
+        scheduleFilter={scheduleFilter}
+        showFilterDropdown={showFilterDropdown}
+        filterDropdownRef={filterDropdownRef}
+        onToggleFilterDropdown={() => setShowFilterDropdown((p) => !p)}
+        onCloseFilterDropdown={() => setShowFilterDropdown(false)}
+        onFilterChange={setScheduleFilter}
+      />
 
-      {/* 2行目: フィルターバッジ + フィルターアイコン */}
-      <div className="calendar-header" style={{
-        display: "flex", alignItems: "center", gap: "8px",
-        paddingTop: "4px", paddingBottom: "8px", justifyContent: "flex-end",
-      }}>
-        <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
-          <span style={{
-            display: "inline-flex", alignItems: "center", gap: "4px",
-            padding: "2px 8px", background: "var(--color-surface2)",
-            borderRadius: "999px", fontSize: "0.8rem",
-          }}>
-            プライベート
-          </span>
-          {selectedGroupIds.map((gid) => {
-            const g = groups.find((gr) => gr.id === gid);
-            return (
-              <span key={gid} style={{
-                display: "inline-flex", alignItems: "center", gap: "4px",
-                padding: "2px 8px", background: "var(--color-surface2)",
-                borderRadius: "999px", fontSize: "0.8rem",
-              }}>
-                {g?.iconData && <img src={g.iconData} alt="" style={{ width: "16px", height: "16px", borderRadius: "3px", objectFit: "cover" }} />}
-                {g?.name ?? gid}
-              </span>
-            );
-          })}
-        </div>
-
-        <div style={{ position: "relative" }} ref={filterDropdownRef}>
-          <button
-            type="button"
-            className="icon-btn"
-            onClick={() => setShowFilterDropdown((p) => !p)}
-            title="フィルター"
-            style={{ display: "flex", padding: "4px", borderRadius: "6px", cursor: "pointer", border: "none", background: "var(--color-surface2)", color: "var(--color-text)" }}
-          >
-            <Filter size={18} />
-          </button>
-          {showFilterDropdown && (
-            <>
-              <div
-                style={{
-                  position: "fixed", inset: 0, zIndex: 99,
-                }}
-                onMouseDown={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  setShowFilterDropdown(false);
-                }}
-              />
-              <div style={{
-              position: "absolute", right: 0, top: "100%", zIndex: 100,
-              background: "var(--color-surface2)", border: "1px solid var(--color-border)",
-              borderRadius: "6px", marginTop: "4px", minWidth: "180px",
-              overflow: "hidden",
-            }}>
-              {filterOptions.filter((o) => o.value !== "personal").length === 0 ? (
-                <div style={{ padding: "12px", fontSize: "0.8rem", color: "var(--color-text-muted)" }}>
-                  参加している共有グループはありません
-                </div>
-              ) : (
-                filterOptions.filter((o) => o.value !== "personal").map((opt) => {
-                const isActive = scheduleFilter.has(opt.value);
-                return (
-                  <div key={String(opt.value)} style={{
-                    padding: "8px 12px", cursor: "pointer", fontSize: "0.85rem",
-                    background: isActive ? "var(--color-hover)" : "transparent",
-                    borderBottom: "1px solid var(--color-border)",
-                    display: "flex", alignItems: "center", gap: "8px",
-                  }}
-                    onMouseDown={(e) => {
-                      e.preventDefault();
-                      const next = new Set(scheduleFilter);
-                      if (isActive) {
-                        next.delete(opt.value);
-                      } else {
-                        next.add(opt.value);
-                      }
-                      setScheduleFilter(next);
-                    }}
-                    onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--color-hover)"; }}
-                    onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = isActive ? "var(--color-hover)" : "transparent"; }}
-                  >
-                    <div style={{
-                      width: "14px", height: "14px", borderRadius: "3px",
-                      border: "2px solid var(--color-border)",
-                      background: isActive ? "var(--color-accent)" : "transparent",
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                      flexShrink: 0,
-                    }}>
-                      {isActive && <Check size={10} style={{ color: "#fff" }} />}
-                    </div>
-                    {opt.label}
-                  </div>
-                );
-              })
-            )}
-          </div></>
-        )}
-      </div>
-    </div>
-
-      <div className="day-labels">
-        {Array.from({ length: 7 }, (_, i) => {
-          const dayIndex = (settings.firstDayOfWeek + i) % 7;
-          const labels = ["日", "月", "火", "水", "木", "金", "土"];
-          return (
-            <div
-              key={labels[dayIndex]}
-              className="day-label"
-              style={{
-                color:
-                  dayIndex === 0
-                    ? "var(--color-sun)"
-                    : dayIndex === 6
-                      ? "var(--color-sat)"
-                      : "inherit",
-              }}
-            >
-              {labels[dayIndex]}
-            </div>
-          );
-        })}
-      </div>
-
-      <div className="scroll-container" ref={scrollRef} onScroll={handleScroll}>
-        <div ref={topSentinelRef} className="sentinel" />
-        {weeks.map((dates, i) => (
-          <WeekRow
-            key={formatDateKey(dates[0])}
-            dates={dates}
-            schedules={filteredSchedules}
-            currentMonth={currentMonth}
-            chipBgColor={settings.chipBgColor}
-            currentUsername={user?.username ?? ""}
-            holidays={holidays}
-            onDateClick={handleDateClick}
-            selectedDate={highlightDate}
-            groups={groups}
-          />
-        ))}
-        <div ref={bottomSentinelRef} className="sentinel" />
-      </div>
+      <CalendarGrid
+        weeks={weeks}
+        filteredSchedules={filteredSchedules}
+        currentMonth={currentMonth}
+        chipBgColor={settings.chipBgColor}
+        currentUsername={user?.username ?? ""}
+        holidays={holidays}
+        highlightDate={highlightDate}
+        groups={groups}
+        firstDayOfWeek={settings.firstDayOfWeek}
+        onDateClick={handleDateClick}
+        onScroll={handleScroll}
+        scrollRef={scrollRef}
+        topSentinelRef={topSentinelRef}
+        bottomSentinelRef={bottomSentinelRef}
+      />
 
       {showSettings && (
         <SettingsDialog
@@ -572,18 +390,18 @@ export default function InfiniteCalendar() {
       )}
 
       {dialogDate && (
-          <ScheduleDialog
-            date={dialogDate}
-            schedules={selectedSchedules}
-            holidayName={holidays.get(formatDateKey(dialogDate)) ?? null}
-            onClose={handleDialogClose}
-            onSchedulesChanged={reloadSchedules}
-            currentUsername={user?.username ?? ""}
-            chipBgColor={settings.chipBgColor}
-            timeInterval={settings.timeInterval}
-            onNotify={notify}
-            groups={groups}
-          />
+        <ScheduleDialog
+          date={dialogDate}
+          schedules={selectedSchedules}
+          holidayName={holidays.get(formatDateKey(dialogDate)) ?? null}
+          onClose={handleDialogClose}
+          onSchedulesChanged={reloadSchedules}
+          currentUsername={user?.username ?? ""}
+          chipBgColor={settings.chipBgColor}
+          timeInterval={settings.timeInterval}
+          onNotify={notify}
+          groups={groups}
+        />
       )}
 
       {toasts.length > 0 && (
