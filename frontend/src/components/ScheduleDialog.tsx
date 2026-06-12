@@ -23,6 +23,7 @@ interface ScheduleDialogProps {
   chipBgColor: string;
   timeInterval: number;
   onNotify: (message: string, type?: "success" | "error") => void;
+  groups: Group[];
 }
 
 /** 予定のタイトル背景色を計算（DayCellのチップ色と一致させる） */
@@ -41,6 +42,7 @@ export default function ScheduleDialog({
   chipBgColor,
   timeInterval,
   onNotify,
+  groups,
 }: ScheduleDialogProps) {
   const [schedules, setSchedules] = useState<Schedule[]>(initialSchedules);
   const [showForm, setShowForm] = useState(false);
@@ -174,9 +176,12 @@ export default function ScheduleDialog({
                       alignSelf: "flex-start",
                     }}
                   >
-                    {(s.memberUsernames ?? []).length > 1 && (
-                      <span style={{ marginRight: "4px", verticalAlign: "middle", fontSize: "0.85rem" }} />
-                    )}
+                    {(s.groupIds ?? []).length > 0 && (() => {
+                      const g = groups.find((gr) => gr.id === s.groupIds![0]);
+                      return g?.iconData ? (
+                        <img src={g.iconData} alt="" style={{ width: "12px", height: "12px", borderRadius: "2px", objectFit: "cover", marginRight: "3px", verticalAlign: "middle" }} />
+                      ) : null;
+                    })()}
                     {s.title}
                   </strong>
                   <span className="schedule-time">

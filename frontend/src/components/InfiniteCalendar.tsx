@@ -572,17 +572,18 @@ export default function InfiniteCalendar() {
       )}
 
       {dialogDate && (
-        <ScheduleDialog
-          date={dialogDate}
-          schedules={selectedSchedules}
-          holidayName={holidays.get(formatDateKey(dialogDate)) ?? null}
-          onClose={handleDialogClose}
-          onSchedulesChanged={reloadSchedules}
-          currentUsername={user?.username ?? ""}
-          chipBgColor={settings.chipBgColor}
-          timeInterval={settings.timeInterval}
-          onNotify={notify}
-        />
+          <ScheduleDialog
+            date={dialogDate}
+            schedules={selectedSchedules}
+            holidayName={holidays.get(formatDateKey(dialogDate)) ?? null}
+            onClose={handleDialogClose}
+            onSchedulesChanged={reloadSchedules}
+            currentUsername={user?.username ?? ""}
+            chipBgColor={settings.chipBgColor}
+            timeInterval={settings.timeInterval}
+            onNotify={notify}
+            groups={groups}
+          />
       )}
 
       {toasts.length > 0 && (
