@@ -11,6 +11,8 @@ export interface MemberManagerHandle {
   getPendingMembers: () => string[];
   /** 編集時に削除予定のメンバー一覧 */
   getRemovedMembers: () => string[];
+  /** グループ変更時、新しいグループに含まれないメンバーを削除予定にする */
+  onGroupChanged: (newGroupMembers: string[]) => void;
 }
 
 interface MemberManagerProps {
@@ -58,7 +60,25 @@ export const MemberManager = forwardRef<MemberManagerHandle, MemberManagerProps>
     useImperativeHandle(ref, () => ({
       getPendingMembers: () => pendingMembers,
       getRemovedMembers: () => pendingRemoves,
-    }), [pendingMembers, pendingRemoves]);
+      onGroupChanged: (newGroupMembers: string[]) => {
+        const newGroupSet = new Set(newGroupMembers);
+        // 現在の有効なメンバー一覧
+        const currentActive: string[] = [
+          ...members
+            .filter((m) => !pendingRemoves.includes(m.username))
+            .map((m) => m.username),
+          ...pendingMembers,
+        ];
+        // 新しいグループに含まれないメンバーを削除対象にする
+        const toRemove = currentActive.filter((u) => !newGroupSet.has(u));
+        setPendingMembers((prev) => prev.filter((u) => newGroupSet.has(u)));
+        setPendingRemoves((prev) => {
+          const existing = new Set(prev);
+          toRemove.forEach((u) => existing.add(u));
+          return [...existing];
+        });
+      },
+    }), [members, pendingMembers, pendingRemoves]);
 
     // シェアメン一覧を取得（承諾済みユーザーを候補として表示）
     useEffect(() => {

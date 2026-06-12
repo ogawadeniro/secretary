@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { Schedule } from "../types/schedule";
 import type { Group } from "../types/group";
-import { fetchGroups } from "../api/groupApi";
+import { fetchGroups, fetchGroupMembers } from "../api/groupApi";
 import TimePicker from "./TimePicker";
 import { useDateTimeCorrection } from "../hooks/useDateTimeCorrection";
 import { MemberManager, type MemberManagerHandle } from "./MemberManager";
@@ -74,6 +74,24 @@ export default function ScheduleForm({
   const isNew = !scheduleId;
   const memberManagerRef = useRef<MemberManagerHandle>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // グループ変更時にメンバー選択をリセット（編集時のみ）
+  useEffect(() => {
+    if (!scheduleId) return;
+    (async () => {
+      if (selectedGroupId === undefined) {
+        memberManagerRef.current?.onGroupChanged([]);
+      } else {
+        try {
+          const groupMembers = await fetchGroupMembers(selectedGroupId);
+          const usernames = groupMembers.map((m) => m.username);
+          memberManagerRef.current?.onGroupChanged(usernames);
+        } catch {
+          // フェッチ失敗時はリセットしない
+        }
+      }
+    })();
+  }, [selectedGroupId, scheduleId]);
 
   // グループドロップダウンの外側クリックで閉じる
   useEffect(() => {
