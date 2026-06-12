@@ -1,947 +1,950 @@
 :root {
-  --color-bg: #0b0b14;
-  --color-surface: #0f0f1e;
-  --color-surface2: #222249;
-  --color-text: #c9c9c9;
-  --color-text-muted: #828282;
-  --color-accent: #4a90d9;
-  --color-sun: #e87a90;
-  --color-sat: #4a90d9;
-  --color-holiday: #e05a5a;
-  --color-today: rgba(74, 144, 217, 0.15);
-  --color-border: #1e1e32;
-  --color-hover: rgba(255, 255, 255, 0.05);
-  --row-height: 110px;
+    --color-bg: #0b0b14;
+    --color-surface: #0f0f1e;
+    --color-surface2: #222249;
+    --color-text: #c9c9c9;
+    --color-text-muted: #828282;
+    --color-accent: #4a90d9;
+    --color-sun: #e87a90;
+    --color-sat: #4a90d9;
+    --color-holiday: #e05a5a;
+    --color-today: rgba(74, 144, 217, 0.15);
+    --color-border: #1e1e32;
+    --color-hover: rgba(255, 255, 255, 0.05);
+    --row-height: 110px;
 }
 
 * {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
 }
 
 /* スマホでのフォーカス時ズームイン防止 */
 input,
 textarea,
 select {
-  font-size: 16px;
-  touch-action: manipulation;
+    font-size: 16px;
+    touch-action: manipulation;
 }
 
 html,
 body,
 #root {
-  height: 100%;
+    height: 100%;
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  background: var(--color-bg);
-  color: var(--color-text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: var(--color-bg);
+    color: var(--color-text);
 }
 
 .app {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
 }
 
 .calendar-container {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
 }
 
 .calendar-header {
-  padding: 8px 12px;
-  text-align: left;
-  border-bottom: 1px solid var(--color-border);
-  background: var(--color-surface);
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  position: relative;
+    padding: 8px 12px;
+    text-align: left;
+    border-bottom: 1px solid var(--color-border);
+    background: var(--color-surface);
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    position: relative;
 }
 
 .calendar-header h1 {
-  font-size: 1.1rem;
-  font-weight: 600;
+    font-size: 1.1rem;
+    font-weight: 600;
 }
 
 .calendar-header-center {
-  margin-left: auto;
-  margin-right: auto;
-  display: flex;
-  align-items: center;
+    margin-left: auto;
+    margin-right: auto;
+    display: flex;
+    align-items: center;
 }
 
 .filter-selector {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  color: var(--color-text-muted);
-  font-size: 0.8rem;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--color-text-muted);
+    font-size: 0.8rem;
 }
 
 .calendar-header-right {
-  position: absolute;
-  right: 12px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
+    position: absolute;
+    right: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
 .header-user {
-  font-size: 0.75rem;
-  color: var(--color-text-muted);
+    font-size: 0.75rem;
+    color: var(--color-text-muted);
 }
 
 /* アカウントアイコンボタン */
 .account-icon-btn {
-  background: none;
-  border: none;
-  color: var(--color-text-muted);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  padding: 2px;
-  border-radius: 50%;
-  transition: color 0.2s, background 0.2s;
+    background: none;
+    border: none;
+    color: var(--color-text-muted);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    padding: 2px;
+    border-radius: 50%;
+    transition: color 0.2s, background 0.2s;
 }
 
 .account-icon-btn:hover {
-  color: var(--color-text);
-  background: var(--color-hover);
+    color: var(--color-text);
+    background: var(--color-hover);
 }
 
 /* アカウントメニュー */
 .account-menu-container {
-  position: relative;
+    position: relative;
 }
 
 .account-dropdown {
-  position: absolute;
-  right: 0;
-  top: calc(100% + 4px);
-  background: var(--color-surface2);
-  border: 1px solid var(--color-border);
-  border-radius: 8px;
-  min-width: 160px;
-  overflow: hidden;
-  z-index: 100;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+    position: absolute;
+    right: 0;
+    top: calc(100% + 4px);
+    background: var(--color-surface2);
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    min-width: 160px;
+    overflow: hidden;
+    z-index: 100;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
 }
 
 .account-dropdown-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  width: 100%;
-  padding: 10px 14px;
-  background: none;
-  border: none;
-  color: var(--color-text);
-  font-size: 0.85rem;
-  cursor: pointer;
-  text-align: left;
-  transition: background 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 10px 14px;
+    background: none;
+    border: none;
+    color: var(--color-text);
+    font-size: 0.85rem;
+    cursor: pointer;
+    text-align: left;
+    transition: background 0.15s;
 }
 
 .account-dropdown-item:hover {
-  background: var(--color-hover);
+    background: var(--color-hover);
 }
 
 .account-dropdown-item:not(:last-child) {
-  border-bottom: 1px solid var(--color-border);
+    border-bottom: 1px solid var(--color-border);
 }
 
 /* 確認ダイアログ */
 .confirm-dialog {
-  background: var(--color-surface);
-  border-radius: 12px;
-  padding: 24px;
-  max-width: 320px;
-  width: 90%;
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
-  text-align: center;
+    background: var(--color-surface);
+    border-radius: 12px;
+    padding: 24px;
+    max-width: 320px;
+    width: 90%;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+    text-align: center;
 }
 
 .confirm-dialog p {
-  margin-bottom: 20px;
-  font-size: 0.95rem;
+    margin-bottom: 20px;
+    font-size: 0.95rem;
 }
 
 .confirm-actions {
-  display: flex;
-  gap: 12px;
-  justify-content: center;
+    display: flex;
+    gap: 12px;
+    justify-content: center;
 }
 
 .confirm-btn-yes,
 .confirm-btn-no {
-  padding: 10px 28px;
-  border-radius: 8px;
-  font-size: 0.85rem;
-  cursor: pointer;
-  border: none;
+    padding: 10px 28px;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    border: none;
 }
 
 .confirm-btn-yes {
-  background: var(--color-sun);
-  color: var(--color-text);
+    background: var(--color-sun);
+    color: var(--color-text);
 }
 
 .confirm-btn-yes:hover {
-  opacity: 0.85;
+    opacity: 0.85;
 }
 
 .confirm-btn-no {
-  background: var(--color-surface2);
-  color: var(--color-text);
-  border: 1px solid var(--color-border);
+    background: var(--color-surface2);
+    color: var(--color-text);
+    border: 1px solid var(--color-border);
 }
 
 .confirm-btn-no:hover {
-  opacity: 0.85;
+    opacity: 0.85;
 }
 
 .day-labels {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  text-align: center;
-  padding: 4px 0;
-  font-size: 0.75rem;
-  font-weight: 600;
-  border-bottom: 1px solid var(--color-border);
-  background: var(--color-surface);
-  flex-shrink: 0;
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    text-align: center;
+    padding: 4px 0;
+    font-size: 0.75rem;
+    font-weight: 600;
+    border-bottom: 1px solid var(--color-border);
+    background: var(--color-surface);
+    flex-shrink: 0;
 }
 
 .day-label {
-  padding: 2px 0;
+    padding: 2px 0;
 }
 
 .scroll-container {
-  flex: 1;
-  overflow-y: auto;
-  overflow-x: hidden;
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
 }
 
 .sentinel {
-  height: 1px;
+    height: 1px;
 }
 
 .week-row {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  height: var(--row-height);
-  border-bottom: 1px solid var(--color-border);
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    height: var(--row-height);
+    border-bottom: 1px solid var(--color-border);
 }
 
 .day-cell {
-  padding: 2px 0;
-  border-right: 1px solid var(--color-border);
-  cursor: pointer;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
-  gap: 1px;
-  height: var(--row-height);
-  overflow: hidden;
-  transition: background 0.1s;
+    padding: 2px 0;
+    border-right: 1px solid var(--color-border);
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    gap: 1px;
+    height: var(--row-height);
+    overflow: hidden;
+    transition: background 0.1s;
 }
 
 .day-cell:nth-child(7) {
-  border-right: none;
+    border-right: none;
 }
 
 .day-cell.selected {
-  background: var(--color-hover);
+    background: var(--color-hover);
 }
 
 .day-cell.today {
-  background: var(--color-today);
+    background: var(--color-today);
 }
 
 .day-cell.other-month {
-  background: rgba(0, 0, 0, 0.12);
+    background: rgba(0, 0, 0, 0.12);
 }
 
 .day-cell.other-month .day-number {
-  opacity: 0.35;
+    opacity: 0.35;
 }
 
 .day-number {
-  font-size: 0.8rem;
-  font-weight: 600;
-  padding: 1px 2px;
-  flex-shrink: 0;
+    font-size: 0.8rem;
+    font-weight: 600;
+    padding: 1px 2px;
+    flex-shrink: 0;
 }
 
 .day-schedules {
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-  overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    overflow: hidden;
 }
 
 .schedule-chip {
-  font-size: 0.6rem;
-  padding: 1px 2px 3px 2px;
-  margin: 0 2px;
-  border-radius: 2px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  display: flex;
-  align-items: flex-start;
-  line-height: 1.3em;
-  height: auto;
-  min-height: calc(1.3em + 4px);
-  box-sizing: content-box;
+    font-size: 0.6rem;
+    padding: 1px 2px 3px 2px;
+    margin: 0 2px;
+    border-radius: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: flex;
+    align-items: flex-start;
+    line-height: 1.3em;
+    /* height: auto; */
+    height: 1.3em;
+    /* min-height: calc(1.3em + 2px); */
+    box-sizing: content-box;
 }
 
 /* 複数日またぎ予定: つながって見えるように（結合部はmargin: 0） */
 .schedule-chip.schedule-start {
-  border-radius: 2px 0 0 2px;
-  padding-left: 2px;
-  padding-right: 0;
-  margin-left: 2px;
-  margin-right: 0;
+    border-radius: 2px 0 0 2px;
+    padding-left: 2px;
+    padding-right: 0;
+    margin-left: 2px;
+    margin-right: 0;
 }
 
 .schedule-chip.schedule-end {
-  border-radius: 0 2px 2px 0;
-  padding-left: 0;
-  padding-right: 2px;
-  margin-left: 0;
-  margin-right: 2px;
+    border-radius: 0 2px 2px 0;
+    padding-left: 0;
+    padding-right: 2px;
+    margin-left: 0;
+    margin-right: 2px;
 }
 
 .schedule-chip.schedule-middle {
-  border-radius: 0;
-  padding-left: 0;
-  padding-right: 0;
-  margin-left: 0;
-  margin-right: 0;
+    border-radius: 0;
+    padding-left: 0;
+    padding-right: 0;
+    margin-left: 0;
+    margin-right: 0;
 }
 
 /* 単日予定は base の padding/margin をそのまま使う */
-.schedule-chip.schedule-single {
-}
+.schedule-chip.schedule-single {}
 
 .schedule-more {
-  font-size: 0.6rem;
-  color: var(--color-text-muted);
-  padding: 0 2px;
+    font-size: 0.6rem;
+    color: var(--color-text-muted);
+    padding: 0 2px;
 }
 
 .schedule-placeholder {
-  font-size: 0.6rem;
-  height: calc(1.3em + 4px);
-  box-sizing: content-box;
-  visibility: hidden;
+    font-size: 0.6rem;
+    height: calc(1.3em + 4px);
+    box-sizing: content-box;
+    visibility: hidden;
 }
 
 /* Dialog */
 .dialog-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.6);
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  z-index: 100;
-  padding: 0;
-  overflow: hidden;
-  transition: opacity 0.2s ease-out;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    z-index: 100;
+    padding: 0;
+    overflow: hidden;
+    transition: opacity 0.2s ease-out;
 }
 
 .dialog-overlay-center {
-  align-items: center;
+    align-items: center;
 }
 
 .dialog-overlay.closing {
-  opacity: 0;
+    opacity: 0;
 }
 
 /* 通知トースト */
 .toast-container {
-  position: fixed;
-  top: 16px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 200;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  pointer-events: none;
+    position: fixed;
+    top: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 200;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    pointer-events: none;
 }
 
 .toast {
-  background: var(--color-surface2);
-  color: var(--color-text);
-  padding: 12px 20px;
-  border-radius: 10px;
-  font-size: 0.85rem;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
-  pointer-events: auto;
-  animation: toast-slide-in 0.3s ease-out;
-  border-left: 4px solid var(--color-accent);
-  white-space: nowrap;
+    background: var(--color-surface2);
+    color: var(--color-text);
+    padding: 12px 20px;
+    border-radius: 10px;
+    font-size: 0.85rem;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+    pointer-events: auto;
+    animation: toast-slide-in 0.3s ease-out;
+    border-left: 4px solid var(--color-accent);
+    white-space: nowrap;
 }
 
 .toast.toast-error {
-  border-left-color: var(--color-sun);
+    border-left-color: var(--color-sun);
 }
 
 @keyframes toast-slide-in {
-  from {
-    opacity: 0;
-    transform: translateY(-12px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+    from {
+        opacity: 0;
+        transform: translateY(-12px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .dialog {
-  background: var(--color-surface);
-  border-radius: 16px 16px 0 0;
-  width: 100%;
-  max-width: 480px;
-  max-height: 85vh;
-  display: flex;
-  flex-direction: column;
-  box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.4);
-  animation: slideUp 0.2s ease-out;
+    background: var(--color-surface);
+    border-radius: 16px 16px 0 0;
+    width: 100%;
+    max-width: 480px;
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.4);
+    animation: slideUp 0.2s ease-out;
 }
 
 .dialog.closing {
-  animation: slideDown 0.2s ease-out forwards;
+    animation: slideDown 0.2s ease-out forwards;
 }
 
 @keyframes slideUp {
-  from {
-    transform: translateY(100%);
-  }
-  to {
-    transform: translateY(0);
-  }
+    from {
+        transform: translateY(100%);
+    }
+
+    to {
+        transform: translateY(0);
+    }
 }
 
 @keyframes slideDown {
-  from {
-    transform: translateY(0);
-  }
-  to {
-    transform: translateY(100%);
-  }
+    from {
+        transform: translateY(0);
+    }
+
+    to {
+        transform: translateY(100%);
+    }
 }
 
 .dialog-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 12px;
-  border-bottom: 1px solid var(--color-border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px;
+    border-bottom: 1px solid var(--color-border);
 }
 
 .dialog-header h2 {
-  font-size: 1rem;
-  font-weight: 600;
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  flex-wrap: wrap;
+    font-size: 1rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
 }
 
 .dialog-holiday-name {
-  font-size: 0.75rem;
-  font-weight: 400;
-  color: var(--color-holiday);
-  display: inline-flex;
-  align-items: center;
-  gap: 2px;
+    font-size: 0.75rem;
+    font-weight: 400;
+    color: var(--color-holiday);
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
 }
 
 .close-btn {
-  background: none;
-  border: none;
-  color: var(--color-text-muted);
-  font-size: 1.2rem;
-  cursor: pointer;
-  padding: 4px;
+    background: none;
+    border: none;
+    color: var(--color-text-muted);
+    font-size: 1.2rem;
+    cursor: pointer;
+    padding: 4px;
 }
 
 .dialog-body {
-  padding: 8px 12px 16px;
-  overflow-y: auto;
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
+    padding: 8px 12px 16px;
+    overflow-y: auto;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
 }
 
 .empty-msg {
-  color: var(--color-text-muted);
-  text-align: center;
-  padding: 24px 0;
+    color: var(--color-text-muted);
+    text-align: center;
+    padding: 24px 0;
 }
 
 .dialog-error {
-  color: var(--color-sun);
-  font-size: 0.8rem;
-  text-align: center;
-  padding: 8px;
-  background: rgba(224, 90, 90, 0.1);
-  border-radius: 6px;
+    color: var(--color-sun);
+    font-size: 0.8rem;
+    text-align: center;
+    padding: 8px;
+    background: rgba(224, 90, 90, 0.1);
+    border-radius: 6px;
 }
 
 .schedule-card {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 8px 10px;
-  background: var(--color-surface2);
-  border-radius: 8px;
-  gap: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 10px;
+    background: var(--color-surface2);
+    border-radius: 8px;
+    gap: 8px;
 }
 
 .schedule-card-info {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  flex: 1;
-  min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    flex: 1;
+    min-width: 0;
 }
 
 .schedule-card-info strong {
-  font-size: 0.9rem;
+    font-size: 0.9rem;
 }
 
 .schedule-time,
 .schedule-owner-members {
-  font-size: 0.75rem;
-  color: var(--color-text-muted);
+    font-size: 0.75rem;
+    color: var(--color-text-muted);
 }
 
 .schedule-card-actions {
-  display: flex;
-  gap: 2px;
-  flex-shrink: 0;
+    display: flex;
+    gap: 2px;
+    flex-shrink: 0;
 }
 
 .schedule-card-actions .icon-btn {
-  background: none;
-  border: none;
-  color: var(--color-text-muted);
-  padding: 6px;
-  border-radius: 50%;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  transition: background 0.15s, color 0.15s;
+    background: none;
+    border: none;
+    color: var(--color-text-muted);
+    padding: 6px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    transition: background 0.15s, color 0.15s;
 }
 
 .schedule-card-actions .icon-btn:hover {
-  background: var(--color-hover);
-  color: var(--color-text);
+    background: var(--color-hover);
+    color: var(--color-text);
 }
 
 .schedule-card-actions .icon-btn.delete-btn-icon {
-  color: #e06060;
+    color: #e06060;
 }
 
 .schedule-card-actions .icon-btn.delete-btn-icon:hover {
-  background: rgba(224, 96, 96, 0.15);
-  color: #e04040;
+    background: rgba(224, 96, 96, 0.15);
+    color: #e04040;
 }
 
 .add-btn {
-  width: 100%;
-  padding: 8px;
-  background: var(--color-accent);
-  color: var(--color-text);
-  border: none;
-  border-radius: 8px;
-  font-size: 0.9rem;
-  cursor: pointer;
-  margin-top: 2px;
+    width: 100%;
+    padding: 8px;
+    background: var(--color-accent);
+    color: var(--color-text);
+    border: none;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    margin-top: 2px;
 }
 
 .add-btn:hover {
-  opacity: 0.9;
+    opacity: 0.9;
 }
 
 .delete-confirm {
-  background: var(--color-surface2);
-  border-radius: 8px;
-  padding: 16px;
-  text-align: center;
-  margin-top: 8px;
+    background: var(--color-surface2);
+    border-radius: 8px;
+    padding: 16px;
+    text-align: center;
+    margin-top: 8px;
 }
 
 .delete-confirm p {
-  margin: 0 0 12px;
-  font-size: 0.9rem;
+    margin: 0 0 12px;
+    font-size: 0.9rem;
 }
 
 .delete-confirm-actions {
-  display: flex;
-  gap: 8px;
-  justify-content: center;
+    display: flex;
+    gap: 8px;
+    justify-content: center;
 }
 
 .delete-confirm-actions button {
-  padding: 8px 20px;
-  border-radius: 8px;
-  font-size: 0.85rem;
-  cursor: pointer;
-  border: none;
+    padding: 8px 20px;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    border: none;
 }
 
 .delete-confirm-actions button.cancel-btn {
-  background: #d0d0d8;
-  color: #0b0b14;
-  border: none;
+    background: #d0d0d8;
+    color: #0b0b14;
+    border: none;
 }
 
 .delete-btn {
-  background: var(--color-sun);
-  color: var(--color-text);
-  border: none;
-  padding: 6px 14px;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 0.85rem;
+    background: var(--color-sun);
+    color: var(--color-text);
+    border: none;
+    padding: 6px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.85rem;
 }
 
 .delete-btn:hover {
-  opacity: 0.9;
+    opacity: 0.9;
 }
 
 /* Schedule form */
 .schedule-form {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding: 4px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 4px 0;
 }
 
 .schedule-form label {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  font-size: 0.8rem;
-  color: var(--color-text-muted);
-  font-weight: 600;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 0.8rem;
+    color: var(--color-text-muted);
+    font-weight: 600;
 }
 
 .schedule-form input[type="text"],
 .schedule-form input[type="time"],
 .schedule-form input[type="date"],
 .schedule-form textarea {
-  background: var(--color-surface2);
-  border: 1px solid var(--color-border);
-  color: var(--color-text);
-  padding: 6px 8px;
-  border-radius: 6px;
-  font-size: 16px;
-  font-family: inherit;
+    background: var(--color-surface2);
+    border: 1px solid var(--color-border);
+    color: var(--color-text);
+    padding: 6px 8px;
+    border-radius: 6px;
+    font-size: 16px;
+    font-family: inherit;
 }
 
 .schedule-form input[type="checkbox"] {
-  width: 18px;
-  height: 18px;
-  accent-color: var(--color-accent);
+    width: 18px;
+    height: 18px;
+    accent-color: var(--color-accent);
 }
 
 .date-fields {
-  display: flex;
-  gap: 10px;
+    display: flex;
+    gap: 10px;
 }
 
 .date-fields label {
-  flex: 1;
+    flex: 1;
 }
 
 .time-fields {
-  display: flex;
-  gap: 10px;
+    display: flex;
+    gap: 10px;
 }
 
 .time-fields label {
-  flex: 1;
+    flex: 1;
 }
 
 .schedule-form textarea {
-  resize: vertical;
-  min-height: 50px;
+    resize: vertical;
+    min-height: 50px;
 }
 
 .form-actions {
-  display: flex;
-  gap: 8px;
-  margin-top: 0;
+    display: flex;
+    gap: 8px;
+    margin-top: 0;
 }
 
 .form-actions button {
-  flex: 1;
-  padding: 8px;
-  border-radius: 8px;
-  font-size: 0.85rem;
-  cursor: pointer;
-  border: none;
+    flex: 1;
+    padding: 8px;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    border: none;
 }
 
 .form-actions button[type="submit"],
 .save-btn {
-  background: var(--color-accent);
-  color: var(--color-text);
-  border-radius: 8px;
+    background: var(--color-accent);
+    color: var(--color-text);
+    border-radius: 8px;
 }
 
 .form-actions button[type="submit"]:disabled,
 .save-btn:disabled {
-  opacity: 0.6;
+    opacity: 0.6;
 }
 
 .form-actions button[type="button"],
 .cancel-btn {
-  background: var(--color-surface2);
-  color: var(--color-text);
-  border: 1px solid var(--color-border);
+    background: var(--color-surface2);
+    color: var(--color-text);
+    border: 1px solid var(--color-border);
 }
 
 /* Login page */
 .login-page {
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 16px;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
 }
 
 .login-card {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: 12px;
-  padding: 32px 24px;
-  width: 100%;
-  max-width: 360px;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: 12px;
+    padding: 32px 24px;
+    width: 100%;
+    max-width: 360px;
 }
 
 .login-title {
-  font-size: 1.5rem;
-  font-weight: 700;
-  text-align: center;
-  margin-bottom: 4px;
+    font-size: 1.5rem;
+    font-weight: 700;
+    text-align: center;
+    margin-bottom: 4px;
 }
 
 .login-subtitle {
-  text-align: center;
-  color: var(--color-text-muted);
-  font-size: 0.85rem;
-  margin-bottom: 20px;
+    text-align: center;
+    color: var(--color-text-muted);
+    font-size: 0.85rem;
+    margin-bottom: 20px;
 }
 
 .login-error {
-  color: var(--color-holiday);
-  font-size: 0.8rem;
-  text-align: center;
-  margin-bottom: 12px;
-  padding: 8px;
-  background: rgba(224, 90, 90, 0.1);
-  border-radius: 6px;
+    color: var(--color-holiday);
+    font-size: 0.8rem;
+    text-align: center;
+    margin-bottom: 12px;
+    padding: 8px;
+    background: rgba(224, 90, 90, 0.1);
+    border-radius: 6px;
 }
 
 .login-form {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
 }
 
 .login-form label {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  font-size: 0.8rem;
-  color: var(--color-text-muted);
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 0.8rem;
+    color: var(--color-text-muted);
 }
 
 .login-form input {
-  background: var(--color-surface2);
-  border: 1px solid var(--color-border);
-  color: var(--color-text);
-  padding: 8px 10px;
-  border-radius: 6px;
-  font-size: 16px;
-  font-family: inherit;
+    background: var(--color-surface2);
+    border: 1px solid var(--color-border);
+    color: var(--color-text);
+    padding: 8px 10px;
+    border-radius: 6px;
+    font-size: 16px;
+    font-family: inherit;
 }
 
 /* 必須マーク（オレンジの丸ポッチ） */
 .required-mark {
-  color: #ff8800;
-  margin-left: 1px;
-  font-size: 0.75rem;
+    color: #ff8800;
+    margin-left: 1px;
+    font-size: 0.75rem;
 }
 
 .login-btn {
-  background: var(--color-accent);
-  color: var(--color-text);
-  border: none;
-  padding: 10px;
-  border-radius: 8px;
-  font-size: 0.9rem;
-  cursor: pointer;
-  margin-top: 4px;
+    background: var(--color-accent);
+    color: var(--color-text);
+    border: none;
+    padding: 10px;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    margin-top: 4px;
 }
 
 .login-btn:disabled {
-  opacity: 0.6;
+    opacity: 0.6;
 }
 
 .login-toggle {
-  text-align: center;
-  font-size: 0.8rem;
-  color: var(--color-text-muted);
-  margin-top: 16px;
+    text-align: center;
+    font-size: 0.8rem;
+    color: var(--color-text-muted);
+    margin-top: 16px;
 }
 
 .forgot-password-btn {
-  display: block;
-  margin: 12px auto 0;
-  text-align: center;
-  font-size: 0.8rem;
+    display: block;
+    margin: 12px auto 0;
+    text-align: center;
+    font-size: 0.8rem;
 }
 
 .forgot-password-hint {
-  font-size: 0.8rem;
-  color: var(--color-text-muted);
-  margin: 16px 0;
-  line-height: 1.6;
+    font-size: 0.8rem;
+    color: var(--color-text-muted);
+    margin: 16px 0;
+    line-height: 1.6;
 }
 
 .link-btn {
-  background: none;
-  border: none;
-  color: var(--color-accent);
-  cursor: pointer;
-  font-size: 0.8rem;
-  text-decoration: underline;
+    background: none;
+    border: none;
+    color: var(--color-accent);
+    cursor: pointer;
+    font-size: 0.8rem;
+    text-decoration: underline;
 }
 
 .loading-screen {
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--color-text-muted);
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-text-muted);
 }
 
 /* 設定ボタン（歯車アイコン） */
 .settings-btn {
-  background: none;
-  border: none;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  padding: 4px;
-  opacity: 0.8;
-  transition: opacity 0.2s;
+    background: none;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    padding: 4px;
+    opacity: 0.8;
+    transition: opacity 0.2s;
 }
 
 .settings-btn:hover {
-  opacity: 1;
+    opacity: 1;
 }
 
 /* 設定フォーム */
 .settings-form {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
 }
 
 .settings-form label {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  font-size: 0.85rem;
-  color: var(--color-text);
-  margin-bottom: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: 0.85rem;
+    color: var(--color-text);
+    margin-bottom: 8px;
 }
 
 .settings-form select {
-  background: var(--color-surface2);
-  color: var(--color-text);
-  border: 1px solid var(--color-border);
-  padding: 8px;
-  border-radius: 4px;
+    background: var(--color-surface2);
+    color: var(--color-text);
+    border: 1px solid var(--color-border);
+    padding: 8px;
+    border-radius: 4px;
 }
 
 /* チップ色スウォッチ選択 */
 .chip-color-swatches {
-  display: grid;
-  grid-template-columns: repeat(8, 1fr);
-  gap: 6px;
-  margin-top: 8px;
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    gap: 6px;
+    margin-top: 8px;
 }
 
 .chip-color-swatch {
-  width: 100%;
-  aspect-ratio: 1;
-  border-radius: 6px;
-  border: 2px solid transparent;
-  cursor: pointer;
-  padding: 0;
-  transition: transform 0.15s, border-color 0.15s;
+    width: 100%;
+    aspect-ratio: 1;
+    border-radius: 6px;
+    border: 2px solid transparent;
+    cursor: pointer;
+    padding: 0;
+    transition: transform 0.15s, border-color 0.15s;
 }
 
 .chip-color-swatch:hover {
-  transform: scale(1.1);
+    transform: scale(1.1);
 }
 
 .chip-color-swatch.selected {
-  border-color: var(--color-text);
+    border-color: var(--color-text);
 }
 
 .color-preview {
-  display: inline-block;
-  padding: 4px 10px;
-  border-radius: 4px;
-  font-size: 0.75rem;
-  line-height: 1.5;
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    line-height: 1.5;
 }
 
-.settings-form + .form-actions {
-  border-top: 1px solid var(--color-border);
-  padding-top: 12px;
-  margin-top: 4px;
+.settings-form+.form-actions {
+    border-top: 1px solid var(--color-border);
+    padding-top: 12px;
+    margin-top: 4px;
 }
 
 /* 設定セクション */
 .settings-section {
-  border-bottom: 1px solid var(--color-border);
-  padding-bottom: 12px;
+    border-bottom: 1px solid var(--color-border);
+    padding-bottom: 12px;
 }
 
 .settings-section:last-of-type {
-  border-bottom: none;
-  padding-bottom: 0;
+    border-bottom: none;
+    padding-bottom: 0;
 }
 
 .settings-section-title {
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: var(--color-text-muted);
-  margin-bottom: 4px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--color-text-muted);
+    margin-bottom: 4px;
 }
 
 /* 設定フォームのテキスト入力 */
@@ -949,30 +952,30 @@ body {
 .settings-form input[type="email"],
 .settings-form input[type="password"],
 .settings-form select {
-  background: var(--color-surface2);
-  color: var(--color-text);
-  border: 1px solid var(--color-border);
-  padding: 8px;
-  border-radius: 4px;
+    background: var(--color-surface2);
+    color: var(--color-text);
+    border: 1px solid var(--color-border);
+    padding: 8px;
+    border-radius: 4px;
 }
 
 /* デフォルトに戻すボタン */
 .reset-btn {
-  width: 100%;
-  padding: 10px;
-  border-radius: 8px;
-  font-size: 0.85rem;
-  cursor: pointer;
-  border: 1px solid var(--color-sun);
-  background: transparent;
-  color: var(--color-sun);
-  transition: background 0.2s;
+    width: 100%;
+    padding: 10px;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    border: 1px solid var(--color-sun);
+    background: transparent;
+    color: var(--color-sun);
+    transition: background 0.2s;
 }
 
 .reset-btn:hover {
-  background: rgba(224, 90, 90, 0.1);
+    background: rgba(224, 90, 90, 0.1);
 }
 
 .reset-btn:disabled {
-  opacity: 0.6;
+    opacity: 0.6;
 }
