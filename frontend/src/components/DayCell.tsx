@@ -74,7 +74,7 @@ export default function DayCell({
               key={s.id}
               className={`schedule-chip schedule-${pos}`}
               style={{
-                color: "#e0e0e0",
+                color: "var(--color-text)",
                 backgroundColor: "var(--color-surface2)",
                 backgroundImage: `linear-gradient(to right, ${colorStops})`,
                 backgroundRepeat: "no-repeat",

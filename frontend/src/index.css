@@ -2,7 +2,7 @@
   --color-bg: #0b0b14;
   --color-surface: #0f0f1e;
   --color-surface2: #14142a;
-  --color-text: #e0e0e0;
+  --color-text: #d4d4d4;
   --color-text-muted: #888;
   --color-accent: #4a90d9;
   --color-sun: #e87a90;
@@ -190,7 +190,7 @@ body {
 
 .confirm-btn-yes {
   background: var(--color-sun);
-  color: #fff;
+  color: var(--color-text);
 }
 
 .confirm-btn-yes:hover {
@@ -567,7 +567,7 @@ body {
   width: 100%;
   padding: 8px;
   background: var(--color-accent);
-  color: #fff;
+  color: var(--color-text);
   border: none;
   border-radius: 8px;
   font-size: 0.9rem;
@@ -614,7 +614,7 @@ body {
 
 .delete-btn {
   background: var(--color-sun);
-  color: #fff;
+  color: var(--color-text);
   border: none;
   padding: 6px 14px;
   border-radius: 6px;
@@ -703,7 +703,7 @@ body {
 .form-actions button[type="submit"],
 .save-btn {
   background: var(--color-accent);
-  color: #fff;
+  color: var(--color-text);
   border-radius: 8px;
 }
 
@@ -794,7 +794,7 @@ body {
 
 .login-btn {
   background: var(--color-accent);
-  color: #fff;
+  color: var(--color-text);
   border: none;
   padding: 10px;
   border-radius: 8px;

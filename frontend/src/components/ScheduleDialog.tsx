@@ -170,7 +170,7 @@ export default function ScheduleDialog({
                       background: scheduleTitleColor(),
                       borderRadius: "4px",
                       padding: "2px 6px",
-                      color: "#e0e0e0",
+                      color: "var(--color-text)",
                       alignSelf: "flex-start",
                     }}
                   >
