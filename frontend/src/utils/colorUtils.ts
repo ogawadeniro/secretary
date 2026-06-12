@@ -3,23 +3,23 @@
  *  白文字との視認性を確保するため輝度を0.45以下に調整済み */
 const PERSONAL_COLORS = [
   // 上段: 暖色→寒色
-  "#c43b3b", // vivid red
-  "#b3582a", // vivid orange
-  "#a35729", // burnt orange
-  "#9a692e", // amber
-  "#677626", // olive
-  "#4d9124", // lime
-  "#289c54", // green
-  "#259579", // teal
+  "#cc3333", // vivid red
+  "#bb5522", // vivid orange
+  "#aa5522", // burnt orange
+  "#a06a28", // amber
+  "#6a7a22", // olive
+  "#4c971e", // lime
+  "#21a352", // green
+  "#1f9b7c", // teal
   // 下段: 寒色→暖色
-  "#208468", // sea green
-  "#206884", // steel blue
-  "#2957a3", // vivid blue (デフォルト)
-  "#3958a4", // indigo
-  "#5849a5", // violet
-  "#7529a3", // purple
-  "#a32957", // rose
-  "#c43b69", // pink
+  "#1a8a6a", // sea green
+  "#1a6a8a", // steel blue
+  "#2255aa", // vivid blue (デフォルト)
+  "#3355aa", // indigo
+  "#5544aa", // violet
+  "#7722aa", // purple
+  "#aa2255", // rose
+  "#cc3366", // pink
 ];
 
 /** 設定画面で選択可能なチップ色の候補（個人用パレット） */
@@ -91,7 +91,7 @@ export function textColorFromBg(hex: string): string {
   try {
     const { r, g, b } = hexToRgb(hex);
     const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-    return luminance > 0.5 ? "#1b1b2d" : "#e0e0e0";
+    return luminance > 0.5 ? "#1a1a2e" : "#e0e0e0";
   } catch {
     return "#ffffff";
   }

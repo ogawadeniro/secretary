@@ -1,13 +1,15 @@
 :root {
-  --color-bg: #1b1b2d;
-  --color-surface: #18223c;
-  --color-surface2: #13345c;
-  --color-accent: #5190d2;
-  --color-sun: #e38093;
-  --color-sat: #5190d2;
-  --color-holiday: #d96161;
-  --color-border: #2c2c48;
-  --color-today: rgba(81, 144, 210, 0.15);
+  --color-bg: #1a1a2e;
+  --color-surface: #16213e;
+  --color-surface2: #0f3460;
+  --color-text: #e0e0e0;
+  --color-text-muted: #888;
+  --color-accent: #4a90d9;
+  --color-sun: #e87a90;
+  --color-sat: #4a90d9;
+  --color-holiday: #e05a5a;
+  --color-today: rgba(74, 144, 217, 0.15);
+  --color-border: #2a2a4a;
   --color-hover: rgba(255, 255, 255, 0.05);
   --row-height: 110px;
 }
@@ -606,7 +608,7 @@ body {
 
 .delete-confirm-actions button.cancel-btn {
   background: #d0d0d8;
-  color: #1b1b2d;
+  color: #1a1a2e;
   border: none;
 }
 
