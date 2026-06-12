@@ -1,7 +1,7 @@
 :root {
-  --color-bg: #1a1a2e;
-  --color-surface: #16213e;
-  --color-surface2: #0f3460;
+  --color-bg: #0b0b14;
+  --color-surface: #0f0f1e;
+  --color-surface2: #14142a;
   --color-text: #e0e0e0;
   --color-text-muted: #888;
   --color-accent: #4a90d9;
@@ -9,7 +9,7 @@
   --color-sat: #4a90d9;
   --color-holiday: #e05a5a;
   --color-today: rgba(74, 144, 217, 0.15);
-  --color-border: #2a2a4a;
+  --color-border: #1e1e32;
   --color-hover: rgba(255, 255, 255, 0.05);
   --row-height: 110px;
 }
@@ -57,7 +57,7 @@ body {
   padding: 8px 12px;
   text-align: left;
   border-bottom: 1px solid var(--color-border);
-  background: #18223c;
+  background: var(--color-surface);
   flex-shrink: 0;
   display: flex;
   align-items: center;
@@ -159,7 +159,7 @@ body {
 
 /* 確認ダイアログ */
 .confirm-dialog {
-  background: #18223c;
+  background: var(--color-surface);
   border-radius: 12px;
   padding: 24px;
   max-width: 320px;
@@ -215,7 +215,7 @@ body {
   font-size: 0.75rem;
   font-weight: 600;
   border-bottom: 1px solid var(--color-border);
-  background: #18223c;
+  background: var(--color-surface);
   flex-shrink: 0;
 }
 
@@ -408,7 +408,7 @@ body {
 }
 
 .dialog {
-  background: #18223c;
+  background: var(--color-surface);
   border-radius: 16px 16px 0 0;
   width: 100%;
   max-width: 480px;
@@ -608,7 +608,7 @@ body {
 
 .delete-confirm-actions button.cancel-btn {
   background: #d0d0d8;
-  color: #1a1a2e;
+  color: #0b0b14;
   border: none;
 }
 
