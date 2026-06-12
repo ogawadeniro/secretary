@@ -428,7 +428,18 @@ export default function InfiniteCalendar() {
             <Filter size={18} />
           </button>
           {showFilterDropdown && (
-            <div style={{
+            <>
+              <div
+                style={{
+                  position: "fixed", inset: 0, zIndex: 99,
+                }}
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setShowFilterDropdown(false);
+                }}
+              />
+              <div style={{
               position: "absolute", right: 0, top: "100%", zIndex: 100,
               background: "var(--color-surface2)", border: "1px solid var(--color-border)",
               borderRadius: "6px", marginTop: "4px", minWidth: "180px",
@@ -475,7 +486,7 @@ export default function InfiniteCalendar() {
                 );
               })
             )}
-          </div>
+          </div></>
         )}
       </div>
     </div>
