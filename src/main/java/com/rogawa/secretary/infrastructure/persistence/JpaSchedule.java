@@ -79,7 +79,10 @@ public class JpaSchedule {
         schedule.setDescription(this.description);
         schedule.setUpdateTime(this.updateTime);
         schedule.setShared(this.shared);
-        schedule.setGroupIds(this.groupIds);
+        // Hibernate の遅延ロードプロキシをそのまま渡すと、
+        // JSONシリアライズ時に LazyInitializationException になるため、
+        // 新しい ArrayList にコピーしてからセットする。
+        schedule.setGroupIds(this.groupIds == null ? new ArrayList<>() : new ArrayList<>(this.groupIds));
         return schedule;
     }
 }
