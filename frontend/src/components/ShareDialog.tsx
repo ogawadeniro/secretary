@@ -8,6 +8,7 @@ import {
   acceptShareman,
   removeShareman,
 } from "../api/sharemanApi";
+import ShareInviteForm from "./ShareInviteForm";
 
 interface ShareDialogProps {
   onClose: () => void;
@@ -26,7 +27,6 @@ function formatDisplay(name: string | undefined | null, username: string): strin
 export default function ShareDialog({ onClose, onError, onNotify }: ShareDialogProps) {
   const [myInvitations, setMyInvitations] = useState<Shareman[]>([]);
   const [incomingInvitations, setIncomingInvitations] = useState<Shareman[]>([]);
-  const [username, setUsername] = useState("");
   const [adding, setAdding] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [closing, setClosing] = useState(false);
@@ -71,14 +71,13 @@ export default function ShareDialog({ onClose, onError, onNotify }: ShareDialogP
     [incomingInvitations],
   );
 
-  const handleInvite = async () => {
+  const handleInvite = async (username: string) => {
     const trimmed = username.trim();
     if (!trimmed) return;
     setAdding(true);
     setError(null);
     try {
       await inviteShareman(trimmed);
-      setUsername("");
       await load();
       onNotify("招待を送信したよ");
     } catch (e) {
@@ -154,36 +153,7 @@ export default function ShareDialog({ onClose, onError, onNotify }: ShareDialogP
         <div className="dialog-body" style={{ gap: "16px" }}>
           {error && <div className="dialog-error">{error}</div>}
 
-          {/* 招待追加 */}
-          <div className="settings-section">
-            <div className="settings-section-title">シェアメンを招待</div>
-            <div style={{ display: "flex", gap: "8px" }}>
-              <input
-                type="text"
-                placeholder="ユーザー名を入力..."
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                onKeyDown={(e) => { if (e.key === "Enter") handleInvite(); }}
-                style={{
-                  flex: 1,
-                  background: "var(--color-surface2)",
-                  border: "1px solid var(--color-border)",
-                  color: "var(--color-text)",
-                  padding: "8px 10px",
-                  borderRadius: "6px",
-                  fontFamily: "inherit",
-                }}
-              />
-              <button
-                className="save-btn"
-                style={{ padding: "8px 16px", fontSize: "0.85rem" }}
-                disabled={adding || !username.trim()}
-                onClick={handleInvite}
-              >
-                {adding ? "送信中..." : "招待"}
-              </button>
-            </div>
-          </div>
+          <ShareInviteForm onInvite={handleInvite} adding={adding} />
 
           {/* 承認済みシェアメン */}
           {acceptedOutgoing.length > 0 && (

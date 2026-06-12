@@ -4,6 +4,7 @@ import { getMembers } from "../api/memberApi";
 import { fetchAcceptedUsernames } from "../api/sharemanApi";
 import { fetchGroupMembers } from "../api/groupApi";
 import { searchUsers } from "../api/userApi";
+import MemberAutocomplete from "./MemberAutocomplete";
 
 export interface MemberManagerHandle {
   /** 新規予定作成時にフォームに渡す保留中のメンバー一覧 */
@@ -102,20 +103,6 @@ export const MemberManager = forwardRef<MemberManagerHandle, MemberManagerProps>
         .catch(() => setMemberError("メンバーの読み込みに失敗したよ"))
         .finally(() => setMemberLoading(false));
     }, [scheduleId]);
-
-    // 候補リストの外側クリックで閉じる
-    useEffect(() => {
-      if (!showSuggestions) return;
-      const handleClick = (e: MouseEvent) => {
-        const target = e.target as Node;
-        const inputEl = memberInputRef.current;
-        if (inputEl?.contains(target)) return;
-        if (suggestionsRef.current && suggestionsRef.current.contains(target)) return;
-        setShowSuggestions(false);
-      };
-      document.addEventListener("mousedown", handleClick);
-      return () => document.removeEventListener("mousedown", handleClick);
-    }, [showSuggestions]);
 
     // メンバー追加（新規/編集とも遅延）
     const handleAddMember = async (username: string) => {
@@ -278,80 +265,25 @@ export const MemberManager = forwardRef<MemberManagerHandle, MemberManagerProps>
           </div>
         )}
 
-        <div style={{ position: "relative" }}>
-          <input
-            ref={memberInputRef}
-            type="text"
-            placeholder="追加するユーザー名を入力..."
-            value={memberInput}
-            onChange={(e) => {
-              setMemberInput(e.target.value);
-              setShowSuggestions(true);
-            }}
-            onFocus={() => setShowSuggestions(true)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                e.preventDefault();
-                if (filteredSuggestions.length > 0) {
-                  handleAddMember(filteredSuggestions[0].username);
-                }
+        <MemberAutocomplete
+          value={memberInput}
+          onChange={(v) => { setMemberInput(v); setShowSuggestions(true); }}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              if (filteredSuggestions.length > 0) {
+                handleAddMember(filteredSuggestions[0].username);
               }
-            }}
-            style={{
-              width: "100%",
-              background: "var(--color-surface2)",
-              border: "1px solid var(--color-border)",
-              color: "var(--color-text)",
-              padding: "6px 8px",
-              borderRadius: "6px",
-              fontFamily: "inherit",
-            }}
-          />
-          {/* 補完候補ドロップダウン */}
-          {showSuggestions && filteredSuggestions.length > 0 && (
-            <div
-              ref={suggestionsRef}
-              style={{
-                position: "absolute",
-                top: "100%",
-                left: 0,
-                right: 0,
-                zIndex: 100,
-                background: "var(--color-surface2)",
-                border: "1px solid var(--color-border)",
-                borderRadius: "6px",
-                marginTop: "4px",
-                maxHeight: "160px",
-                overflowY: "auto",
-              }}
-            >
-              {filteredSuggestions.slice(0, 5).map((c) => (
-                <div
-                  key={c.username}
-                  style={{
-                    padding: "8px 10px",
-                    cursor: "pointer",
-                    fontSize: "0.85rem",
-                    borderBottom: "1px solid var(--color-border)",
-                  }}
-                  onMouseDown={(e) => {
-                    e.preventDefault();
-                    e.nativeEvent.stopPropagation();
-                    handleAddMember(c.username);
-                  }}
-                  onMouseEnter={(e) => {
-                    (e.currentTarget as HTMLElement).style.background = "var(--color-hover)";
-                  }}
-                  onMouseLeave={(e) => {
-                    (e.currentTarget as HTMLElement).style.background = "transparent";
-                  }}
-                >
-                  {c.displayName}<span style={{ color: "var(--color-text-muted)" }}>&lt;{c.username}&gt;</span>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+            }
+          }}
+          onFocus={() => setShowSuggestions(true)}
+          suggestions={filteredSuggestions}
+          showSuggestions={showSuggestions}
+          onSelect={(username) => handleAddMember(username)}
+          onClose={() => setShowSuggestions(false)}
+          inputRef={memberInputRef}
+          suggestionsRef={suggestionsRef}
+        />
       </div>
     );
   }
