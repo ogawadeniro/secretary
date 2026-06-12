@@ -299,6 +299,7 @@ body {
   align-items: flex-start;
   line-height: 1.3em;
   height: auto;
+  min-height: calc(1.3em + 4px);
   box-sizing: content-box;
 }
 
