@@ -322,7 +322,7 @@ export default function InfiniteCalendar() {
   return (
     <div className="calendar-container">
       {/* 1行目: 月表示 + アカウント */}
-      <div className="calendar-header" style={{ paddingBottom: 0 }}>
+      <div className="calendar-header" style={{ paddingBottom: 0, borderBottom: "none" }}>
         <h1>{monthLabel}</h1>
         <div className="calendar-header-right">
           <span className="header-user" style={{ background: settings.chipBgColor, borderRadius: "4px", padding: "2px 6px", color: "var(--color-text)" }}>{user?.displayName ?? user?.username}</span>
