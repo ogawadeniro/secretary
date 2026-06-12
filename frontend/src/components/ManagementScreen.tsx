@@ -22,6 +22,7 @@ import {
 import { fetchAcceptedUsernames } from "../api/sharemanApi";
 import ShareInviteForm from "./ShareInviteForm";
 import GroupCreateForm from "./GroupCreateForm";
+import ConfirmDialog from "./ConfirmDialog";
 
 interface ManagementScreenProps {
   onNavigateToCalendar: () => void;
@@ -86,6 +87,7 @@ function SharemenPanel({ onNotify }: { onNotify: ManagementScreenProps["onNotify
   const [incomingInvitations, setIncomingInvitations] = useState<Shareman[]>([]);
   const [adding, setAdding] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [confirmRemoveId, setConfirmRemoveId] = useState<number | null>(null);
 
   const showError = (msg: string) => setError(msg);
 
@@ -135,14 +137,21 @@ function SharemenPanel({ onNotify }: { onNotify: ManagementScreenProps["onNotify
     }
   };
 
-  const handleRemove = async (id: number) => {
+  const handleRemove = (id: number) => {
+    setConfirmRemoveId(id);
+  };
+
+  const handleRemoveConfirmed = async () => {
+    if (confirmRemoveId === null) return;
     setError(null);
     try {
-      await removeShareman(id);
+      await removeShareman(confirmRemoveId);
       await load();
       onNotify("削除したよ");
     } catch {
       showError("削除に失敗したよ");
+    } finally {
+      setConfirmRemoveId(null);
     }
   };
 
@@ -241,6 +250,14 @@ function SharemenPanel({ onNotify }: { onNotify: ManagementScreenProps["onNotify
           まだシェアメンがいないよ。ユーザー名を入力して招待しよう！
         </p>
       )}
+
+      {confirmRemoveId !== null && (
+        <ConfirmDialog
+          message="本当にこのシェアメンを削除する？"
+          onConfirm={handleRemoveConfirmed}
+          onCancel={() => setConfirmRemoveId(null)}
+        />
+      )}
     </>
   );
 }
@@ -257,6 +274,7 @@ function GroupsPanel({ onNotify }: { onNotify: ManagementScreenProps["onNotify"]
   const [creating, setCreating] = useState(false);
   const [accepting, setAccepting] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
 
   const load = async () => {
     try {
@@ -299,11 +317,15 @@ function GroupsPanel({ onNotify }: { onNotify: ManagementScreenProps["onNotify"]
     }
   };
 
-  const handleDelete = async (id: number) => {
-    if (!confirm("本当にこの共有グループを削除する？")) return;
+  const handleDelete = (id: number) => {
+    setConfirmDeleteId(id);
+  };
+
+  const handleDeleteConfirmed = async () => {
+    if (confirmDeleteId === null) return;
     try {
-      await deleteGroup(id);
-      if (selectedGroup?.id === id) {
+      await deleteGroup(confirmDeleteId);
+      if (selectedGroup?.id === confirmDeleteId) {
         setSelectedGroup(null);
         setMembers([]);
       }
@@ -311,6 +333,8 @@ function GroupsPanel({ onNotify }: { onNotify: ManagementScreenProps["onNotify"]
       onNotify("共有グループを削除したよ");
     } catch {
       setError("削除に失敗したよ");
+    } finally {
+      setConfirmDeleteId(null);
     }
   };
 
@@ -502,6 +526,14 @@ function GroupsPanel({ onNotify }: { onNotify: ManagementScreenProps["onNotify"]
             </div>
           )}
         </div>
+      )}
+
+      {confirmDeleteId !== null && (
+        <ConfirmDialog
+          message="本当にこの共有グループを削除する？"
+          onConfirm={handleDeleteConfirmed}
+          onCancel={() => setConfirmDeleteId(null)}
+        />
       )}
     </>
   );
