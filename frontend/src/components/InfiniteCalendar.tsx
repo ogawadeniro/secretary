@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback, useLayoutEffect, useMemo } from "react";
-import { CircleUser, Settings, LogOut, Share2, Users, User, Filter, X } from "lucide-react";
+import { CircleUser, Settings, LogOut, Share2, Users, User, Filter, Check } from "lucide-react";
 import type { UserSettings } from "../types/settings";
 import type { Schedule } from "../types/schedule";
 import type { Group } from "../types/group";
@@ -407,25 +407,11 @@ export default function InfiniteCalendar() {
             return (
               <span key={gid} style={{
                 display: "inline-flex", alignItems: "center", gap: "4px",
-                padding: "2px 4px 2px 8px", background: "var(--color-surface2)",
+                padding: "2px 8px", background: "var(--color-surface2)",
                 borderRadius: "999px", fontSize: "0.8rem",
               }}>
                 {g?.iconData && <img src={g.iconData} alt="" style={{ width: "16px", height: "16px", borderRadius: "3px", objectFit: "cover" }} />}
                 {g?.name ?? gid}
-                <button type="button" onClick={() => {
-                  const next = new Set(scheduleFilter);
-                  next.delete(gid);
-                  setScheduleFilter(next);
-                }}
-                  style={{
-                    display: "inline-flex", alignItems: "center", justifyContent: "center",
-                    width: "18px", height: "18px", padding: 0, border: "none",
-                    borderRadius: "50%", background: "var(--color-border)",
-                    color: "var(--color-text-muted)", cursor: "pointer", fontSize: "11px", lineHeight: 1, flexShrink: 0,
-                  }}
-                >
-                  <X size={11} />
-                </button>
               </span>
             );
           })}
@@ -482,7 +468,7 @@ export default function InfiniteCalendar() {
                       display: "flex", alignItems: "center", justifyContent: "center",
                       flexShrink: 0,
                     }}>
-                      {isActive && <X size={10} style={{ color: "#fff" }} />}
+                      {isActive && <Check size={10} style={{ color: "#fff" }} />}
                     </div>
                     {opt.label}
                   </div>
