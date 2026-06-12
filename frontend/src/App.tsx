@@ -1,6 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import InfiniteCalendar from "./components/InfiniteCalendar";
+import ManagementScreen from "./components/ManagementScreen";
+import FooterTabs from "./components/FooterTabs";
+import type { TabId } from "./components/FooterTabs";
 import LoginPage from "./components/LoginPage";
 import ForgotPasswordPage from "./components/ForgotPasswordPage";
 import ResetPasswordPage from "./components/ResetPasswordPage";
@@ -11,6 +14,17 @@ function AppContent() {
   const { user, loading } = useAuth();
   const [page, setPage] = useState<Page>("login");
   const [resetToken, setResetToken] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<TabId>("calendar");
+  const [toasts, setToasts] = useState<{ id: number; message: string; type: "success" | "error" }[]>([]);
+  const toastIdRef = useRef(0);
+
+  const notify = (message: string, type: "success" | "error" = "success") => {
+    const id = ++toastIdRef.current;
+    setToasts((prev) => [...prev, { id, message, type }]);
+    setTimeout(() => {
+      setToasts((prev) => prev.filter((t) => t.id !== id));
+    }, 3000);
+  };
 
   // URLのクエリパラメータからリセットトークンを取得
   useEffect(() => {
@@ -33,7 +47,27 @@ function AppContent() {
   if (user) {
     return (
       <div className="app">
-        <InfiniteCalendar />
+        <div className="main-content">
+          {activeTab === "calendar" && (
+            <InfiniteCalendar />
+          )}
+          {activeTab === "management" && (
+            <ManagementScreen
+              onNavigateToCalendar={() => setActiveTab("calendar")}
+              onNotify={notify}
+            />
+          )}
+        </div>
+        <FooterTabs activeTab={activeTab} onTabChange={setActiveTab} />
+        {toasts.length > 0 && (
+          <div className="toast-container">
+            {toasts.map((t) => (
+              <div key={t.id} className={`toast${t.type === "error" ? " toast-error" : ""}`}>
+                {t.message}
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     );
   }
