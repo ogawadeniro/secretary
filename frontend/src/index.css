@@ -57,7 +57,7 @@ body {
   padding: 8px 12px;
   text-align: left;
   border-bottom: 1px solid var(--color-border);
-  background: var(--color-surface);
+  background: #18223c;
   flex-shrink: 0;
   display: flex;
   align-items: center;
@@ -159,7 +159,7 @@ body {
 
 /* 確認ダイアログ */
 .confirm-dialog {
-  background: var(--color-surface);
+  background: #18223c;
   border-radius: 12px;
   padding: 24px;
   max-width: 320px;
@@ -215,7 +215,7 @@ body {
   font-size: 0.75rem;
   font-weight: 600;
   border-bottom: 1px solid var(--color-border);
-  background: var(--color-surface);
+  background: #18223c;
   flex-shrink: 0;
 }
 
@@ -408,7 +408,7 @@ body {
 }
 
 .dialog {
-  background: var(--color-surface);
+  background: #18223c;
   border-radius: 16px 16px 0 0;
   width: 100%;
   max-width: 480px;
