@@ -392,9 +392,9 @@ export default function InfiniteCalendar() {
       {/* 2行目: フィルターバッジ + フィルターアイコン */}
       <div className="calendar-header" style={{
         display: "flex", alignItems: "center", gap: "8px",
-        paddingTop: "4px", paddingBottom: "8px",
+        paddingTop: "4px", paddingBottom: "8px", justifyContent: "flex-end",
       }}>
-        <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", flex: 1 }}>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
           <span style={{
             display: "inline-flex", alignItems: "center", gap: "4px",
             padding: "2px 8px", background: "var(--color-surface2)",
