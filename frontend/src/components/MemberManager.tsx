@@ -1,9 +1,7 @@
-import { useState, useEffect, useRef, useMemo, forwardRef, useImperativeHandle } from "react";
+import { useState, useEffect, useRef, forwardRef, useImperativeHandle } from "react";
 import { ScheduleMember as ScheduleMemberType } from "../types/schedule";
 import { getMembers } from "../api/memberApi";
-import { fetchAcceptedUsernames } from "../api/sharemanApi";
-import { fetchGroupMembers } from "../api/groupApi";
-import { searchUsers } from "../api/userApi";
+import { useMemberCandidates } from "../hooks/useMemberCandidates";
 import MemberAutocomplete from "./MemberAutocomplete";
 
 export interface MemberManagerHandle {
@@ -50,9 +48,6 @@ export const MemberManager = forwardRef<MemberManagerHandle, MemberManagerProps>
     const [memberLoading, setMemberLoading] = useState(false);
     const [memberError, setMemberError] = useState<string | null>(null);
     const [showSuggestions, setShowSuggestions] = useState(false);
-    const [shareCandidates, setShareCandidates] = useState<
-      { username: string; displayName: string; chipBgColor?: string }[]
-    >([]);
     const suggestionsRef = useRef<HTMLDivElement>(null);
     const memberInputRef = useRef<HTMLInputElement>(null);
     const isNew = !scheduleId;
@@ -80,39 +75,19 @@ export const MemberManager = forwardRef<MemberManagerHandle, MemberManagerProps>
       },
     }), [members, pendingMembers, pendingRemoves]);
 
-    // シェアメン一覧を取得（承諾済みユーザーを候補として表示）
-    useEffect(() => {
-      (async () => {
-        try {
-          if (groupId) {
-            // グループが選択されている場合はグループメンバーを候補にする
-            const members = await fetchGroupMembers(groupId);
-            const candidates = members
-              .filter((m) => m.username !== currentUsername)
-              .sort((a, b) => a.username.localeCompare(b.username))
-              .map((m) => ({
-                username: m.username,
-                displayName: m.displayName ?? m.username,
-                chipBgColor: m.chipBgColor,
-              }));
-            setShareCandidates(candidates);
-          } else {
-            const [accepted, allUsers] = await Promise.all([
-              fetchAcceptedUsernames(),
-              searchUsers(""),
-            ]);
-            const candidates = accepted.filter((u) => u !== currentUsername).sort().map((username) => ({
-              username,
-              displayName: allUsers.find((u) => u.username === username)?.displayName ?? username,
-              chipBgColor: allUsers.find((u) => u.username === username)?.chipBgColor,
-            }));
-            setShareCandidates(candidates);
-          }
-        } catch {
-          // 候補一覧がなくても機能に影響なし
-        }
-      })();
-    }, [currentUsername, groupId]);
+    // 補完候補を管理
+    const { displayNameMap, chipBgColorMap, filteredSuggestions } = useMemberCandidates({
+      groupId,
+      excludeUsername: currentUsername,
+      memberInput,
+      isMember: (username) => {
+        if (isNew) return pendingMembers.includes(username);
+        return members.some((m) => m.username === username && !pendingRemoves.includes(m.username))
+          || pendingMembers.includes(username);
+      },
+      existingDisplayNames: existingMemberDisplayNames,
+      existingChipBgColors: existingMemberChipBgColors,
+    });
 
     // 既存予定の編集時はメンバー一覧をロード
     useEffect(() => {
@@ -166,33 +141,6 @@ export const MemberManager = forwardRef<MemberManagerHandle, MemberManagerProps>
       }
     };
 
-    // 補完候補（フィルタ済み）
-    const filteredSuggestions = shareCandidates.filter((c) => {
-      const query = memberInput.trim().toLowerCase();
-      const matchesQuery = query === "" ||
-        c.username.toLowerCase().includes(query) ||
-        c.displayName.toLowerCase().includes(query);
-      const alreadyAdded = isNew
-        ? pendingMembers.includes(c.username)
-        : members.some((m) => m.username === c.username && !pendingRemoves.includes(m.username))
-          || pendingMembers.includes(c.username);
-      return matchesQuery && !alreadyAdded;
-    });
-
-    // 表示名マップ（補完候補から生成）
-    const memberDisplayNameMap = useMemo(() => {
-      const map = new Map<string, string>();
-      shareCandidates.forEach((c) => map.set(c.username, c.displayName));
-      return map;
-    }, [shareCandidates]);
-
-    // チップ背景色マップ（補完候補から生成）
-    const memberChipBgColorMap = useMemo(() => {
-      const map = new Map<string, string | undefined>();
-      shareCandidates.forEach((c) => map.set(c.username, c.chipBgColor));
-      return map;
-    }, [shareCandidates]);
-
     // 表示用メンバー一覧（作成者を先頭に固定）
     const displayMembers = [
       {
@@ -210,10 +158,10 @@ export const MemberManager = forwardRef<MemberManagerHandle, MemberManagerProps>
             .map((m) => ({
               key: m.id.toString(),
               username: m.username,
-              displayName: existingMemberDisplayNames?.[m.username] ?? memberDisplayNameMap.get(m.username) ?? m.username,
+              displayName: displayNameMap[m.username] ?? m.username,
               isOwner: false,
               pending: false,
-              chipBgColor: existingMemberChipBgColors?.[m.username] ?? memberChipBgColorMap.get(m.username),
+              chipBgColor: chipBgColorMap[m.username],
             }))
         : []),
       // 保留中の追加メンバー
@@ -222,10 +170,10 @@ export const MemberManager = forwardRef<MemberManagerHandle, MemberManagerProps>
         .map((u) => ({
           key: u,
           username: u,
-          displayName: memberDisplayNameMap.get(u) ?? u,
+          displayName: displayNameMap[u] ?? u,
           isOwner: false,
           pending: true,
-          chipBgColor: memberChipBgColorMap.get(u),
+          chipBgColor: chipBgColorMap[u],
         })),
     ];
 
@@ -249,7 +197,7 @@ export const MemberManager = forwardRef<MemberManagerHandle, MemberManagerProps>
                   alignItems: "center",
                   gap: "4px",
                   padding: m.isOwner ? "2px 10px" : "2px 4px 2px 10px",
-                  background: m.isOwner ? "var(--color-surface2)" : (m.chipBgColor ?? "var(--color-surface2)"),
+                  background: m.chipBgColor ?? "var(--color-surface2)",
                   borderRadius: "999px",
                   fontSize: "0.8rem",
                 }}

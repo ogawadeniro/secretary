@@ -2,9 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import type { TodoItem } from "../types/todo";
 import type { Group } from "../types/group";
 import { createTodo, updateTodo } from "../api/todoApi";
-import { fetchAcceptedUsernames } from "../api/sharemanApi";
-import { fetchGroupMembers } from "../api/groupApi";
-import { searchUsers } from "../api/userApi";
+import { useMemberCandidates } from "../hooks/useMemberCandidates";
 import MemberAutocomplete from "./MemberAutocomplete";
 
 interface TodoDialogProps {
@@ -64,9 +62,6 @@ export default function TodoDialog({ item, groups, currentUsername, onClose, onS
     });
     const [memberInput, setMemberInput] = useState("");
     const [showSuggestions, setShowSuggestions] = useState(false);
-    const [shareCandidates, setShareCandidates] = useState<
-        { username: string; displayName: string; chipBgColor?: string }[]
-    >([]);
     const memberInputRef = useRef<HTMLInputElement>(null);
     const suggestionsRef = useRef<HTMLDivElement>(null);
     const [saving, setSaving] = useState(false);
@@ -83,42 +78,16 @@ export default function TodoDialog({ item, groups, currentUsername, onClose, onS
         }
     }, []);
 
-    // グループ選択に応じて候補を取得
-    useEffect(() => {
-        (async () => {
-            try {
-                if (selectedGroupId) {
-                    const groupMembers = await fetchGroupMembers(selectedGroupId);
-                    const candidates = groupMembers
-                        .filter((m) => m.username !== item?.owner)
-                        .sort((a, b) => a.username.localeCompare(b.username))
-                        .map((m) => ({
-                            username: m.username,
-                            displayName: m.displayName ?? m.username,
-                            chipBgColor: m.chipBgColor,
-                        }));
-                    setShareCandidates(candidates);
-                } else {
-                    const [accepted, allUsers] = await Promise.all([
-                        fetchAcceptedUsernames(),
-                        searchUsers(""),
-                    ]);
-                    const currentOwner = item?.owner;
-                    const candidates = accepted
-                        .filter((u) => u !== currentOwner)
-                        .sort()
-                        .map((username) => ({
-                            username,
-                            displayName: allUsers.find((u) => u.username === username)?.displayName ?? username,
-                            chipBgColor: allUsers.find((u) => u.username === username)?.chipBgColor,
-                        }));
-                    setShareCandidates(candidates);
-                }
-            } catch {
-                // 候補一覧がなくても機能に影響なし
-            }
-        })();
-    }, [selectedGroupId, item?.owner]);
+    // 補完候補を管理
+    const { displayNameMap: memberDisplayNameMap, chipBgColorMap: memberChipBgColorMap, filteredSuggestions } = useMemberCandidates({
+        groupId: selectedGroupId,
+        excludeUsername: item?.owner ?? undefined,
+        memberInput,
+        isMember: (username) => members.includes(username),
+        existingDisplayNames: item?.memberDisplayNames,
+        existingChipBgColors: item?.memberChipBgColors,
+        currentUsername,
+    });
 
     // グループドロップダウンの外側クリックで閉じる
     useEffect(() => {
@@ -131,15 +100,6 @@ export default function TodoDialog({ item, groups, currentUsername, onClose, onS
         document.addEventListener("mousedown", handleClick);
         return () => document.removeEventListener("mousedown", handleClick);
     }, [showGroupDropdown]);
-
-    // 補完候補（フィルタ済み）
-    const filteredSuggestions = shareCandidates.filter((c) => {
-        const query = memberInput.trim().toLowerCase();
-        const matchesQuery = query === "" ||
-            c.username.toLowerCase().includes(query) ||
-            c.displayName.toLowerCase().includes(query);
-        return matchesQuery && !members.includes(c.username);
-    });
 
     const handleAddMember = (username: string) => {
         const trimmed = username.trim();
@@ -157,30 +117,6 @@ export default function TodoDialog({ item, groups, currentUsername, onClose, onS
         if (!item && username === currentUsername) return;
         setMembers((prev) => prev.filter((m) => m !== username));
     };
-
-    // 表示名・チップ色マップ（候補＋既存メンバーデータから生成）
-    const memberDisplayNameMap: Record<string, string> = {};
-    const memberChipBgColorMap: Record<string, string | undefined> = {};
-    // 編集モードでは API から返された既存データを優先
-    if (item?.memberDisplayNames) {
-        Object.assign(memberDisplayNameMap, item.memberDisplayNames);
-    }
-    if (item?.memberChipBgColors) {
-        Object.assign(memberChipBgColorMap, item.memberChipBgColors);
-    }
-    // 現在のユーザー（作成者）をフォールバックとして追加
-    if (currentUsername && !(currentUsername in memberDisplayNameMap)) {
-        memberDisplayNameMap[currentUsername] = currentUsername;
-    }
-    // 候補データで補完（既存データを上書きしない）
-    shareCandidates.forEach((c) => {
-        if (!(c.username in memberDisplayNameMap)) {
-            memberDisplayNameMap[c.username] = c.displayName;
-        }
-        if (!(c.username in memberChipBgColorMap)) {
-            memberChipBgColorMap[c.username] = c.chipBgColor;
-        }
-    });
 
     const handleSave = async (e: React.FormEvent) => {
         e.preventDefault();
