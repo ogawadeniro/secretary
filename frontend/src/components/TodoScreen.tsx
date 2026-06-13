@@ -138,8 +138,8 @@ export default function TodoScreen({ onNavigateToCalendar, onNotify }: TodoScree
                     style={{ color: item.completed ? "var(--color-text-muted)" : "var(--color-accent)" }}
                 >
                     {item.completed
-                        ? <Circle size={16} />
-                        : <CheckCircle2 size={16} />
+                        ? <CheckCircle2 size={16} />
+                        : <Circle size={16} />
                     }
                 </button>
                 <div
