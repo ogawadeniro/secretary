@@ -106,17 +106,21 @@ psql -h "$DB_HOST" -U "$DB_USER" -d "$DB_NAME" <<-EOSQL
         description TEXT NOT NULL DEFAULT '',
         owner TEXT NOT NULL,
         created_at TIMESTAMPTZ,
-        updated_at TIMESTAMPTZ
+        updated_at TIMESTAMPTZ,
+        deadline TIMESTAMPTZ,
+        completed BOOLEAN NOT NULL DEFAULT false
     );
 
     CREATE TABLE IF NOT EXISTS todo_item_groups (
         todo_item_id BIGINT NOT NULL REFERENCES todo_items(id) ON DELETE CASCADE,
-        group_id BIGINT NOT NULL
+        group_id BIGINT NOT NULL,
+        UNIQUE(todo_item_id, group_id)
     );
 
     CREATE TABLE IF NOT EXISTS todo_item_members (
         todo_item_id BIGINT NOT NULL REFERENCES todo_items(id) ON DELETE CASCADE,
-        username TEXT NOT NULL
+        username TEXT NOT NULL,
+        UNIQUE(todo_item_id, username)
     );
 
     -- ============================================================
