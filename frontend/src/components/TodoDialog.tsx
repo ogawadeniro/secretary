@@ -155,18 +155,20 @@ export default function TodoDialog({ item, groups, onClose, onSaved, onNotify }:
                         やることの詳細
                         <textarea
                             value={description}
-                            onChange={(e) => setDescription(e.target.value)}
+                            onChange={(e) => {
+                                setDescription(e.target.value);
+                                e.target.style.height = "auto";
+                                e.target.style.height = `${e.target.scrollHeight}px`;
+                            }}
                             placeholder="詳細（省略可）"
+                            style={{ overflow: "hidden", resize: "none", minHeight: "50px" }}
                         />
                     </label>
 
                     {/* 締め切り */}
-                    <label>
-                        締め切り
-                    </label>
                     <div className="date-fields">
                         <label>
-                            日付
+                            締切日
                             <input
                                 type="date"
                                 value={deadlineDate}
@@ -174,7 +176,7 @@ export default function TodoDialog({ item, groups, onClose, onSaved, onNotify }:
                             />
                         </label>
                         <label>
-                            時刻
+                            締め切り時刻
                             <input
                                 type="time"
                                 value={deadlineTime}
