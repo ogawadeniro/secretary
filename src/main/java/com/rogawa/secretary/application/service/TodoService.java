@@ -93,7 +93,6 @@ public class TodoService {
         if (updated.getGroupIds() != null) existing.setGroupIds(updated.getGroupIds());
         if (updated.getMemberUsernames() != null) existing.setMemberUsernames(updated.getMemberUsernames());
         existing.setDeadline(updated.getDeadline());
-        existing.setCompleted(updated.isCompleted());
         existing.setUpdatedAt(LocalDateTime.now());
 
         TodoItem saved = todoItemRepository.save(existing);

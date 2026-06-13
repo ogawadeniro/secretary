@@ -37,6 +37,7 @@ public class JpaTodoItem {
 
     private LocalDateTime deadline;
 
+    @Column(columnDefinition = "boolean default false")
     private boolean completed;
 
     private LocalDateTime createdAt;

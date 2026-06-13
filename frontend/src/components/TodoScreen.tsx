@@ -35,6 +35,7 @@ export default function TodoScreen({ onNavigateToCalendar, onNotify }: TodoScree
     const [dialogOpen, setDialogOpen] = useState(false);
     const [editItem, setEditItem] = useState<TodoItem | null>(null);
     const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
+    const [confirmCompleteId, setConfirmCompleteId] = useState<number | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
@@ -94,6 +95,10 @@ export default function TodoScreen({ onNavigateToCalendar, onNotify }: TodoScree
         setConfirmDeleteId(id);
     };
 
+    const handleCompleteClick = (id: number) => {
+        setConfirmCompleteId(id);
+    };
+
     const handleDeleteConfirmed = async () => {
         if (confirmDeleteId === null) return;
         try {
@@ -115,6 +120,12 @@ export default function TodoScreen({ onNavigateToCalendar, onNotify }: TodoScree
         } catch {
             onNotify("完了状態の変更に失敗したよ", "error");
         }
+    };
+
+    const handleCompleteConfirmed = async () => {
+        if (confirmCompleteId === null) return;
+        await handleToggleComplete(confirmCompleteId, false);
+        setConfirmCompleteId(null);
     };
 
     function renderCard(item: TodoItem) {
@@ -153,7 +164,7 @@ export default function TodoScreen({ onNavigateToCalendar, onNotify }: TodoScree
                     <button
                         className="icon-btn"
                         title={item.completed ? "未完了に戻す" : "完了"}
-                        onClick={() => handleToggleComplete(item.id, item.completed)}
+                        onClick={() => item.completed ? handleToggleComplete(item.id, true) : handleCompleteClick(item.id)}
                         style={{ color: item.completed ? "var(--color-text-muted)" : "var(--color-accent)" }}
                     >
                         {item.completed
@@ -264,6 +275,16 @@ export default function TodoScreen({ onNavigateToCalendar, onNotify }: TodoScree
                     message="本当にこのやることを削除する？"
                     onConfirm={handleDeleteConfirmed}
                     onCancel={() => setConfirmDeleteId(null)}
+                />
+            )}
+
+            {confirmCompleteId !== null && (
+                <ConfirmDialog
+                    message="やったことにする？？"
+                    confirmLabel="うん"
+                    cancelLabel="まだ"
+                    onConfirm={handleCompleteConfirmed}
+                    onCancel={() => setConfirmCompleteId(null)}
                 />
             )}
         </div>
