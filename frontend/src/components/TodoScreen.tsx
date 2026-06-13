@@ -60,6 +60,17 @@ export default function TodoScreen({ onNavigateToCalendar, onNotify }: TodoScree
     const incompleteTodos = todos.filter((t) => !t.completed);
     const completedTodos = todos.filter((t) => t.completed);
 
+    const allDoneMessages = [
+        "全部終わったよ！おつかれさま〜",
+        "いつもありがとうね。",
+        "なんだかスッキリしたね！",
+        "おわった！ぱや、ぱやぱや！！",
+        "きもちいい！今日はパーティーだ",
+    ];
+    const [allDoneMessage] = useState(() =>
+        allDoneMessages[Math.floor(Math.random() * allDoneMessages.length)]
+    );
+
     const handleCreate = () => {
         setEditItem(null);
         setDialogOpen(true);
@@ -229,7 +240,7 @@ export default function TodoScreen({ onNavigateToCalendar, onNotify }: TodoScree
                             <span>これからやる</span>
                         </div>
                         {incompleteTodos.length === 0 ? (
-                            <p className="todo-empty" style={{ marginTop: 8 }}>全部終わったよ！お疲れさま〜</p>
+                            <p className="todo-empty" style={{ marginTop: 8 }}>{allDoneMessage}</p>
                         ) : (
                             incompleteTodos.map(renderCard)
                         )}
