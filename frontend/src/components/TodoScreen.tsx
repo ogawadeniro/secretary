@@ -135,10 +135,7 @@ export default function TodoScreen({ onNavigateToCalendar, onNotify }: TodoScree
                     className="icon-btn"
                     title={item.completed ? "未完了に戻す" : "完了"}
                     onClick={() => item.completed ? handleToggleComplete(item.id, true) : handleCompleteClick(item.id)}
-                    style={{
-                        color: item.completed ? "var(--color-text-muted)" : "var(--color-accent)",
-                        flexShrink: 0,
-                    }}
+                    style={{ color: item.completed ? "var(--color-text-muted)" : "var(--color-accent)" }}
                 >
                     {item.completed
                         ? <Circle size={16} />
