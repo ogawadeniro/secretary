@@ -6,6 +6,7 @@ export interface TodoItem {
     ownerDisplayName?: string;
     createdAt: string;
     updatedAt: string;
+    deadline?: string;
     canEdit: boolean;
     groupIds: number[];
     memberUsernames: string[];

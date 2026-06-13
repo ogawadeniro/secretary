@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { X, Pencil, Trash2, Users, Calendar, Clock } from "lucide-react";
+import { X, Pencil, Trash2, Users, Calendar, Clock, AlertTriangle } from "lucide-react";
 import type { TodoItem } from "../types/todo";
 import type { Group } from "../types/group";
 
@@ -39,19 +39,30 @@ export default function TodoDetailDialog({ item, groups, onClose, onEdit, onDele
     };
 
     return (
-        <div className="dialog-overlay" onClick={handleClose}>
+        <div className={`dialog-overlay${closing ? " closing" : ""}`} onClick={handleClose}>
             <div className={`dialog${closing ? " closing" : ""}`} onClick={(e) => e.stopPropagation()}>
                 <div className="dialog-header">
                     <h2>{item.title}</h2>
-                    <button className="close-btn" onClick={handleClose}><X size={20} /></button>
+                    <button className="close-btn" onClick={handleClose}>✕</button>
                 </div>
 
-                <div className="dialog-body" style={{ gap: "16px" }}>
+                <div className="dialog-body" style={{ gap: "16px", display: "flex", flexDirection: "column" }}>
                     {/* 説明 */}
                     <div className="detail-field">
                         <span className="detail-label">説明</span>
                         <span className="detail-value">
                             {item.description || "（説明なし）"}
+                        </span>
+                    </div>
+
+                    {/* 締め切り */}
+                    <div className="detail-field">
+                        <span className="detail-label">
+                            <AlertTriangle size={14} style={{ marginRight: 4, verticalAlign: "middle" }} />
+                            締め切り
+                        </span>
+                        <span className="detail-value">
+                            {item.deadline ? formatDate(item.deadline) : "（設定なし）"}
                         </span>
                     </div>
 

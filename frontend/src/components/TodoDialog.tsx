@@ -1,5 +1,4 @@
-import { useState, useEffect } from "react";
-import { X } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
 import type { TodoItem } from "../types/todo";
 import type { Group } from "../types/group";
 import { createTodo, updateTodo } from "../api/todoApi";
@@ -13,26 +12,66 @@ interface TodoDialogProps {
     onNotify: (message: string, type?: "success" | "error") => void;
 }
 
+/**
+ * deadline の ISO 文字列 → "yyyy-MM-dd" の date 部分を取り出す
+ */
+function deadlineToDate(iso?: string): string {
+    if (!iso) return "";
+    return iso.slice(0, 10);
+}
+
+/**
+ * deadline の ISO 文字列 → "HH:mm" の time 部分を取り出す
+ */
+function deadlineToTime(iso?: string): string {
+    if (!iso || iso.length < 16) return "";
+    return iso.slice(11, 16);
+}
+
+/**
+ * date ("yyyy-MM-dd") + time ("HH:mm") → ISO 文字列
+ */
+function toDeadlineISO(date: string, time: string): string | null {
+    if (!date) return null;
+    return `${date}T${time || "00:00"}:00`;
+}
+
 export default function TodoDialog({ item, groups, onClose, onSaved, onNotify }: TodoDialogProps) {
     const isEditing = item !== null;
     const [title, setTitle] = useState(item?.title ?? "");
     const [description, setDescription] = useState(item?.description ?? "");
+    const [deadlineDate, setDeadlineDate] = useState(deadlineToDate(item?.deadline));
+    const [deadlineTime, setDeadlineTime] = useState(deadlineToTime(item?.deadline));
     const [selectedGroupId, setSelectedGroupId] = useState<number | undefined>(
         item?.groupIds && item.groupIds.length > 0 ? item.groupIds[0] : undefined
     );
-    const [memberUsername, setMemberUsername] = useState("");
+    const [showGroupDropdown, setShowGroupDropdown] = useState(false);
     const [members, setMembers] = useState<string[]>(item?.memberUsernames ?? []);
+    const [memberUsername, setMemberUsername] = useState("");
     const [sharemen, setSharemen] = useState<string[]>([]);
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [closing, setClosing] = useState(false);
+    const dropdownRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         fetchAcceptedUsernames().then(setSharemen).catch(() => {});
     }, []);
 
+    // グループドロップダウンの外側クリックで閉じる
+    useEffect(() => {
+        if (!showGroupDropdown) return;
+        const handleClick = (e: MouseEvent) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+                setShowGroupDropdown(false);
+            }
+        };
+        document.addEventListener("mousedown", handleClick);
+        return () => document.removeEventListener("mousedown", handleClick);
+    }, [showGroupDropdown]);
+
     const availableSharemen = selectedGroupId
-        ? []  // グループ選択時はグループメンバーから選ぶ想定（一旦シェアメン候補は表示しない）
+        ? []
         : sharemen.filter((u) => !members.includes(u) && u !== item?.owner);
 
     const handleAddMember = () => {
@@ -46,7 +85,8 @@ export default function TodoDialog({ item, groups, onClose, onSaved, onNotify }:
         setMembers((prev) => prev.filter((m) => m !== username));
     };
 
-    const handleSave = async () => {
+    const handleSave = async (e: React.FormEvent) => {
+        e.preventDefault();
         if (!title.trim()) {
             setError("タイトルを入力してね");
             return;
@@ -57,6 +97,7 @@ export default function TodoDialog({ item, groups, onClose, onSaved, onNotify }:
             const data: Partial<TodoItem> = {
                 title: title.trim(),
                 description: description.trim(),
+                deadline: toDeadlineISO(deadlineDate, deadlineTime) ?? undefined,
                 groupIds: selectedGroupId ? [selectedGroupId] : [],
                 memberUsernames: members,
             };
@@ -81,72 +122,120 @@ export default function TodoDialog({ item, groups, onClose, onSaved, onNotify }:
     };
 
     return (
-        <div className="dialog-overlay" onClick={handleClose}>
+        <div className={`dialog-overlay${closing ? " closing" : ""}`} onClick={handleClose}>
             <div className={`dialog${closing ? " closing" : ""}`} onClick={(e) => e.stopPropagation()}>
                 <div className="dialog-header">
                     <h2>{isEditing ? "やることを編集" : "やることを追加"}</h2>
-                    <button className="close-btn" onClick={handleClose}><X size={20} /></button>
+                    <button className="close-btn" onClick={handleClose}>
+                        ✕
+                    </button>
                 </div>
-                <div className="dialog-body" style={{ gap: "12px" }}>
+                <form className="schedule-form dialog-body" onSubmit={handleSave}>
                     {error && <div className="dialog-error">{error}</div>}
 
                     <label>
-                        タイトル
+                        <span style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                            タイトル
+                            <span style={{
+                                width: "8px", height: "8px",
+                                borderRadius: "50%",
+                                background: "#e87a40",
+                                display: "inline-block",
+                                flexShrink: 0,
+                            }} />
+                        </span>
                         <input
                             type="text"
                             value={title}
                             onChange={(e) => setTitle(e.target.value)}
+                            required
                             placeholder="やることのタイトル"
                             autoFocus
                         />
                     </label>
 
+                    {/* 締め切り */}
                     <label>
-                        詳細
-                        <textarea
-                            value={description}
-                            onChange={(e) => setDescription(e.target.value)}
-                            placeholder="詳細（省略可）"
-                            rows={3}
-                            style={{
-                                background: "var(--color-surface2)",
-                                color: "var(--color-text)",
-                                border: "1px solid var(--color-border)",
-                                padding: "8px",
-                                borderRadius: "4px",
-                                fontFamily: "inherit",
-                                fontSize: "0.85rem",
-                                width: "100%",
-                                resize: "vertical",
-                            }}
-                        />
+                        締め切り
                     </label>
+                    <div className="date-fields">
+                        <label>
+                            日付
+                            <input
+                                type="date"
+                                value={deadlineDate}
+                                onChange={(e) => setDeadlineDate(e.target.value)}
+                            />
+                        </label>
+                        <label>
+                            時刻
+                            <input
+                                type="time"
+                                value={deadlineTime}
+                                onChange={(e) => setDeadlineTime(e.target.value)}
+                            />
+                        </label>
+                    </div>
 
-                    {/* 共有グループ選択 */}
-                    <label>
-                        共有グループ
-                        <select
-                            value={selectedGroupId ?? ""}
-                            onChange={(e) => setSelectedGroupId(e.target.value ? Number(e.target.value) : undefined)}
-                            style={{
-                                width: "100%",
-                                background: "var(--color-surface2)",
-                                color: "var(--color-text)",
-                                border: "1px solid var(--color-border)",
-                                padding: "8px",
-                                borderRadius: "4px",
-                                fontFamily: "inherit",
-                                fontSize: "0.85rem",
-                            }}
-                        >
-                            <option value="">選択しない（個人のやること）</option>
-                            {groups.map((g) => (
-                                <option key={g.id} value={g.id}>
-                                    {g.iconData && `[icon] `}{g.name}
-                                </option>
-                            ))}
-                        </select>
-                    </label>
+                    {/* 共有グループ */}
+                    <div className="settings-section" style={{ borderBottom: "none", paddingBottom: 0 }}>
+                        <div className="settings-section-title">共有グループ</div>
+                        <div style={{ position: "relative" }} ref={dropdownRef}>
+                            <div
+                                style={{
+                                    width: "100%", background: "var(--color-surface2)",
+                                    border: "1px solid var(--color-border)", color: "var(--color-text)",
+                                    padding: "6px 8px", borderRadius: "6px", fontFamily: "inherit",
+                                    cursor: "pointer", fontSize: "0.85rem",
+                                }}
+                                onClick={() => setShowGroupDropdown((p) => !p)}
+                            >
+                                {(() => {
+                                    if (selectedGroupId === undefined) return "プライベート";
+                                    const g = groups.find((gr) => gr.id === selectedGroupId);
+                                    return (
+                                        <span style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                                            {g?.iconData && <img src={g.iconData} alt="" style={{ width: "16px", height: "16px", borderRadius: "3px", objectFit: "cover" }} />}
+                                            {g?.name ?? "共有グループ"}
+                                        </span>
+                                    );
+                                })()}
+                            </div>
+                            {showGroupDropdown && (
+                                <div style={{
+                                    position: "absolute", top: "100%", left: 0, right: 0, zIndex: 100,
+                                    background: "var(--color-surface2)", border: "1px solid var(--color-border)",
+                                    borderRadius: "6px", marginTop: "4px", maxHeight: "200px", overflowY: "auto",
+                                }}>
+                                    <div style={{
+                                        padding: "8px 10px", cursor: "pointer", fontSize: "0.85rem",
+                                        borderBottom: "1px solid var(--color-border)",
+                                        background: selectedGroupId === undefined ? "var(--color-hover)" : "transparent",
+                                    }}
+                                        onMouseDown={(e) => { e.preventDefault(); setSelectedGroupId(undefined); setShowGroupDropdown(false); }}
+                                        onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--color-hover)"; }}
+                                        onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = selectedGroupId === undefined ? "var(--color-hover)" : "transparent"; }}
+                                    >プライベート</div>
+                                    {groups.map((g) => (
+                                        <div key={g.id} style={{
+                                            padding: "8px 10px", cursor: "pointer", fontSize: "0.85rem",
+                                            borderBottom: "1px solid var(--color-border)",
+                                            background: selectedGroupId === g.id ? "var(--color-hover)" : "transparent",
+                                        }}
+                                            onMouseDown={(e) => { e.preventDefault(); setSelectedGroupId(g.id); setShowGroupDropdown(false); }}
+                                            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--color-hover)"; }}
+                                            onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = selectedGroupId === g.id ? "var(--color-hover)" : "transparent"; }}
+                                        >
+                                            <span style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                                                {g.iconData && <img src={g.iconData} alt="" style={{ width: "16px", height: "16px", borderRadius: "3px", objectFit: "cover" }} />}
+                                                {g.name}
+                                            </span>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    </div>
 
                     {/* メンバー管理 */}
                     {!selectedGroupId && (
@@ -169,6 +258,7 @@ export default function TodoDialog({ item, groups, onClose, onSaved, onNotify }:
                                         >
                                             {m}
                                             <button
+                                                type="button"
                                                 style={{
                                                     background: "none",
                                                     border: "none",
@@ -197,7 +287,7 @@ export default function TodoDialog({ item, groups, onClose, onSaved, onNotify }:
                                             color: "var(--color-text)",
                                             border: "1px solid var(--color-border)",
                                             padding: "8px",
-                                            borderRadius: "4px",
+                                            borderRadius: "6px",
                                             fontFamily: "inherit",
                                             fontSize: "0.85rem",
                                         }}
@@ -208,6 +298,7 @@ export default function TodoDialog({ item, groups, onClose, onSaved, onNotify }:
                                         ))}
                                     </select>
                                     <button
+                                        type="button"
                                         className="save-btn"
                                         style={{ padding: "8px 16px", fontSize: "0.85rem" }}
                                         disabled={!memberUsername}
@@ -220,15 +311,24 @@ export default function TodoDialog({ item, groups, onClose, onSaved, onNotify }:
                         </div>
                     )}
 
+                    <label>
+                        説明
+                        <textarea
+                            value={description}
+                            onChange={(e) => setDescription(e.target.value)}
+                            placeholder="詳細（省略可）"
+                        />
+                    </label>
+
                     <div className="form-actions">
-                        <button className="save-btn" onClick={handleSave} disabled={saving}>
+                        <button type="submit" disabled={saving}>
                             {saving ? "保存中..." : "保存"}
                         </button>
-                        <button className="cancel-btn" onClick={handleClose}>
+                        <button type="button" onClick={handleClose}>
                             キャンセル
                         </button>
                     </div>
-                </div>
+                </form>
             </div>
         </div>
     );

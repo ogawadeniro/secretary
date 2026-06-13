@@ -15,6 +15,9 @@ public class TodoItem {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
+    /** 締め切り（null=期限なし） */
+    private LocalDateTime deadline;
+
     /** 所属グループID一覧（空=個人のやること） */
     private List<Long> groupIds = new ArrayList<>();
 

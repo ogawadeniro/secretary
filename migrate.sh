@@ -144,6 +144,9 @@ psql -h "$DB_HOST" -U "$DB_USER" -d "$DB_NAME" <<-EOSQL
     -- 2-7. group_members.status（初回作成時の DEFAULT 'ACCEPTED' が効かない場合対策）
     ALTER TABLE group_members ADD COLUMN IF NOT EXISTS status TEXT NOT NULL DEFAULT 'ACCEPTED';
 
+    -- 2-8. todo_items.deadline
+    ALTER TABLE todo_items ADD COLUMN IF NOT EXISTS deadline TIMESTAMPTZ;
+
     -- ============================================================
     --  3. データ移行
     -- ============================================================

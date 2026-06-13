@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { Plus, Trash2, Pencil, ArrowLeft } from "lucide-react";
+import { Plus, ArrowLeft } from "lucide-react";
 import type { TodoItem } from "../types/todo";
 import type { Group } from "../types/group";
 import { fetchTodos, deleteTodo } from "../api/todoApi";
@@ -11,6 +11,21 @@ import ConfirmDialog from "./ConfirmDialog";
 interface TodoScreenProps {
     onNavigateToCalendar: () => void;
     onNotify: (message: string, type?: "success" | "error") => void;
+}
+
+function formatDeadline(iso?: string): string {
+    if (!iso) return "";
+    try {
+        const d = new Date(iso);
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, "0");
+        const day = String(d.getDate()).padStart(2, "0");
+        const h = String(d.getHours()).padStart(2, "0");
+        const min = String(d.getMinutes()).padStart(2, "0");
+        return `${y}/${m}/${day} ${h}:${min}`;
+    } catch {
+        return iso;
+    }
 }
 
 export default function TodoScreen({ onNavigateToCalendar, onNotify }: TodoScreenProps) {
@@ -46,19 +61,16 @@ export default function TodoScreen({ onNavigateToCalendar, onNotify }: TodoScree
         setDialogOpen(true);
     };
 
-    /** カードクリック → 詳細表示 */
     const handleShowDetail = (item: TodoItem) => {
         setDetailItem(item);
     };
 
-    /** 詳細の編集ボタン → 編集ダイアログ */
     const handleDetailEdit = (item: TodoItem) => {
         setDetailItem(null);
         setEditItem(item);
         setDialogOpen(true);
     };
 
-    /** 詳細の削除ボタン → 確認 */
     const handleDetailDelete = (id: number) => {
         setDetailItem(null);
         setConfirmDeleteId(id);
@@ -114,48 +126,57 @@ export default function TodoScreen({ onNavigateToCalendar, onNotify }: TodoScree
                 ) : (
                     <div className="todo-list">
                         {todos.map((item) => (
-                            <div key={item.id} className="todo-card">
+                            <div key={item.id} className="schedule-card" style={{ cursor: "pointer" }}>
                                 <div
-                                    className="todo-card-body"
+                                    className="schedule-card-info"
                                     onClick={() => handleShowDetail(item)}
-                                    style={{ cursor: "pointer" }}
                                 >
-                                    <div className="todo-card-title">
-                                        {item.title}
-                                    </div>
+                                    <strong>{item.title}</strong>
                                     {item.description && (
-                                        <div className="todo-card-desc">{item.description}</div>
+                                        <span className="schedule-owner-members">
+                                            {item.description}
+                                        </span>
                                     )}
-                                    <div className="todo-card-meta">
+                                    <span className="schedule-owner-members">
                                         {item.ownerDisplayName ?? item.owner}
+                                        {item.deadline && (
+                                            <span style={{ marginLeft: 8 }}>
+                                                期限: {formatDeadline(item.deadline)}
+                                            </span>
+                                        )}
                                         {item.groupIds.length > 0 && (
-                                            <span className="todo-card-group">
+                                            <span style={{ marginLeft: 8 }}>
                                                 {item.groupIds.map((gid) => {
                                                     const g = groups.find((gr) => gr.id === gid);
                                                     return g?.name ?? `グループ#${gid}`;
                                                 }).join(", ")}
                                             </span>
                                         )}
-                                    </div>
+                                    </span>
                                 </div>
-                                <div className="todo-card-actions">
+                                <div className="schedule-card-actions">
                                     {item.canEdit && (
                                         <>
                                             <button
                                                 className="icon-btn"
-                                                onClick={() => handleDialogEdit(item)}
                                                 title="編集"
-                                                style={{ color: "var(--color-accent)", padding: "4px" }}
+                                                onClick={() => handleDialogEdit(item)}
                                             >
-                                                <Pencil size={16} />
+                                                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2">
+                                                    <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z" />
+                                                </svg>
                                             </button>
                                             <button
-                                                className="icon-btn"
-                                                onClick={() => handleDeleteClick(item.id)}
+                                                className="icon-btn delete-btn-icon"
                                                 title="削除"
-                                                style={{ color: "var(--color-sun)", padding: "4px" }}
+                                                onClick={() => handleDeleteClick(item.id)}
                                             >
-                                                <Trash2 size={16} />
+                                                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2">
+                                                    <polyline points="3 6 5 6 21 6" />
+                                                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                                                    <line x1="10" y1="11" x2="10" y2="17" />
+                                                    <line x1="14" y1="11" x2="14" y2="17" />
+                                                </svg>
                                             </button>
                                         </>
                                     )}
