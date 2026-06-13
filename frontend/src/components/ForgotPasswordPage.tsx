@@ -61,7 +61,7 @@ export default function ForgotPasswordPage({ onBackToLogin }: ForgotPasswordPage
               onChange={(e) => setEmail(e.target.value)}
               required
               autoFocus
-              placeholder="info.secretary.ryokotu@gmail.com"
+              placeholder="example@mail.com"
             />
           </label>
 

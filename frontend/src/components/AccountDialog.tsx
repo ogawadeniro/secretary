@@ -94,7 +94,7 @@ export default function AccountDialog({
                 />
               </label>
               <label>
-                メールアドレス
+                 パスワードを忘れた時用メールアドレス
                 <input
                   type="email"
                   value={email}

@@ -11,8 +11,7 @@ import CalendarGrid from "./CalendarGrid";
 import ScheduleDialog from "./ScheduleDialog";
 import SettingsDialog from "./SettingsDialog";
 import AccountDialog from "./AccountDialog";
-import ShareDialog from "./ShareDialog";
-import GroupDialog from "./GroupDialog";
+// ShareDialog と GroupDialog は管理画面タブに移行
 import { addDays, getWeekStart, formatDateKey, toEpochDay } from "../utils/dateUtils";
 import { getHolidaysInRange } from "../utils/holidayUtils";
 import type { HolidayMap } from "../utils/holidayUtils";
@@ -58,8 +57,6 @@ export default function InfiniteCalendar() {
   const [showAccount, setShowAccount] = useState(false);
   const [showAccountMenu, setShowAccountMenu] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
-  const [showShare, setShowShare] = useState(false);
-  const [showGroup, setShowGroup] = useState(false);
   const [groups, setGroups] = useState<Group[]>([]);
   const [scheduleFilter, setScheduleFilter] = useState<Set<string | number>>(() => {
     try {
@@ -320,8 +317,6 @@ export default function InfiniteCalendar() {
         onToggleAccountMenu={() => setShowAccountMenu((p) => !p)}
         onShowSettings={() => { setShowAccountMenu(false); setShowSettings(true); }}
         onShowAccount={() => { setShowAccountMenu(false); setShowAccount(true); }}
-        onShowShare={() => { setShowAccountMenu(false); setShowShare(true); }}
-        onShowGroup={() => { setShowAccountMenu(false); setShowGroup(true); }}
         onLogoutClick={() => setShowLogoutConfirm(true)}
       />
       <FilterBar
@@ -379,14 +374,6 @@ export default function InfiniteCalendar() {
             </div>
           </div>
         </div>
-      )}
-
-      {showShare && (
-        <ShareDialog onClose={() => setShowShare(false)} onNotify={notify} />
-      )}
-
-      {showGroup && (
-        <GroupDialog onClose={() => setShowGroup(false)} onNotify={notify} />
       )}
 
       {dialogDate && (

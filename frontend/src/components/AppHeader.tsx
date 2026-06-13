@@ -1,4 +1,4 @@
-import { CircleUser, Settings, LogOut, Share2, Users, User } from "lucide-react";
+import { CircleUser, Settings, LogOut, User } from "lucide-react";
 import type { UserSettings } from "../types/settings";
 
 interface AppHeaderProps {
@@ -10,8 +10,6 @@ interface AppHeaderProps {
   onToggleAccountMenu: () => void;
   onShowSettings: () => void;
   onShowAccount: () => void;
-  onShowShare: () => void;
-  onShowGroup: () => void;
   onLogoutClick: () => void;
 }
 
@@ -24,8 +22,6 @@ export default function AppHeader({
   onToggleAccountMenu,
   onShowSettings,
   onShowAccount,
-  onShowShare,
-  onShowGroup,
   onLogoutClick,
 }: AppHeaderProps) {
   return (
@@ -52,14 +48,6 @@ export default function AppHeader({
               <button className="account-dropdown-item" onClick={onShowAccount}>
                 <User size={16} />
                 <span>アカウント</span>
-              </button>
-              <button className="account-dropdown-item" onClick={onShowShare}>
-                <Share2 size={16} />
-                <span>シェアメン管理</span>
-              </button>
-              <button className="account-dropdown-item" onClick={onShowGroup}>
-                <Users size={16} />
-                <span>共有グループ管理</span>
               </button>
               <button className="account-dropdown-item" onClick={onLogoutClick}>
                 <LogOut size={16} />
