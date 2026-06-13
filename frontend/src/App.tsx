@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import InfiniteCalendar from "./components/InfiniteCalendar";
 import ManagementScreen from "./components/ManagementScreen";
+import TodoScreen from "./components/TodoScreen";
 import FooterTabs from "./components/FooterTabs";
 import InvitationBanner from "./components/InvitationBanner";
 import type { TabId } from "./components/FooterTabs";
@@ -65,6 +66,12 @@ function AppContent() {
             <ManagementScreen
               key={managementInitialTab}
               initialTab={managementInitialTab}
+              onNavigateToCalendar={() => setActiveTab("calendar")}
+              onNotify={notify}
+            />
+          )}
+          {activeTab === "todos" && (
+            <TodoScreen
               onNavigateToCalendar={() => setActiveTab("calendar")}
               onNotify={notify}
             />

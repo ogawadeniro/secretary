@@ -1,6 +1,6 @@
-import { Calendar, Users } from "lucide-react";
+import { Calendar, Users, ListTodo } from "lucide-react";
 
-export type TabId = "calendar" | "management";
+export type TabId = "calendar" | "management" | "todos";
 
 interface FooterTabsProps {
   activeTab: TabId;
@@ -16,6 +16,13 @@ export default function FooterTabs({ activeTab, onTabChange }: FooterTabsProps) 
       >
         <Users size={20} />
         <span>管理</span>
+      </button>
+      <button
+        className={`footer-tab${activeTab === "todos" ? " active" : ""}`}
+        onClick={() => onTabChange("todos")}
+      >
+        <ListTodo size={20} />
+        <span>やること</span>
       </button>
       <button
         className={`footer-tab${activeTab === "calendar" ? " active" : ""}`}
