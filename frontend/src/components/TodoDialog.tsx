@@ -151,6 +151,15 @@ export default function TodoDialog({ item, groups, onClose, onSaved, onNotify }:
                         />
                     </label>
 
+                    <label>
+                        やることの詳細
+                        <textarea
+                            value={description}
+                            onChange={(e) => setDescription(e.target.value)}
+                            placeholder="詳細（省略可）"
+                        />
+                    </label>
+
                     {/* 締め切り */}
                     <label>
                         締め切り
@@ -307,15 +316,6 @@ export default function TodoDialog({ item, groups, onClose, onSaved, onNotify }:
                             )}
                         </div>
                     )}
-
-                    <label>
-                        説明
-                        <textarea
-                            value={description}
-                            onChange={(e) => setDescription(e.target.value)}
-                            placeholder="詳細（省略可）"
-                        />
-                    </label>
 
                     <div className="form-actions">
                         <button type="submit" disabled={saving}>

@@ -196,6 +196,23 @@ export default function TodoScreen({ onNavigateToCalendar, onNotify }: TodoScree
                     onClick={() => handleShowDetail(item)}
                 >
                     <strong style={item.completed ? { textDecoration: "line-through", opacity: 0.6 } : undefined}>
+                        {item.groupIds.length > 0 && (() => {
+                            const g = groups.find((gr) => gr.id === item.groupIds[0]);
+                            return g?.iconData ? (
+                                <img
+                                    src={g.iconData}
+                                    alt=""
+                                    style={{
+                                        width: "14px",
+                                        height: "14px",
+                                        borderRadius: "3px",
+                                        objectFit: "cover",
+                                        marginRight: "4px",
+                                        verticalAlign: "middle",
+                                    }}
+                                />
+                            ) : null;
+                        })()}
                         {item.title}
                     </strong>
                     {item.description && (
