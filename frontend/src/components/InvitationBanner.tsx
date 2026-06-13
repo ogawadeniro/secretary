@@ -35,13 +35,13 @@ export default function InvitationBanner({ onNavigateToManagement }: InvitationB
   let message: string;
   let subTab: "sharemen" | "groups" | undefined;
   if (sharemanCount > 0 && groupCount > 0) {
-    message = `シェアメン招待 ${sharemanCount}件、グループ招待 ${groupCount}件`;
+    message = `${sharemanCount}件 のシェアメン招待、${groupCount}件 のグループ招待が来ているよ`;
     subTab = "sharemen";
   } else if (sharemanCount > 0) {
-    message = `シェアメン招待が ${sharemanCount}件 あります`;
+    message = `${sharemanCount}件 のシェアメン招待が来ているよ`;
     subTab = "sharemen";
   } else {
-    message = `グループ招待が ${groupCount}件 あります`;
+    message = `${groupCount}件 のグループ招待が来ているよ`;
     subTab = "groups";
   }
 
