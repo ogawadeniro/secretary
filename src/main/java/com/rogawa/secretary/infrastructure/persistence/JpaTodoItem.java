@@ -37,6 +37,8 @@ public class JpaTodoItem {
 
     private LocalDateTime deadline;
 
+    private boolean completed;
+
     private LocalDateTime createdAt;
 
     private LocalDateTime updatedAt;
@@ -60,6 +62,7 @@ public class JpaTodoItem {
         entity.setDescription(item.getDescription());
         entity.setOwner(item.getOwner());
         entity.setDeadline(item.getDeadline());
+        entity.setCompleted(item.isCompleted());
         entity.setCreatedAt(item.getCreatedAt());
         entity.setUpdatedAt(item.getUpdatedAt());
         entity.setGroupIds(item.getGroupIds());
@@ -74,6 +77,7 @@ public class JpaTodoItem {
         item.setDescription(this.description);
         item.setOwner(this.owner);
         item.setDeadline(this.deadline);
+        item.setCompleted(this.completed);
         item.setCreatedAt(this.createdAt);
         item.setUpdatedAt(this.updatedAt);
         item.setGroupIds(this.groupIds == null ? new ArrayList<>() : new ArrayList<>(this.groupIds));

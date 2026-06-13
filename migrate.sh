@@ -147,6 +147,9 @@ psql -h "$DB_HOST" -U "$DB_USER" -d "$DB_NAME" <<-EOSQL
     -- 2-8. todo_items.deadline
     ALTER TABLE todo_items ADD COLUMN IF NOT EXISTS deadline TIMESTAMPTZ;
 
+    -- 2-9. todo_items.completed
+    ALTER TABLE todo_items ADD COLUMN IF NOT EXISTS completed BOOLEAN NOT NULL DEFAULT false;
+
     -- ============================================================
     --  3. データ移行
     -- ============================================================

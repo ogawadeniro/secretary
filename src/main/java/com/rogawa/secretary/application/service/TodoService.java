@@ -93,6 +93,7 @@ public class TodoService {
         if (updated.getGroupIds() != null) existing.setGroupIds(updated.getGroupIds());
         if (updated.getMemberUsernames() != null) existing.setMemberUsernames(updated.getMemberUsernames());
         existing.setDeadline(updated.getDeadline());
+        existing.setCompleted(updated.isCompleted());
         existing.setUpdatedAt(LocalDateTime.now());
 
         TodoItem saved = todoItemRepository.save(existing);
@@ -121,6 +122,34 @@ public class TodoService {
         }
 
         todoItemRepository.deleteById(id);
+    }
+
+    /** やることの完了状態をトグルする */
+    @Transactional
+    public TodoItem toggleComplete(Long id, String username) {
+        TodoItem existing = todoItemRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("やることが見つからないよ"));
+
+        if (!existing.getOwner().equals(username)) {
+            // グループメンバーにもトグル権限を与える
+            List<Long> groupIds = existing.getGroupIds();
+            if (groupIds != null && !groupIds.isEmpty()) {
+                boolean isMember = groupRepository.findByMemberUsername(username).stream()
+                        .anyMatch(g -> groupIds.contains(g.getId()));
+                if (!isMember) {
+                    throw new RuntimeException("権限がないよ");
+                }
+            } else {
+                throw new RuntimeException("権限がないよ");
+            }
+        }
+
+        existing.setCompleted(!existing.isCompleted());
+        existing.setUpdatedAt(LocalDateTime.now());
+
+        TodoItem saved = todoItemRepository.save(existing);
+        enrichItem(saved, username);
+        return saved;
     }
 
     /** やことにメンバーを追加 */

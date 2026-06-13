@@ -41,6 +41,11 @@ export async function deleteTodo(id: number): Promise<void> {
     }
 }
 
+export async function toggleComplete(id: number): Promise<TodoItem> {
+    const res = await fetch(`${BASE}/${id}/toggle-complete`, { method: "PATCH" });
+    return handleResponse<TodoItem>(res);
+}
+
 export async function addTodoMember(todoId: number, username: string): Promise<TodoItem> {
     const res = await fetch(`${BASE}/${todoId}/members`, {
         method: "POST",

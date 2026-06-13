@@ -29,6 +29,9 @@ public class TodoDto {
     /** 締め切り（null=期限なし） */
     private LocalDateTime deadline;
 
+    /** 完了フラグ */
+    private boolean completed;
+
     /** 所属グループID一覧 */
     private List<Long> groupIds = new ArrayList<>();
 
@@ -54,6 +57,7 @@ public class TodoDto {
         dto.setCreatedAt(item.getCreatedAt());
         dto.setUpdatedAt(item.getUpdatedAt());
         dto.setDeadline(item.getDeadline());
+        dto.setCompleted(item.isCompleted());
         dto.setGroupIds(item.getGroupIds() != null
                 ? new ArrayList<>(item.getGroupIds()) : new ArrayList<>());
         dto.setMemberUsernames(item.getMemberUsernames() != null
@@ -71,6 +75,7 @@ public class TodoDto {
         item.setDescription(this.description);
         item.setOwner(this.owner);
         item.setDeadline(this.deadline);
+        item.setCompleted(this.completed);
         item.setGroupIds(this.groupIds != null
                 ? new ArrayList<>(this.groupIds) : new ArrayList<>());
         item.setMemberUsernames(this.memberUsernames != null

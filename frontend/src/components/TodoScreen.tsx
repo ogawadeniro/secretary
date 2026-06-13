@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
-import { Plus, ArrowLeft } from "lucide-react";
+import { Plus, ArrowLeft, Circle, CheckCircle2 } from "lucide-react";
 import type { TodoItem } from "../types/todo";
 import type { Group } from "../types/group";
-import { fetchTodos, deleteTodo } from "../api/todoApi";
+import { fetchTodos, deleteTodo, toggleComplete } from "../api/todoApi";
 import { fetchGroups } from "../api/groupApi";
 import TodoDialog from "./TodoDialog";
 import TodoDetailDialog from "./TodoDetailDialog";
@@ -56,6 +56,9 @@ export default function TodoScreen({ onNavigateToCalendar, onNotify }: TodoScree
 
     useEffect(() => { load(); }, [load]);
 
+    const incompleteTodos = todos.filter((t) => !t.completed);
+    const completedTodos = todos.filter((t) => t.completed);
+
     const handleCreate = () => {
         setEditItem(null);
         setDialogOpen(true);
@@ -104,6 +107,90 @@ export default function TodoScreen({ onNavigateToCalendar, onNotify }: TodoScree
         }
     };
 
+    const handleToggleComplete = async (id: number, completed: boolean) => {
+        try {
+            await toggleComplete(id);
+            onNotify(completed ? "やることを未完了に戻したよ" : "やることを完了したよ！");
+            load();
+        } catch {
+            onNotify("完了状態の変更に失敗したよ", "error");
+        }
+    };
+
+    function renderCard(item: TodoItem) {
+        return (
+            <div key={item.id} className="schedule-card" style={{ cursor: "pointer" }}>
+                <div
+                    className="schedule-card-info"
+                    onClick={() => handleShowDetail(item)}
+                >
+                    <strong style={item.completed ? { textDecoration: "line-through", opacity: 0.6 } : undefined}>
+                        {item.title}
+                    </strong>
+                    {item.description && (
+                        <span className="schedule-owner-members">
+                            {item.description}
+                        </span>
+                    )}
+                    <span className="schedule-owner-members">
+                        {item.ownerDisplayName ?? item.owner}
+                        {item.deadline && (
+                            <span style={{ marginLeft: 8 }}>
+                                期限: {formatDeadline(item.deadline)}
+                            </span>
+                        )}
+                        {item.groupIds.length > 0 && (
+                            <span style={{ marginLeft: 8 }}>
+                                {item.groupIds.map((gid) => {
+                                    const g = groups.find((gr) => gr.id === gid);
+                                    return g?.name ?? `グループ#${gid}`;
+                                }).join(", ")}
+                            </span>
+                        )}
+                    </span>
+                </div>
+                <div className="schedule-card-actions">
+                    <button
+                        className="icon-btn"
+                        title={item.completed ? "未完了に戻す" : "完了"}
+                        onClick={() => handleToggleComplete(item.id, item.completed)}
+                        style={{ color: item.completed ? "var(--color-text-muted)" : "var(--color-accent)" }}
+                    >
+                        {item.completed
+                            ? <Circle size={16} />
+                            : <CheckCircle2 size={16} />
+                        }
+                    </button>
+                    {item.canEdit && (
+                        <>
+                            <button
+                                className="icon-btn"
+                                title="編集"
+                                onClick={() => handleDialogEdit(item)}
+                            >
+                                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2">
+                                    <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z" />
+                                </svg>
+                            </button>
+                            <button
+                                className="icon-btn delete-btn-icon"
+                                title="削除"
+                                onClick={() => handleDeleteClick(item.id)}
+                            >
+                                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2">
+                                    <polyline points="3 6 5 6 21 6" />
+                                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                                    <line x1="10" y1="11" x2="10" y2="17" />
+                                    <line x1="14" y1="11" x2="14" y2="17" />
+                                </svg>
+                            </button>
+                        </>
+                    )}
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className="todo-screen">
             <div className="todo-header">
@@ -125,64 +212,27 @@ export default function TodoScreen({ onNavigateToCalendar, onNotify }: TodoScree
                     <p className="todo-empty">やることがまだないよ。追加してみよう！</p>
                 ) : (
                     <div className="todo-list">
-                        {todos.map((item) => (
-                            <div key={item.id} className="schedule-card" style={{ cursor: "pointer" }}>
-                                <div
-                                    className="schedule-card-info"
-                                    onClick={() => handleShowDetail(item)}
-                                >
-                                    <strong>{item.title}</strong>
-                                    {item.description && (
-                                        <span className="schedule-owner-members">
-                                            {item.description}
-                                        </span>
-                                    )}
-                                    <span className="schedule-owner-members">
-                                        {item.ownerDisplayName ?? item.owner}
-                                        {item.deadline && (
-                                            <span style={{ marginLeft: 8 }}>
-                                                期限: {formatDeadline(item.deadline)}
-                                            </span>
-                                        )}
-                                        {item.groupIds.length > 0 && (
-                                            <span style={{ marginLeft: 8 }}>
-                                                {item.groupIds.map((gid) => {
-                                                    const g = groups.find((gr) => gr.id === gid);
-                                                    return g?.name ?? `グループ#${gid}`;
-                                                }).join(", ")}
-                                            </span>
-                                        )}
-                                    </span>
+                        {/* 未完了セクション */}
+                        <div className="todo-section-header">
+                            <CheckCircle2 size={18} />
+                            <span>これからやる</span>
+                        </div>
+                        {incompleteTodos.length === 0 ? (
+                            <p className="todo-empty" style={{ marginTop: 8 }}>全部終わったよ！お疲れさま〜</p>
+                        ) : (
+                            incompleteTodos.map(renderCard)
+                        )}
+
+                        {/* 完了セクション */}
+                        {completedTodos.length > 0 && (
+                            <>
+                                <div className="todo-section-header" style={{ marginTop: 24 }}>
+                                    <Circle size={18} />
+                                    <span>やった</span>
                                 </div>
-                                <div className="schedule-card-actions">
-                                    {item.canEdit && (
-                                        <>
-                                            <button
-                                                className="icon-btn"
-                                                title="編集"
-                                                onClick={() => handleDialogEdit(item)}
-                                            >
-                                                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2">
-                                                    <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z" />
-                                                </svg>
-                                            </button>
-                                            <button
-                                                className="icon-btn delete-btn-icon"
-                                                title="削除"
-                                                onClick={() => handleDeleteClick(item.id)}
-                                            >
-                                                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2">
-                                                    <polyline points="3 6 5 6 21 6" />
-                                                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-                                                    <line x1="10" y1="11" x2="10" y2="17" />
-                                                    <line x1="14" y1="11" x2="14" y2="17" />
-                                                </svg>
-                                            </button>
-                                        </>
-                                    )}
-                                </div>
-                            </div>
-                        ))}
+                                {completedTodos.map(renderCard)}
+                            </>
+                        )}
                     </div>
                 )}
             </div>

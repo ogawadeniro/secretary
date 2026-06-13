@@ -63,6 +63,15 @@ public class TodoController {
         return ResponseEntity.noContent().build();
     }
 
+    /** やることの完了状態をトグル */
+    @PatchMapping("/{id}/toggle-complete")
+    public ResponseEntity<TodoDto> toggleComplete(
+            @PathVariable Long id,
+            Authentication authentication) {
+        var updated = todoService.toggleComplete(id, authentication.getName());
+        return ResponseEntity.ok(TodoDto.fromDomain(updated));
+    }
+
     /** やことにメンバーを追加 */
     @PostMapping("/{id}/members")
     public ResponseEntity<TodoDto> addMember(

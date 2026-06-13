@@ -7,6 +7,7 @@ export interface TodoItem {
     createdAt: string;
     updatedAt: string;
     deadline?: string;
+    completed: boolean;
     canEdit: boolean;
     groupIds: number[];
     memberUsernames: string[];
