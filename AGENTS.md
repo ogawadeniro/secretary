@@ -35,9 +35,9 @@ domain/ → application/ → infrastructure/ ← frontend/ (React)
 
 | レイヤー | 役割 | キーファイル |
 |----------|------|-------------|
-| `domain/` | エンティティ、リポジトリポート | `Schedule`, `ScheduleRepository`, `Shareman`, `SharemanRepository`, `Group`, `GroupRepository`, `User`, `UserSetting` |
-| `application/` | ユースケース（アプリケーションサービス） | `ScheduleUseCase`, `ScheduleService`, `SharemanService`, `GroupService` |
-| `infrastructure/` | JPA永続化、RESTエンドポイント | `JpaSchedule`, `SchedulePersistenceAdapter`, `ScheduleController`, `ScheduleDto`, `SharemanController`, `GroupController` |
+| `domain/` | エンティティ、リポジトリポート | `Schedule`, `ScheduleRepository`, `Shareman`, `SharemanRepository`, `Group`, `GroupRepository`, `User`, `UserSetting`, `TodoItem`, `TodoItemRepository` |
+| `application/` | ユースケース（アプリケーションサービス） | `ScheduleUseCase`, `ScheduleService`, `SharemanService`, `GroupService`, `TodoService` |
+| `infrastructure/` | JPA永続化、RESTエンドポイント | `JpaSchedule`, `SchedulePersistenceAdapter`, `ScheduleController`, `ScheduleDto`, `TodoController`, `TodoDto`, `SharemanController`, `GroupController` |
 
 ### フロントエンド（React + Vite + TypeScript）
 
@@ -50,7 +50,8 @@ frontend/src/
 │   ├── schedule.ts              # Schedule / ScheduleMember 型定義
 │   ├── share.ts                 # CalendarShare 型定義
 │   ├── group.ts                 # Group / GroupMember 型定義
-│   └── settings.ts              # UserSettings 型定義
+│   ├── settings.ts              # UserSettings 型定義
+│   └── todo.ts                  # TodoItem 型定義
 ├── api/
 │   ├── authApi.ts               # 認証API（login / register / logout / me）
 │   ├── scheduleApi.ts           # 予定CRUD API
@@ -58,7 +59,8 @@ frontend/src/
 │   ├── groupApi.ts              # グループAPI
 │   ├── memberApi.ts             # 予定メンバーAPI
 │   ├── settingsApi.ts           # ユーザー設定API
-│   └── userApi.ts               # ユーザー検索API
+│   ├── userApi.ts               # ユーザー検索API
+│   └── todoApi.ts               # やることCRUD API
 ├── hooks/
 │   └── useDateTimeCorrection.ts # 日時補正カスタムフック
 ├── utils/
@@ -71,10 +73,17 @@ frontend/src/
     ├── DayCell.tsx              # 日付セル（チップ・プレースホルダー・+N）
     ├── ScheduleDialog.tsx       # 予定CRUDダイアログ
     ├── MemberManager.tsx        # 予定メンバー管理コンポーネント（追加・削除・補完）
+    ├── MemberAutocomplete.tsx   # メンバー補完入力コンポーネント
     ├── TimePicker.tsx           # 時刻選択ポップアップ
     ├── SettingsDialog.tsx       # 設定ダイアログ（色・初回曜日・表示名）
     ├── ShareDialog.tsx          # シェアメン招待管理ダイアログ
     ├── GroupDialog.tsx          # グループ管理ダイアログ
+    ├── FilterBar.tsx            # グループフィルター（カレンダー＋やること共用）
+    ├── FooterTabs.tsx           # フッタータブ（管理/カレンダー/やること）
+    ├── TodoScreen.tsx           # やること一覧画面（未完了/完了/フィルター/ソート）
+    ├── TodoDialog.tsx           # やること作成・編集ダイアログ
+    ├── TodoDetailDialog.tsx     # やること詳細表示ダイアログ
+    ├── ConfirmDialog.tsx        # 確認ダイアログ（削除・完了トグル）
     ├── LoginPage.tsx            # ログインページ
     ├── AccountDialog.tsx        # アカウント管理ダイアログ
     ├── ForgotPasswordPage.tsx   # パスワード忘れページ
@@ -86,10 +95,14 @@ frontend/src/
 | 役割 | ファイル |
 |------|----------|
 | アプリ起動 | `Application.java` |
-| REST API | `infrastructure/rest/ScheduleController.java` |
-| JPAエンティティ | `infrastructure/persistence/JpaSchedule.java`（テーブル: `schedules`） |
-| ドメインモデル | `domain/model/Schedule.java` |
-| アプリケーションサービス | `application/service/ScheduleService.java` |
+| 予定REST API | `infrastructure/rest/ScheduleController.java` |
+| やることREST API | `infrastructure/rest/TodoController.java` |
+| 予定JPAエンティティ | `infrastructure/persistence/JpaSchedule.java`（テーブル: `schedules`） |
+| やることJPAエンティティ | `infrastructure/persistence/JpaTodoItem.java`（テーブル: `todo_items`） |
+| 予定ドメインモデル | `domain/model/Schedule.java` |
+| やることドメインモデル | `domain/model/TodoItem.java` |
+| 予定アプリケーションサービス | `application/service/ScheduleService.java` |
+| やることアプリケーションサービス | `application/service/TodoService.java` |
 
 ## アクセス権限
 
@@ -160,6 +173,14 @@ frontend/src/
 - グループメンバーはシェアメンの中から選択。
 - グループに属する予定はメンバー全員がCRUD可能。
 
+### やることリスト
+- **TodoScreen**: 未完了リスト（期限昇順）と完了リスト（作成日時降順）の二段構成。グループフィルター（FilterBar 共用）対応。
+- **TodoDialog**: ボトムシート形式の作成/編集フォーム。タイトル（必須）・説明（自動リサイズtextarea）・期限（日付＋時刻）・共有グループ・メンバー（MemberAutocomplete + バッジ）を入力。保存後即時リストに反映。
+- **TodoDetailDialog**: 詳細表示専用。説明・期限・作成者・作成日時・更新日時・グループ・メンバーを表示。編集/削除ボタン付き。
+- **完了機能**: ConfirmDialog で確認後トグル。全完了時にランダムメッセージ5種から1つを表示。
+- **メンバー管理**: カレンダー予定と同様の MemberAutocomplete + バッジ（chipBgColor 背景色）表示。作成者は自動メンバー・固定で削除不可。
+- **API**: GET一覧、POST作成、PATCH更新、DELETE削除、PATCH toggle-complete。API応答に `canEdit`, `ownerDisplayName`, `memberUsernames`, `memberDisplayNames`, `memberChipBgColors` を含む。
+
 ### PWA
 - **Manifest**: `display: standalone`、`background_color: #1a1a2e`、`theme_color: #16213e`。
 - **iOS対応**: `apple-mobile-web-app-capable`、`apple-touch-icon`、ステータスバー透過。
@@ -168,6 +189,8 @@ frontend/src/
 ### REST API
 - 予定のCRUD（GET一覧/個別、POST作成、PATCH更新、DELETE削除）
 - 予定メンバー管理（GET一覧、POST追加、DELETE削除）
+- やることのCRUD（GET一覧、POST作成、PATCH更新、DELETE削除、PATCH toggle-complete）
+- やることメンバー管理（POST追加、DELETE削除）
 - カレンダー共有管理（GET一覧/incoming、POST作成、DELETE削除）
 - ユーザー検索（GET search、ユーザー名・表示名両方で部分一致）
 - ユーザー設定（GET取得、PUT更新、DELETEリセット）
@@ -211,6 +234,7 @@ frontend/src/
 - CI/CDは GitHub Actions（`.github/workflows/ci.yml`）。mainブランチにpushで自動テスト→Dockerイメージを `ghcr.io/ogawadeniro/secretary:latest` にpush。
 - Dockerデプロイは `Dockerfile` + `deploy.sh` を参照。Rocky Linux 9.4 で動作確認。
 - スマホでのズームイン防止のため、全 `input`/`textarea`/`select` に `font-size: 16px; touch-action: manipulation;` を適用。
+- `spring.jpa.open-in-view=false` のため、PersistenceAdapter 読み取りメソッドには `@Transactional(readOnly = true)` が必要。
 
 ## プロジェクトスクリプト
 
@@ -284,6 +308,36 @@ CREATE TABLE password_reset_tokens (
 
 ```sql
 ALTER TABLE user_settings ADD COLUMN time_interval integer NOT NULL DEFAULT 5;
+```
+
+### やることリスト（`feature/todo-list`）
+`setup-server.sh` / `migrate.sh` で対応済み。
+
+```sql
+CREATE TABLE todo_items (
+    id bigserial primary key,
+    title text not null,
+    description text not null default '',
+    owner text not null,
+    created_at timestamptz not null,
+    updated_at timestamptz not null,
+    deadline timestamptz,
+    completed boolean not null default false
+);
+
+CREATE TABLE todo_item_groups (
+    id bigserial primary key,
+    todo_item_id bigint not null references todo_items(id) on delete cascade,
+    group_id bigint not null references groups(id) on delete cascade,
+    unique(todo_item_id, group_id)
+);
+
+CREATE TABLE todo_item_members (
+    id bigserial primary key,
+    todo_item_id bigint not null references todo_items(id) on delete cascade,
+    username text not null,
+    unique(todo_item_id, username)
+);
 ```
 
 ## 既知の問題
@@ -364,6 +418,35 @@ create table user_settings (
     id bigserial primary key,
     username text not null unique,
     chip_bg_color text,
-    first_day_of_week integer
+    first_day_of_week integer,
+    time_interval integer not null default 5
+);
+
+-- やること
+create table todo_items (
+    id bigserial primary key,
+    title text not null,
+    description text not null default '',
+    owner text not null,
+    created_at timestamptz not null,
+    updated_at timestamptz not null,
+    deadline timestamptz,
+    completed boolean not null default false
+);
+
+-- やることグループ紐付け
+create table todo_item_groups (
+    id bigserial primary key,
+    todo_item_id bigint not null references todo_items(id) on delete cascade,
+    group_id bigint not null references groups(id) on delete cascade,
+    unique(todo_item_id, group_id)
+);
+
+-- やることメンバー
+create table todo_item_members (
+    id bigserial primary key,
+    todo_item_id bigint not null references todo_items(id) on delete cascade,
+    username text not null,
+    unique(todo_item_id, username)
 );
 ```

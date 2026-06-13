@@ -8,6 +8,7 @@ import TodoDialog from "./TodoDialog";
 import TodoDetailDialog from "./TodoDetailDialog";
 import ConfirmDialog from "./ConfirmDialog";
 import FilterBar from "./FilterBar";
+import { useAuth } from "../context/AuthContext";
 
 interface TodoScreenProps {
     onNavigateToCalendar: () => void;
@@ -30,6 +31,7 @@ function formatDeadline(iso?: string): string {
 }
 
 export default function TodoScreen({ onNavigateToCalendar, onNotify }: TodoScreenProps) {
+    const { user } = useAuth();
     const [todos, setTodos] = useState<TodoItem[]>([]);
     const [groups, setGroups] = useState<Group[]>([]);
     const [detailItem, setDetailItem] = useState<TodoItem | null>(null);
@@ -345,6 +347,7 @@ export default function TodoScreen({ onNavigateToCalendar, onNotify }: TodoScree
                 <TodoDialog
                     item={editItem}
                     groups={groups}
+                    currentUsername={user?.username ?? ""}
                     onClose={() => { setDialogOpen(false); setEditItem(null); }}
                     onSaved={handleSaved}
                     onNotify={onNotify}

@@ -73,6 +73,10 @@ public class TodoService {
         if (item.getMemberUsernames() == null) {
             item.setMemberUsernames(new ArrayList<>());
         }
+        // 作成者は自動でメンバーに含める
+        if (!item.getMemberUsernames().contains(username)) {
+            item.getMemberUsernames().add(username);
+        }
         TodoItem saved = todoItemRepository.save(item);
         enrichItem(saved, username);
         return saved;
@@ -91,7 +95,13 @@ public class TodoService {
         if (updated.getTitle() != null) existing.setTitle(updated.getTitle());
         if (updated.getDescription() != null) existing.setDescription(updated.getDescription());
         if (updated.getGroupIds() != null) existing.setGroupIds(updated.getGroupIds());
-        if (updated.getMemberUsernames() != null) existing.setMemberUsernames(updated.getMemberUsernames());
+        if (updated.getMemberUsernames() != null) {
+            // オーナーは常にメンバーに含める
+            if (!updated.getMemberUsernames().contains(existing.getOwner())) {
+                updated.getMemberUsernames().add(existing.getOwner());
+            }
+            existing.setMemberUsernames(updated.getMemberUsernames());
+        }
         existing.setDeadline(updated.getDeadline());
         existing.setUpdatedAt(LocalDateTime.now());
 
@@ -207,9 +217,9 @@ public class TodoService {
             item.setOwnerDisplayName(u.getDisplayName());
         });
 
-        // メンバー情報
+        // メンバー情報（オーナーを含む全メンバー）
         List<String> members = item.getMemberUsernames();
-        if (members != null && !members.isEmpty()) {
+        if (members != null) {
             Map<String, String> displayNames = new HashMap<>();
             Map<String, String> chipBgColors = new HashMap<>();
             for (String m : members) {
@@ -220,6 +230,11 @@ public class TodoService {
                     chipBgColors.put(m, s.getChipBgColor());
                 });
             }
+            // オーナーも確実に含める
+            displayNames.putIfAbsent(item.getOwner(), item.getOwnerDisplayName());
+            userSettingRepository.findByUsername(item.getOwner()).ifPresent(s -> {
+                chipBgColors.putIfAbsent(item.getOwner(), s.getChipBgColor());
+            });
             item.setMemberDisplayNames(displayNames);
             item.setMemberChipBgColors(chipBgColors);
         }

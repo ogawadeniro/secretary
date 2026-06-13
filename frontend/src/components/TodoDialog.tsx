@@ -3,10 +3,14 @@ import type { TodoItem } from "../types/todo";
 import type { Group } from "../types/group";
 import { createTodo, updateTodo } from "../api/todoApi";
 import { fetchAcceptedUsernames } from "../api/sharemanApi";
+import { fetchGroupMembers } from "../api/groupApi";
+import { searchUsers } from "../api/userApi";
+import MemberAutocomplete from "./MemberAutocomplete";
 
 interface TodoDialogProps {
     item: TodoItem | null;
     groups: Group[];
+    currentUsername: string;
     onClose: () => void;
     onSaved: () => void;
     onNotify: (message: string, type?: "success" | "error") => void;
@@ -36,7 +40,7 @@ function toDeadlineISO(date: string, time: string): string | null {
     return `${date}T${time || "00:00"}:00`;
 }
 
-export default function TodoDialog({ item, groups, onClose, onSaved, onNotify }: TodoDialogProps) {
+export default function TodoDialog({ item, groups, currentUsername, onClose, onSaved, onNotify }: TodoDialogProps) {
     const isEditing = item !== null;
     const [title, setTitle] = useState(item?.title ?? "");
     const [description, setDescription] = useState(item?.description ?? "");
@@ -46,9 +50,25 @@ export default function TodoDialog({ item, groups, onClose, onSaved, onNotify }:
         item?.groupIds && item.groupIds.length > 0 ? item.groupIds[0] : undefined
     );
     const [showGroupDropdown, setShowGroupDropdown] = useState(false);
-    const [members, setMembers] = useState<string[]>(item?.memberUsernames ?? []);
-    const [memberUsername, setMemberUsername] = useState("");
-    const [sharemen, setSharemen] = useState<string[]>([]);
+    const [members, setMembers] = useState<string[]>(() => {
+        if (!item) {
+            // 作成時は自分をメンバーに含める
+            return currentUsername ? [currentUsername] : [];
+        }
+        const initial = [...(item.memberUsernames ?? [])];
+        // オーナーをメンバーに含める
+        if (item.owner && !initial.includes(item.owner)) {
+            initial.push(item.owner);
+        }
+        return initial;
+    });
+    const [memberInput, setMemberInput] = useState("");
+    const [showSuggestions, setShowSuggestions] = useState(false);
+    const [shareCandidates, setShareCandidates] = useState<
+        { username: string; displayName: string; chipBgColor?: string }[]
+    >([]);
+    const memberInputRef = useRef<HTMLInputElement>(null);
+    const suggestionsRef = useRef<HTMLDivElement>(null);
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [closing, setClosing] = useState(false);
@@ -63,9 +83,42 @@ export default function TodoDialog({ item, groups, onClose, onSaved, onNotify }:
         }
     }, []);
 
+    // グループ選択に応じて候補を取得
     useEffect(() => {
-        fetchAcceptedUsernames().then(setSharemen).catch(() => {});
-    }, []);
+        (async () => {
+            try {
+                if (selectedGroupId) {
+                    const groupMembers = await fetchGroupMembers(selectedGroupId);
+                    const candidates = groupMembers
+                        .filter((m) => m.username !== item?.owner)
+                        .sort((a, b) => a.username.localeCompare(b.username))
+                        .map((m) => ({
+                            username: m.username,
+                            displayName: m.displayName ?? m.username,
+                            chipBgColor: m.chipBgColor,
+                        }));
+                    setShareCandidates(candidates);
+                } else {
+                    const [accepted, allUsers] = await Promise.all([
+                        fetchAcceptedUsernames(),
+                        searchUsers(""),
+                    ]);
+                    const currentOwner = item?.owner;
+                    const candidates = accepted
+                        .filter((u) => u !== currentOwner)
+                        .sort()
+                        .map((username) => ({
+                            username,
+                            displayName: allUsers.find((u) => u.username === username)?.displayName ?? username,
+                            chipBgColor: allUsers.find((u) => u.username === username)?.chipBgColor,
+                        }));
+                    setShareCandidates(candidates);
+                }
+            } catch {
+                // 候補一覧がなくても機能に影響なし
+            }
+        })();
+    }, [selectedGroupId, item?.owner]);
 
     // グループドロップダウンの外側クリックで閉じる
     useEffect(() => {
@@ -79,18 +132,55 @@ export default function TodoDialog({ item, groups, onClose, onSaved, onNotify }:
         return () => document.removeEventListener("mousedown", handleClick);
     }, [showGroupDropdown]);
 
-    const availableSharemen = sharemen.filter((u) => !members.includes(u) && u !== item?.owner);
+    // 補完候補（フィルタ済み）
+    const filteredSuggestions = shareCandidates.filter((c) => {
+        const query = memberInput.trim().toLowerCase();
+        const matchesQuery = query === "" ||
+            c.username.toLowerCase().includes(query) ||
+            c.displayName.toLowerCase().includes(query);
+        return matchesQuery && !members.includes(c.username);
+    });
 
-    const handleAddMember = () => {
-        const trimmed = memberUsername.trim();
+    const handleAddMember = (username: string) => {
+        const trimmed = username.trim();
         if (!trimmed || members.includes(trimmed)) return;
         setMembers((prev) => [...prev, trimmed]);
-        setMemberUsername("");
+        setMemberInput("");
+        setShowSuggestions(true);
+        memberInputRef.current?.focus();
     };
 
     const handleRemoveMember = (username: string) => {
+        // 作成者は削除不可
+        if (username === item?.owner) return;
+        // 作成中の場合は現在のユーザーも削除不可
+        if (!item && username === currentUsername) return;
         setMembers((prev) => prev.filter((m) => m !== username));
     };
+
+    // 表示名・チップ色マップ（候補＋既存メンバーデータから生成）
+    const memberDisplayNameMap: Record<string, string> = {};
+    const memberChipBgColorMap: Record<string, string | undefined> = {};
+    // 編集モードでは API から返された既存データを優先
+    if (item?.memberDisplayNames) {
+        Object.assign(memberDisplayNameMap, item.memberDisplayNames);
+    }
+    if (item?.memberChipBgColors) {
+        Object.assign(memberChipBgColorMap, item.memberChipBgColors);
+    }
+    // 現在のユーザー（作成者）をフォールバックとして追加
+    if (currentUsername && !(currentUsername in memberDisplayNameMap)) {
+        memberDisplayNameMap[currentUsername] = currentUsername;
+    }
+    // 候補データで補完（既存データを上書きしない）
+    shareCandidates.forEach((c) => {
+        if (!(c.username in memberDisplayNameMap)) {
+            memberDisplayNameMap[c.username] = c.displayName;
+        }
+        if (!(c.username in memberChipBgColorMap)) {
+            memberChipBgColorMap[c.username] = c.chipBgColor;
+        }
+    });
 
     const handleSave = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -259,73 +349,81 @@ export default function TodoDialog({ item, groups, onClose, onSaved, onNotify }:
                     {selectedGroupId && (
                         <div className="settings-section" style={{ borderBottom: "none", paddingBottom: 0 }}>
                             <div className="settings-section-title">メンバー</div>
+
+                            {/* バッジ一覧（作成者を常に先頭に） */}
                             {members.length > 0 && (
-                                <div style={{ display: "flex", flexWrap: "wrap", gap: "4px", marginBottom: "8px" }}>
-                                    {members.map((m) => (
-                                        <span
-                                            key={m}
-                                            style={{
-                                                display: "inline-flex",
-                                                alignItems: "center",
-                                                gap: "4px",
-                                                padding: "2px 8px",
-                                                background: "var(--color-surface2)",
-                                                borderRadius: "999px",
-                                                fontSize: "0.8rem",
-                                            }}
-                                        >
-                                            {m}
-                                            <button
-                                                type="button"
+                                <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", marginBottom: "8px" }}>
+                                    {[...members].sort((a, b) => {
+                                        const ownerKey = item?.owner ?? currentUsername;
+                                        if (a === ownerKey) return -1;
+                                        if (b === ownerKey) return 1;
+                                        return 0;
+                                    }).map((m) => {
+                                        const isOwner = m === item?.owner || (!item && m === currentUsername);
+                                        return (
+                                            <span
+                                                key={m}
                                                 style={{
-                                                    background: "none",
-                                                    border: "none",
-                                                    cursor: "pointer",
-                                                    color: "var(--color-sun)",
-                                                    padding: "0",
+                                                    display: "inline-flex",
+                                                    alignItems: "center",
+                                                    gap: "4px",
+                                                    padding: isOwner ? "2px 10px" : "2px 4px 2px 10px",
+                                                    background: memberChipBgColorMap[m] ?? "var(--color-surface2)",
+                                                    borderRadius: "999px",
                                                     fontSize: "0.8rem",
-                                                    lineHeight: 1,
                                                 }}
-                                                onClick={() => handleRemoveMember(m)}
                                             >
-                                                ✕
-                                            </button>
-                                        </span>
-                                    ))}
+                                                {memberDisplayNameMap[m] ?? m}
+                                                {!isOwner && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => handleRemoveMember(m)}
+                                                        title="メンバーを削除"
+                                                        style={{
+                                                            display: "inline-flex",
+                                                            alignItems: "center",
+                                                            justifyContent: "center",
+                                                            width: "18px",
+                                                            height: "18px",
+                                                            padding: 0,
+                                                            border: "none",
+                                                            borderRadius: "50%",
+                                                            background: "var(--color-border)",
+                                                            color: "var(--color-text-muted)",
+                                                            cursor: "pointer",
+                                                            fontSize: "11px",
+                                                            lineHeight: 1,
+                                                            flexShrink: 0,
+                                                        }}
+                                                    >
+                                                        ✕
+                                                    </button>
+                                                )}
+                                            </span>
+                                        );
+                                    })}
                                 </div>
                             )}
-                            {availableSharemen.length > 0 && (
-                                <div style={{ display: "flex", gap: "8px" }}>
-                                    <select
-                                        value={memberUsername}
-                                        onChange={(e) => setMemberUsername(e.target.value)}
-                                        style={{
-                                            flex: 1,
-                                            background: "var(--color-surface2)",
-                                            color: "var(--color-text)",
-                                            border: "1px solid var(--color-border)",
-                                            padding: "8px",
-                                            borderRadius: "6px",
-                                            fontFamily: "inherit",
-                                            fontSize: "0.85rem",
-                                        }}
-                                    >
-                                        <option value="">シェアメンを選択...</option>
-                                        {availableSharemen.map((u) => (
-                                            <option key={u} value={u}>{u}</option>
-                                        ))}
-                                    </select>
-                                    <button
-                                        type="button"
-                                        className="save-btn"
-                                        style={{ padding: "8px 16px", fontSize: "0.85rem" }}
-                                        disabled={!memberUsername}
-                                        onClick={handleAddMember}
-                                    >
-                                        追加
-                                    </button>
-                                </div>
-                            )}
+
+                            <MemberAutocomplete
+                                value={memberInput}
+                                onChange={(v) => { setMemberInput(v); setShowSuggestions(true); }}
+                                onKeyDown={(e) => {
+                                    if (e.key === "Enter") {
+                                        e.preventDefault();
+                                        if (filteredSuggestions.length > 0) {
+                                            handleAddMember(filteredSuggestions[0].username);
+                                        }
+                                    }
+                                }}
+                                onFocus={() => setShowSuggestions(true)}
+                                suggestions={filteredSuggestions}
+                                showSuggestions={showSuggestions}
+                                onSelect={(username) => handleAddMember(username)}
+                                onClose={() => setShowSuggestions(false)}
+                                inputRef={memberInputRef}
+                                suggestionsRef={suggestionsRef}
+                            />
                         </div>
                     )}
 
