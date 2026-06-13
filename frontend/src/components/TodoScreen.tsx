@@ -221,20 +221,17 @@ export default function TodoScreen({ onNavigateToCalendar, onNotify }: TodoScree
                         </span>
                     )}
                     <span className="schedule-owner-members">
-                        {item.ownerDisplayName ?? item.owner}
                         {item.deadline && (
-                            <span style={{ marginLeft: 8 }}>
+                            <span>
                                 期限: {formatDeadline(item.deadline)}
                             </span>
                         )}
-                        {item.groupIds.length > 0 && (
-                            <span style={{ marginLeft: 8 }}>
-                                {item.groupIds.map((gid) => {
-                                    const g = groups.find((gr) => gr.id === gid);
-                                    return g?.name ?? `グループ#${gid}`;
-                                }).join(", ")}
-                            </span>
-                        )}
+                        <span>
+                            メンバー: {item.memberUsernames.length > 0
+                                ? item.memberUsernames.map((u) => item.memberDisplayNames?.[u] ?? u).join(", ")
+                                : "プライベート"
+                            }
+                        </span>
                     </span>
                 </div>
                 <div className="schedule-card-actions">
