@@ -1,10 +1,11 @@
-import { useState, useEffect, useCallback, useRef } from "react";
-import { Plus, Trash2, Pencil, ArrowLeft, Check } from "lucide-react";
+import { useState, useEffect, useCallback } from "react";
+import { Plus, Trash2, Pencil, ArrowLeft } from "lucide-react";
 import type { TodoItem } from "../types/todo";
 import type { Group } from "../types/group";
 import { fetchTodos, deleteTodo } from "../api/todoApi";
 import { fetchGroups } from "../api/groupApi";
 import TodoDialog from "./TodoDialog";
+import TodoDetailDialog from "./TodoDetailDialog";
 import ConfirmDialog from "./ConfirmDialog";
 
 interface TodoScreenProps {
@@ -15,6 +16,7 @@ interface TodoScreenProps {
 export default function TodoScreen({ onNavigateToCalendar, onNotify }: TodoScreenProps) {
     const [todos, setTodos] = useState<TodoItem[]>([]);
     const [groups, setGroups] = useState<Group[]>([]);
+    const [detailItem, setDetailItem] = useState<TodoItem | null>(null);
     const [dialogOpen, setDialogOpen] = useState(false);
     const [editItem, setEditItem] = useState<TodoItem | null>(null);
     const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
@@ -44,7 +46,25 @@ export default function TodoScreen({ onNavigateToCalendar, onNotify }: TodoScree
         setDialogOpen(true);
     };
 
-    const handleEdit = (item: TodoItem) => {
+    /** カードクリック → 詳細表示 */
+    const handleShowDetail = (item: TodoItem) => {
+        setDetailItem(item);
+    };
+
+    /** 詳細の編集ボタン → 編集ダイアログ */
+    const handleDetailEdit = (item: TodoItem) => {
+        setDetailItem(null);
+        setEditItem(item);
+        setDialogOpen(true);
+    };
+
+    /** 詳細の削除ボタン → 確認 */
+    const handleDetailDelete = (id: number) => {
+        setDetailItem(null);
+        setConfirmDeleteId(id);
+    };
+
+    const handleDialogEdit = (item: TodoItem) => {
         setEditItem(item);
         setDialogOpen(true);
     };
@@ -72,12 +92,6 @@ export default function TodoScreen({ onNavigateToCalendar, onNotify }: TodoScree
         }
     };
 
-    /** グループ名を ID から検索 */
-    const groupName = (gid: number): string => {
-        const g = groups.find((gr) => gr.id === gid);
-        return g?.name ?? `グループ#${gid}`;
-    };
-
     return (
         <div className="todo-screen">
             <div className="todo-header">
@@ -101,7 +115,11 @@ export default function TodoScreen({ onNavigateToCalendar, onNotify }: TodoScree
                     <div className="todo-list">
                         {todos.map((item) => (
                             <div key={item.id} className="todo-card">
-                                <div className="todo-card-body">
+                                <div
+                                    className="todo-card-body"
+                                    onClick={() => handleShowDetail(item)}
+                                    style={{ cursor: "pointer" }}
+                                >
                                     <div className="todo-card-title">
                                         {item.title}
                                     </div>
@@ -112,7 +130,10 @@ export default function TodoScreen({ onNavigateToCalendar, onNotify }: TodoScree
                                         {item.ownerDisplayName ?? item.owner}
                                         {item.groupIds.length > 0 && (
                                             <span className="todo-card-group">
-                                                {item.groupIds.map((gid) => groupName(gid)).join(", ")}
+                                                {item.groupIds.map((gid) => {
+                                                    const g = groups.find((gr) => gr.id === gid);
+                                                    return g?.name ?? `グループ#${gid}`;
+                                                }).join(", ")}
                                             </span>
                                         )}
                                     </div>
@@ -122,7 +143,7 @@ export default function TodoScreen({ onNavigateToCalendar, onNotify }: TodoScree
                                         <>
                                             <button
                                                 className="icon-btn"
-                                                onClick={() => handleEdit(item)}
+                                                onClick={() => handleDialogEdit(item)}
                                                 title="編集"
                                                 style={{ color: "var(--color-accent)", padding: "4px" }}
                                             >
@@ -145,6 +166,18 @@ export default function TodoScreen({ onNavigateToCalendar, onNotify }: TodoScree
                 )}
             </div>
 
+            {/* 詳細ダイアログ */}
+            {detailItem && (
+                <TodoDetailDialog
+                    item={detailItem}
+                    groups={groups}
+                    onClose={() => setDetailItem(null)}
+                    onEdit={handleDetailEdit}
+                    onDelete={handleDetailDelete}
+                />
+            )}
+
+            {/* 作成・編集ダイアログ */}
             {dialogOpen && (
                 <TodoDialog
                     item={editItem}
