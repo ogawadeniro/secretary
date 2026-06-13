@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
-import { Plus, ArrowLeft, Circle, CheckCircle2, Clock, Users } from "lucide-react";
+import { Plus, ArrowLeft, Circle, CheckCircle2, CalendarCheck, Users } from "lucide-react";
 import type { TodoItem } from "../types/todo";
 import type { Group } from "../types/group";
 import { fetchTodos, deleteTodo, toggleComplete } from "../api/todoApi";
@@ -230,7 +230,7 @@ export default function TodoScreen({ onNavigateToCalendar, onNotify }: TodoScree
                     )}
                     <span className="schedule-owner-members" style={{ display: "flex", flexDirection: "column", gap: 2 }}>
                         <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                            <Clock size={12} />
+                            <CalendarCheck size={12} />
                             {item.deadline ? formatDeadline(item.deadline) : "—"}
                         </span>
                         <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
