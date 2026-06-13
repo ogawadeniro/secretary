@@ -99,6 +99,26 @@ psql -h "$DB_HOST" -U "$DB_USER" -d "$DB_NAME" <<-EOSQL
         UNIQUE(group_id, username)
     );
 
+    -- 1-6. やることリストテーブル
+    CREATE TABLE IF NOT EXISTS todo_items (
+        id BIGSERIAL PRIMARY KEY,
+        title TEXT NOT NULL,
+        description TEXT NOT NULL DEFAULT '',
+        owner TEXT NOT NULL,
+        created_at TIMESTAMPTZ,
+        updated_at TIMESTAMPTZ
+    );
+
+    CREATE TABLE IF NOT EXISTS todo_item_groups (
+        todo_item_id BIGINT NOT NULL REFERENCES todo_items(id) ON DELETE CASCADE,
+        group_id BIGINT NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS todo_item_members (
+        todo_item_id BIGINT NOT NULL REFERENCES todo_items(id) ON DELETE CASCADE,
+        username TEXT NOT NULL
+    );
+
     -- ============================================================
     --  2. 不足カラムの追加（IF NOT EXISTS で安全）
     -- ============================================================
