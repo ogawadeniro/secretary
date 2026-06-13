@@ -53,6 +53,15 @@ export default function TodoDialog({ item, groups, onClose, onSaved, onNotify }:
     const [error, setError] = useState<string | null>(null);
     const [closing, setClosing] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
+    const descRef = useRef<HTMLTextAreaElement>(null);
+
+    // 編集中、初期値で高さを調整
+    useEffect(() => {
+        if (descRef.current) {
+            descRef.current.style.height = "auto";
+            descRef.current.style.height = `${descRef.current.scrollHeight}px`;
+        }
+    }, []);
 
     useEffect(() => {
         fetchAcceptedUsernames().then(setSharemen).catch(() => {});
@@ -154,6 +163,7 @@ export default function TodoDialog({ item, groups, onClose, onSaved, onNotify }:
                     <label>
                         やることの詳細
                         <textarea
+                            ref={descRef}
                             value={description}
                             onChange={(e) => {
                                 setDescription(e.target.value);
@@ -176,7 +186,7 @@ export default function TodoDialog({ item, groups, onClose, onSaved, onNotify }:
                             />
                         </label>
                         <label>
-                            締め切り時刻
+                            締切時刻
                             <input
                                 type="time"
                                 value={deadlineTime}
