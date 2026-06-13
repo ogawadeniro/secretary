@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { Plus, ArrowLeft, Circle, CheckCircle2 } from "lucide-react";
 import type { TodoItem } from "../types/todo";
 import type { Group } from "../types/group";
@@ -7,6 +7,7 @@ import { fetchGroups } from "../api/groupApi";
 import TodoDialog from "./TodoDialog";
 import TodoDetailDialog from "./TodoDetailDialog";
 import ConfirmDialog from "./ConfirmDialog";
+import FilterBar from "./FilterBar";
 
 interface TodoScreenProps {
     onNavigateToCalendar: () => void;
@@ -57,9 +58,6 @@ export default function TodoScreen({ onNavigateToCalendar, onNotify }: TodoScree
 
     useEffect(() => { load(); }, [load]);
 
-    const incompleteTodos = todos.filter((t) => !t.completed);
-    const completedTodos = todos.filter((t) => t.completed);
-
     const allDoneMessages = [
         "全部終わったよ！おつかれさま〜",
         "いつもありがとうね。",
@@ -70,6 +68,46 @@ export default function TodoScreen({ onNavigateToCalendar, onNotify }: TodoScree
     const [allDoneMessage] = useState(() =>
         allDoneMessages[Math.floor(Math.random() * allDoneMessages.length)]
     );
+
+    const [scheduleFilter, setScheduleFilter] = useState<Set<string | number>>(() => {
+        try {
+            const saved = localStorage.getItem("calendar_filter");
+            if (saved) return new Set(JSON.parse(saved));
+        } catch { /* ignore */ }
+        return new Set(["personal"]);
+    });
+    const [showFilterDropdown, setShowFilterDropdown] = useState(false);
+    const filterDropdownRef = useRef<HTMLDivElement>(null);
+
+    // フィルターを localStorage に保存
+    useEffect(() => {
+        localStorage.setItem("calendar_filter", JSON.stringify([...scheduleFilter]));
+    }, [scheduleFilter]);
+
+    // フィルタードロップダウンの外側クリックで閉じる
+    useEffect(() => {
+        if (!showFilterDropdown) return;
+        const handleClick = (e: MouseEvent) => {
+            if (filterDropdownRef.current && !filterDropdownRef.current.contains(e.target as Node)) {
+                setShowFilterDropdown(false);
+            }
+        };
+        document.addEventListener("mousedown", handleClick);
+        return () => document.removeEventListener("mousedown", handleClick);
+    }, [showFilterDropdown]);
+
+    // フィルター適用
+    const filteredTodos = useMemo(() => {
+        if (scheduleFilter.size === 0) return [];
+        return todos.filter((t) => {
+            if (scheduleFilter.has("personal") && t.groupIds.length === 0) return true;
+            if (t.groupIds.some((gid) => scheduleFilter.has(gid))) return true;
+            return false;
+        });
+    }, [todos, scheduleFilter]);
+
+    const incompleteTodos = filteredTodos.filter((t) => !t.completed);
+    const completedTodos = filteredTodos.filter((t) => t.completed);
 
     const handleCreate = () => {
         setEditItem(null);
@@ -234,6 +272,16 @@ export default function TodoScreen({ onNavigateToCalendar, onNotify }: TodoScree
                     <p className="todo-empty">やることがまだないよ。追加してみよう！</p>
                 ) : (
                     <div className="todo-list">
+                        <FilterBar
+                            groups={groups}
+                            scheduleFilter={scheduleFilter}
+                            showFilterDropdown={showFilterDropdown}
+                            filterDropdownRef={filterDropdownRef}
+                            onToggleFilterDropdown={() => setShowFilterDropdown((p) => !p)}
+                            onCloseFilterDropdown={() => setShowFilterDropdown(false)}
+                            onFilterChange={(next) => setScheduleFilter(next)}
+                        />
+
                         {/* 未完了セクション */}
                         <div className="todo-section-header">
                             <Circle size={18} />
