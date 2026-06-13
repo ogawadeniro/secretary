@@ -131,6 +131,20 @@ export default function TodoScreen({ onNavigateToCalendar, onNotify }: TodoScree
     function renderCard(item: TodoItem) {
         return (
             <div key={item.id} className="schedule-card" style={{ cursor: "pointer" }}>
+                <button
+                    className="icon-btn"
+                    title={item.completed ? "未完了に戻す" : "完了"}
+                    onClick={() => item.completed ? handleToggleComplete(item.id, true) : handleCompleteClick(item.id)}
+                    style={{
+                        color: item.completed ? "var(--color-text-muted)" : "var(--color-accent)",
+                        flexShrink: 0,
+                    }}
+                >
+                    {item.completed
+                        ? <Circle size={16} />
+                        : <CheckCircle2 size={16} />
+                    }
+                </button>
                 <div
                     className="schedule-card-info"
                     onClick={() => handleShowDetail(item)}
@@ -161,17 +175,6 @@ export default function TodoScreen({ onNavigateToCalendar, onNotify }: TodoScree
                     </span>
                 </div>
                 <div className="schedule-card-actions">
-                    <button
-                        className="icon-btn"
-                        title={item.completed ? "未完了に戻す" : "完了"}
-                        onClick={() => item.completed ? handleToggleComplete(item.id, true) : handleCompleteClick(item.id)}
-                        style={{ color: item.completed ? "var(--color-text-muted)" : "var(--color-accent)" }}
-                    >
-                        {item.completed
-                            ? <Circle size={16} />
-                            : <CheckCircle2 size={16} />
-                        }
-                    </button>
                     {item.canEdit && (
                         <>
                             <button
