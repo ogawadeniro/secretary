@@ -125,22 +125,6 @@ export default function InfiniteCalendar() {
     localStorage.setItem("calendar_filter", JSON.stringify([...scheduleFilter]));
   }, [scheduleFilter]);
 
-  // 削除済みグループのIDをフィルターから除去
-  useEffect(() => {
-    const groupIds = new Set(groups.map((g) => g.id));
-    setScheduleFilter((prev) => {
-      const next = new Set(prev);
-      let changed = false;
-      for (const v of next) {
-        if (typeof v === "number" && !groupIds.has(v)) {
-          next.delete(v);
-          changed = true;
-        }
-      }
-      return changed ? next : prev;
-    });
-  }, [groups]);
-
   // チップ色を CSS 変数に反映
   useEffect(() => {
     document.documentElement.style.setProperty("--color-chip-bg", settings.chipBgColor);
