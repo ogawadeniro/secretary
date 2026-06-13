@@ -150,7 +150,6 @@ export default function TodoDialog({ item, groups, onClose, onSaved, onNotify }:
                             onChange={(e) => setTitle(e.target.value)}
                             required
                             placeholder="やることのタイトル"
-                            autoFocus
                         />
                     </label>
 
