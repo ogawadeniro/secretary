@@ -18,18 +18,18 @@ export default function FooterTabs({ activeTab, onTabChange }: FooterTabsProps) 
         <span>管理</span>
       </button>
       <button
-        className={`footer-tab${activeTab === "todos" ? " active" : ""}`}
-        onClick={() => onTabChange("todos")}
-      >
-        <ListTodo size={20} />
-        <span>やること</span>
-      </button>
-      <button
         className={`footer-tab${activeTab === "calendar" ? " active" : ""}`}
         onClick={() => onTabChange("calendar")}
       >
         <Calendar size={20} />
         <span>カレンダー</span>
+      </button>
+      <button
+        className={`footer-tab${activeTab === "todos" ? " active" : ""}`}
+        onClick={() => onTabChange("todos")}
+      >
+        <ListTodo size={20} />
+        <span>やること</span>
       </button>
     </div>
   );
