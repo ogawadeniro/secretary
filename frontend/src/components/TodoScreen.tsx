@@ -106,7 +106,15 @@ export default function TodoScreen({ onNavigateToCalendar, onNotify }: TodoScree
         });
     }, [todos, scheduleFilter]);
 
-    const incompleteTodos = filteredTodos.filter((t) => !t.completed);
+    const incompleteTodos = filteredTodos
+        .filter((t) => !t.completed)
+        .sort((a, b) => {
+            // 期限が迫っている順（期限なしは最下位）
+            if (!a.deadline && !b.deadline) return 0;
+            if (!a.deadline) return 1;
+            if (!b.deadline) return -1;
+            return a.deadline.localeCompare(b.deadline);
+        });
     const completedTodos = filteredTodos.filter((t) => t.completed);
 
     const handleCreate = () => {
