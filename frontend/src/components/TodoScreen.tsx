@@ -228,7 +228,7 @@ export default function TodoScreen({ onNavigateToCalendar, onNotify }: TodoScree
                     <div className="todo-list">
                         {/* 未完了セクション */}
                         <div className="todo-section-header">
-                            <CheckCircle2 size={18} />
+                            <Circle size={18} />
                             <span>これからやる</span>
                         </div>
                         {incompleteTodos.length === 0 ? (
@@ -241,7 +241,7 @@ export default function TodoScreen({ onNavigateToCalendar, onNotify }: TodoScree
                         {completedTodos.length > 0 && (
                             <>
                                 <div className="todo-section-header" style={{ marginTop: 24 }}>
-                                    <Circle size={18} />
+                                    <CheckCircle2 size={18} />
                                     <span>やった</span>
                                 </div>
                                 {completedTodos.map(renderCard)}
