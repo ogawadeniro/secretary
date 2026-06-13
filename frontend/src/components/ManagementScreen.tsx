@@ -25,6 +25,7 @@ import GroupCreateForm from "./GroupCreateForm";
 import ConfirmDialog from "./ConfirmDialog";
 
 interface ManagementScreenProps {
+  initialTab?: "sharemen" | "groups";
   onNavigateToCalendar: () => void;
   onNotify: (message: string, type?: "success" | "error") => void;
 }
@@ -39,8 +40,8 @@ function formatDisplay(name: string | undefined | null, username: string): strin
 
 type MgmtTab = "sharemen" | "groups";
 
-export default function ManagementScreen({ onNavigateToCalendar, onNotify }: ManagementScreenProps) {
-  const [activeTab, setActiveTab] = useState<MgmtTab>("sharemen");
+export default function ManagementScreen({ initialTab = "sharemen", onNavigateToCalendar, onNotify }: ManagementScreenProps) {
+  const [activeTab, setActiveTab] = useState<MgmtTab>(initialTab);
 
   return (
     <div className="management-screen">
