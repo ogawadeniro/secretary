@@ -20,9 +20,9 @@ export default function FilterBar({
   onCloseFilterDropdown,
   onFilterChange,
 }: FilterBarProps) {
-  const selectedGroupIds = [...scheduleFilter].filter(
-    (v) => v !== "personal"
-  ) as number[];
+  const selectedGroupIds = ([...scheduleFilter] as (string | number)[])
+    .filter((v) => v !== "personal")
+    .filter((v) => typeof v === "number" && groups.some((g) => g.id === v)) as number[];
 
   return (
     <div
