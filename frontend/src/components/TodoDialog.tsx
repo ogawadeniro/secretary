@@ -70,9 +70,7 @@ export default function TodoDialog({ item, groups, onClose, onSaved, onNotify }:
         return () => document.removeEventListener("mousedown", handleClick);
     }, [showGroupDropdown]);
 
-    const availableSharemen = selectedGroupId
-        ? []
-        : sharemen.filter((u) => !members.includes(u) && u !== item?.owner);
+    const availableSharemen = sharemen.filter((u) => !members.includes(u) && u !== item?.owner);
 
     const handleAddMember = () => {
         const trimmed = memberUsername.trim();
@@ -237,7 +235,7 @@ export default function TodoDialog({ item, groups, onClose, onSaved, onNotify }:
                     </div>
 
                     {/* メンバー管理 */}
-                    {!selectedGroupId && (
+                    {selectedGroupId && (
                         <div className="settings-section" style={{ borderBottom: "none", paddingBottom: 0 }}>
                             <div className="settings-section-title">メンバー</div>
                             {members.length > 0 && (
