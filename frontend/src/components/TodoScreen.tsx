@@ -220,16 +220,14 @@ export default function TodoScreen({ onNavigateToCalendar, onNotify }: TodoScree
                             {item.description}
                         </span>
                     )}
-                    <span className="schedule-owner-members">
-                        {item.deadline && (
-                            <span>
-                                期限: {formatDeadline(item.deadline)}
-                            </span>
-                        )}
+                    <span className="schedule-owner-members" style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                        <span>
+                            期限: {item.deadline ? formatDeadline(item.deadline) : "—"}
+                        </span>
                         <span>
                             メンバー: {item.memberUsernames.length > 0
                                 ? item.memberUsernames.map((u) => item.memberDisplayNames?.[u] ?? u).join(", ")
-                                : "プライベート"
+                                : "—"
                             }
                         </span>
                     </span>
