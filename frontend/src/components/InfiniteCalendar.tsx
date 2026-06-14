@@ -55,7 +55,6 @@ export default function InfiniteCalendar() {
   const [dialogDate, setDialogDate] = useState<Date | null>(null);
   const [showSettings, setShowSettings] = useState(false);
   const [showAccount, setShowAccount] = useState(false);
-  const [showAccountMenu, setShowAccountMenu] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [groups, setGroups] = useState<Group[]>([]);
   const [scheduleFilter, setScheduleFilter] = useState<Set<string | number>>(() => {
@@ -83,8 +82,6 @@ export default function InfiniteCalendar() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const topSentinelRef = useRef<HTMLDivElement>(null);
   const bottomSentinelRef = useRef<HTMLDivElement>(null);
-  const accountMenuRef = useRef<HTMLDivElement>(null);
-
   /** 設定を読み込んで適用 */
   const reloadSettings = useCallback(async () => {
     try {
@@ -129,18 +126,6 @@ export default function InfiniteCalendar() {
   useEffect(() => {
     document.documentElement.style.setProperty("--color-chip-bg", settings.chipBgColor);
   }, [settings.chipBgColor]);
-
-  // アカウントメニューの外側クリックで閉じる
-  useEffect(() => {
-    if (!showAccountMenu) return;
-    const handleClick = (e: MouseEvent) => {
-      if (accountMenuRef.current && !accountMenuRef.current.contains(e.target as Node)) {
-        setShowAccountMenu(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClick);
-    return () => document.removeEventListener("mousedown", handleClick);
-  }, [showAccountMenu]);
 
   // フィルタードロップダウンの外側クリックで閉じる
   useEffect(() => {
@@ -264,7 +249,6 @@ export default function InfiniteCalendar() {
 
   const handleLogoutConfirm = async () => {
     setShowLogoutConfirm(false);
-    setShowAccountMenu(false);
     await logout();
   };
 
@@ -308,17 +292,6 @@ export default function InfiniteCalendar() {
 
   return (
     <div className="calendar-container">
-      <AppHeader
-        monthLabel={monthLabel}
-        settings={settings}
-        user={user}
-        showAccountMenu={showAccountMenu}
-        accountMenuRef={accountMenuRef}
-        onToggleAccountMenu={() => setShowAccountMenu((p) => !p)}
-        onShowSettings={() => { setShowAccountMenu(false); setShowSettings(true); }}
-        onShowAccount={() => { setShowAccountMenu(false); setShowAccount(true); }}
-        onLogoutClick={() => setShowLogoutConfirm(true)}
-      />
       <FilterBar
         groups={groups}
         scheduleFilter={scheduleFilter}
@@ -327,6 +300,14 @@ export default function InfiniteCalendar() {
         onToggleFilterDropdown={() => setShowFilterDropdown((p) => !p)}
         onCloseFilterDropdown={() => setShowFilterDropdown(false)}
         onFilterChange={setScheduleFilter}
+      />
+      <AppHeader
+        monthLabel={monthLabel}
+        settings={settings}
+        user={user}
+        onShowSettings={() => setShowSettings(true)}
+        onShowAccount={() => setShowAccount(true)}
+        onLogoutClick={() => setShowLogoutConfirm(true)}
       />
 
       <CalendarGrid

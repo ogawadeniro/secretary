@@ -1034,7 +1034,6 @@ body {
 .management-header {
     display: flex;
     align-items: center;
-    justify-content: space-between;
     padding: 8px 12px;
     background: var(--color-surface);
     border-bottom: 1px solid var(--color-border);
@@ -1134,24 +1133,24 @@ body {
 .todo-header {
     display: flex;
     align-items: center;
-    gap: 12px;
-    padding: 12px 16px;
+    padding: 8px 12px;
     border-bottom: 1px solid var(--color-border);
     flex-shrink: 0;
+    position: relative;
+    background: var(--color-surface);
 }
 
 .todo-header h1 {
-    flex: 1;
     font-size: 1.1rem;
-    margin: 0;
+    font-weight: 600;
 }
 
 .todo-add-btn {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 36px;
-    height: 36px;
+    width: 1.1rem;
+    height: 1.1rem;
     border-radius: 50%;
     border: none;
     background: var(--color-accent);

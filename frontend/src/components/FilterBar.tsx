@@ -31,8 +31,6 @@ export default function FilterBar({
         display: "flex",
         alignItems: "center",
         gap: "8px",
-        paddingTop: "4px",
-        paddingBottom: "8px",
         justifyContent: "flex-end",
       }}
     >

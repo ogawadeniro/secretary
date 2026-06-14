@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { X, Trash2, Check, UserPlus, Users, Share2, ArrowLeft } from "lucide-react";
+import { X, Trash2, Check, UserPlus, Users, Share2 } from "lucide-react";
 import type { Shareman } from "../types/group";
 import type { Group, GroupMember } from "../types/group";
 import {
@@ -46,11 +46,7 @@ export default function ManagementScreen({ initialTab = "sharemen", onNavigateTo
   return (
     <div className="management-screen">
       <div className="management-header">
-        <button className="icon-btn" onClick={onNavigateToCalendar} title="カレンダーに戻る">
-          <ArrowLeft size={20} />
-        </button>
         <h1>管理</h1>
-        <div style={{ width: "36px" }} />
       </div>
 
       <div className="management-tabs">

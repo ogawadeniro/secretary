@@ -1,14 +1,25 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
-import { Plus, ArrowLeft, Circle, CheckCircle2, CalendarCheck, Users } from "lucide-react";
+import { Plus, Circle, CheckCircle2, CalendarCheck, Users } from "lucide-react";
 import type { TodoItem } from "../types/todo";
 import type { Group } from "../types/group";
+import type { UserSettings } from "../types/settings";
 import { fetchTodos, deleteTodo, toggleComplete } from "../api/todoApi";
 import { fetchGroups } from "../api/groupApi";
+import { fetchSettings } from "../api/settingsApi";
 import TodoDialog from "./TodoDialog";
 import TodoDetailDialog from "./TodoDetailDialog";
 import ConfirmDialog from "./ConfirmDialog";
 import FilterBar from "./FilterBar";
+import UserAccountSection from "./UserAccountSection";
+import SettingsDialog from "./SettingsDialog";
+import AccountDialog from "./AccountDialog";
 import { useAuth } from "../context/AuthContext";
+
+const DEFAULT_SETTINGS: UserSettings = {
+    chipBgColor: "#4a6fa5",
+    firstDayOfWeek: 0,
+    timeInterval: 5,
+};
 
 interface TodoScreenProps {
     onNavigateToCalendar: () => void;
@@ -31,7 +42,7 @@ function formatDeadline(iso?: string): string {
 }
 
 export default function TodoScreen({ onNavigateToCalendar, onNotify }: TodoScreenProps) {
-    const { user } = useAuth();
+    const { user, logout } = useAuth();
     const [todos, setTodos] = useState<TodoItem[]>([]);
     const [groups, setGroups] = useState<Group[]>([]);
     const [detailItem, setDetailItem] = useState<TodoItem | null>(null);
@@ -41,6 +52,10 @@ export default function TodoScreen({ onNavigateToCalendar, onNotify }: TodoScree
     const [confirmCompleteId, setConfirmCompleteId] = useState<number | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [settings, setSettings] = useState<UserSettings>(DEFAULT_SETTINGS);
+    const [showSettings, setShowSettings] = useState(false);
+    const [showAccount, setShowAccount] = useState(false);
+    const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
     const load = useCallback(async () => {
         try {
@@ -59,6 +74,10 @@ export default function TodoScreen({ onNavigateToCalendar, onNotify }: TodoScree
     }, []);
 
     useEffect(() => { load(); }, [load]);
+
+    useEffect(() => {
+        fetchSettings().then(setSettings).catch(() => {});
+    }, []);
 
     const allDoneMessages = [
         "全部終わったよ！おつかれさま〜",
@@ -277,14 +296,24 @@ export default function TodoScreen({ onNavigateToCalendar, onNotify }: TodoScree
 
     return (
         <div className="todo-screen">
+            <FilterBar
+                groups={groups}
+                scheduleFilter={scheduleFilter}
+                showFilterDropdown={showFilterDropdown}
+                filterDropdownRef={filterDropdownRef}
+                onToggleFilterDropdown={() => setShowFilterDropdown((p) => !p)}
+                onCloseFilterDropdown={() => setShowFilterDropdown(false)}
+                onFilterChange={(next) => setScheduleFilter(next)}
+            />
             <div className="todo-header">
-                <button className="icon-btn" onClick={onNavigateToCalendar} title="カレンダーに戻る">
-                    <ArrowLeft size={20} />
-                </button>
                 <h1>やることリスト</h1>
-                <button className="todo-add-btn" onClick={handleCreate} title="やることを追加">
-                    <Plus size={20} />
-                </button>
+                <UserAccountSection
+                    settings={settings}
+                    user={user}
+                    onShowSettings={() => setShowSettings(true)}
+                    onShowAccount={() => setShowAccount(true)}
+                    onLogoutClick={() => setShowLogoutConfirm(true)}
+                />
             </div>
 
             {error && <div className="dialog-error">{error}</div>}
@@ -296,20 +325,16 @@ export default function TodoScreen({ onNavigateToCalendar, onNotify }: TodoScree
                     <p className="todo-empty">やることがまだないよ。追加してみよう！</p>
                 ) : (
                     <div className="todo-list">
-                        <FilterBar
-                            groups={groups}
-                            scheduleFilter={scheduleFilter}
-                            showFilterDropdown={showFilterDropdown}
-                            filterDropdownRef={filterDropdownRef}
-                            onToggleFilterDropdown={() => setShowFilterDropdown((p) => !p)}
-                            onCloseFilterDropdown={() => setShowFilterDropdown(false)}
-                            onFilterChange={(next) => setScheduleFilter(next)}
-                        />
 
                         {/* 未完了セクション */}
                         <div className="todo-section-header">
                             <Circle size={18} />
                             <span>これからやる</span>
+                            <div style={{ marginLeft: "auto" }}>
+                                <button className="todo-add-btn" onClick={handleCreate} title="やることを追加">
+                                    <Plus size={20} />
+                                </button>
+                            </div>
                         </div>
                         {incompleteTodos.length === 0 ? (
                             <p className="todo-empty" style={{ marginTop: 8 }}>{allDoneMessage}</p>
@@ -369,6 +394,33 @@ export default function TodoScreen({ onNavigateToCalendar, onNotify }: TodoScree
                     cancelLabel="まだ"
                     onConfirm={handleCompleteConfirmed}
                     onCancel={() => setConfirmCompleteId(null)}
+                />
+            )}
+
+            {showSettings && (
+                <SettingsDialog
+                    settings={settings}
+                    onClose={() => setShowSettings(false)}
+                    onSaved={(s) => { setSettings(s); setShowSettings(false); }}
+                    onNotify={onNotify}
+                />
+            )}
+
+            {showAccount && (
+                <AccountDialog
+                    settings={settings}
+                    onClose={() => setShowAccount(false)}
+                    onSaved={(s) => { setSettings(s); setShowAccount(false); }}
+                    onNotify={onNotify}
+                />
+            )}
+
+            {showLogoutConfirm && (
+                <ConfirmDialog
+                    message="ログアウトするよ？"
+                    confirmLabel="ログアウト"
+                    onConfirm={async () => { setShowLogoutConfirm(false); await logout(); }}
+                    onCancel={() => setShowLogoutConfirm(false)}
                 />
             )}
         </div>
