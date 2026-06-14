@@ -13,6 +13,7 @@ export default function LoginPage({ onShowForgotPassword }: LoginPageProps) {
   const [password, setPassword] = useState("");
   const [displayName, setDisplayName] = useState("");
   const [email, setEmail] = useState("");
+  const [rememberMe, setRememberMe] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -24,7 +25,7 @@ export default function LoginPage({ onShowForgotPassword }: LoginPageProps) {
       if (isRegister) {
         await register(username, password, displayName, email);
       } else {
-        await login(username, password);
+        await login(username, password, rememberMe);
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "エラーが発生しました");
@@ -89,6 +90,17 @@ export default function LoginPage({ onShowForgotPassword }: LoginPageProps) {
               minLength={4}
             />
           </label>
+
+          {!isRegister && (
+            <label className="login-remember">
+              <input
+                type="checkbox"
+                checked={rememberMe}
+                onChange={(e) => setRememberMe(e.target.checked)}
+              />
+              <span>ログイン状態を保持する</span>
+            </label>
+          )}
 
           <button type="submit" className="login-btn" disabled={submitting}>
             {submitting ? "送信中..." : isRegister ? "登録" : "ログイン"}

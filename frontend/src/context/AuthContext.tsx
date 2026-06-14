@@ -5,7 +5,7 @@ import { loginApi, registerApi, logoutApi, fetchMe } from "../api/authApi";
 interface AuthContextType {
   user: AuthUser | null;
   loading: boolean;
-  login: (username: string, password: string) => Promise<void>;
+  login: (username: string, password: string, rememberMe?: boolean) => Promise<void>;
   register: (username: string, password: string, displayName: string, email: string) => Promise<void>;
   logout: () => Promise<void>;
   updateUser: (partial: Partial<AuthUser>) => void;
@@ -24,8 +24,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .finally(() => setLoading(false));
   }, []);
 
-  const login = useCallback(async (username: string, password: string) => {
-    const u = await loginApi(username, password);
+  const login = useCallback(async (username: string, password: string, rememberMe?: boolean) => {
+    const u = await loginApi(username, password, rememberMe);
     setUser(u);
   }, []);
 

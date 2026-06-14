@@ -9,12 +9,12 @@ export interface AuthUser {
 const BASE = "/api/v1/auth";
 
 /** ログイン */
-export async function loginApi(username: string, password: string): Promise<AuthUser> {
+export async function loginApi(username: string, password: string, rememberMe?: boolean): Promise<AuthUser> {
   const res = await fetch(`${BASE}/login`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     credentials: "include",
-    body: JSON.stringify({ username, password }),
+    body: JSON.stringify({ username, password, rememberMe: rememberMe ?? false }),
   });
   if (!res.ok) {
     if (res.status === 401) throw new Error("ユーザー名またはパスワードが違うよ");

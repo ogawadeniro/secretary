@@ -123,6 +123,14 @@ psql -h "$DB_HOST" -U "$DB_USER" -d "$DB_NAME" <<-EOSQL
         UNIQUE(todo_item_id, username)
     );
 
+    -- 1-10. Remember-Me トークン（ログイン状態の保持）
+    CREATE TABLE IF NOT EXISTS persistent_logins (
+        username VARCHAR(64) NOT NULL,
+        series VARCHAR(64) PRIMARY KEY,
+        token VARCHAR(64) NOT NULL,
+        last_used TIMESTAMP NOT NULL
+    );
+
     -- ============================================================
     --  2. 不足カラムの追加（IF NOT EXISTS で安全）
     -- ============================================================

@@ -11,6 +11,7 @@ import com.rogawa.secretary.infrastructure.rest.dto.RegisterRequest;
 import java.util.Map;
 import com.rogawa.secretary.infrastructure.service.EmailService;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import java.security.SecureRandom;
@@ -24,6 +25,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.authentication.rememberme.AbstractRememberMeServices;
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -40,6 +42,7 @@ public class AuthController {
     private final PasswordEncoder passwordEncoder;
     private final PasswordResetTokenRepository tokenRepository;
     private final EmailService emailService;
+    private final AbstractRememberMeServices rememberMeServices;
     private final SecureRandom secureRandom = new SecureRandom();
 
     @Value("${app.base-url:http://localhost:5173}")
@@ -50,12 +53,14 @@ public class AuthController {
             UserRepository userRepository,
             PasswordEncoder passwordEncoder,
             PasswordResetTokenRepository tokenRepository,
-            EmailService emailService) {
+            EmailService emailService,
+            AbstractRememberMeServices rememberMeServices) {
         this.authenticationManager = authenticationManager;
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.tokenRepository = tokenRepository;
         this.emailService = emailService;
+        this.rememberMeServices = rememberMeServices;
     }
 
     /** ユーザー登録 */
@@ -85,7 +90,8 @@ public class AuthController {
     @PostMapping("/api/v1/auth/login")
     public ResponseEntity<AuthResponse> login(
             @Valid @RequestBody LoginRequest request,
-            HttpServletRequest httpRequest) {
+            HttpServletRequest httpRequest,
+            HttpServletResponse httpResponse) {
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                         request.getUsername(), request.getPassword()));
@@ -96,6 +102,11 @@ public class AuthController {
         session.setAttribute(
                 HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY,
                 SecurityContextHolder.getContext());
+
+        // Remember-Me（ログイン状態の保持）
+        if (request.isRememberMe()) {
+            rememberMeServices.loginSuccess(httpRequest, httpResponse, authentication);
+        }
 
         User user = userRepository.findByUsername(request.getUsername())
                 .orElseThrow();
@@ -122,10 +133,16 @@ public class AuthController {
 
     /** ログアウト */
     @PostMapping("/api/v1/auth/logout")
-    public ResponseEntity<Void> logout(HttpServletRequest httpRequest) {
+    public ResponseEntity<Void> logout(HttpServletRequest httpRequest,
+                                       HttpServletResponse httpResponse) {
         HttpSession session = httpRequest.getSession(false);
         if (session != null) {
             session.invalidate();
+        }
+        // Remember-Me Cookie とトークンを削除
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null) {
+            rememberMeServices.logout(httpRequest, httpResponse, auth);
         }
         SecurityContextHolder.clearContext();
         return ResponseEntity.ok().build();

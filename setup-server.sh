@@ -177,6 +177,14 @@ EOSQL
             UNIQUE(group_id, username)
         );
 
+        -- 1-9. Remember-Me トークン（ログイン状態の保持）
+        CREATE TABLE IF NOT EXISTS persistent_logins (
+            username VARCHAR(64) NOT NULL,
+            series VARCHAR(64) PRIMARY KEY,
+            token VARCHAR(64) NOT NULL,
+            last_used TIMESTAMP NOT NULL
+        );
+
         -- groups に icon_data カラム追加
         ALTER TABLE groups ADD COLUMN IF NOT EXISTS icon_data TEXT;
 EOSQL
