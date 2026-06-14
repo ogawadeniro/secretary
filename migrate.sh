@@ -131,6 +131,9 @@ psql -h "$DB_HOST" -U "$DB_USER" -d "$DB_NAME" <<-EOSQL
         last_used TIMESTAMP NOT NULL
     );
 
+    -- 1-11. persistent_logins へのアクセス権限をアプリユーザーに付与
+    GRANT ALL ON persistent_logins TO rogawa;
+
     -- ============================================================
     --  2. 不足カラムの追加（IF NOT EXISTS で安全）
     -- ============================================================

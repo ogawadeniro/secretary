@@ -185,6 +185,9 @@ EOSQL
             last_used TIMESTAMP NOT NULL
         );
 
+        -- persistent_logins へのアクセス権限をアプリユーザーに付与
+        GRANT ALL ON persistent_logins TO rogawa;
+
         -- groups に icon_data カラム追加
         ALTER TABLE groups ADD COLUMN IF NOT EXISTS icon_data TEXT;
 EOSQL
