@@ -321,15 +321,13 @@ export default function TodoScreen({ onNavigateToCalendar, onNotify }: TodoScree
             <div className="todo-body">
                 {loading ? (
                     <p className="todo-empty">読み込み中...</p>
-                ) : todos.length === 0 ? (
-                    <p className="todo-empty">やることがまだないよ。追加してみよう！</p>
                 ) : (
                     <div className="todo-list">
-
+                        
                         {/* 未完了セクション */}
                         <div className="todo-section-header">
                             <Circle size={18} />
-                            <span>これからやる</span>
+                            <span>これからやること</span>
                             <div style={{ marginLeft: "auto" }}>
                                 <button className="todo-add-btn" onClick={handleCreate} title="やることを追加">
                                     <Plus size={20} />
@@ -337,7 +335,9 @@ export default function TodoScreen({ onNavigateToCalendar, onNotify }: TodoScree
                             </div>
                         </div>
                         {incompleteTodos.length === 0 ? (
-                            <p className="todo-empty" style={{ marginTop: 8 }}>{allDoneMessage}</p>
+                            <p className="todo-empty" style={{ marginTop: 8 }}>
+                                {todos.length === 0 ? "やることがまだないよ。追加してみよう！" : allDoneMessage}
+                            </p>
                         ) : (
                             incompleteTodos.map(renderCard)
                         )}
@@ -347,7 +347,7 @@ export default function TodoScreen({ onNavigateToCalendar, onNotify }: TodoScree
                             <>
                                 <div className="todo-section-header" style={{ marginTop: 24 }}>
                                     <CheckCircle2 size={18} />
-                                    <span>やった</span>
+                                    <span>やったこと</span>
                                 </div>
                                 {completedTodos.map(renderCard)}
                             </>
