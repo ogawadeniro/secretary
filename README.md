@@ -227,7 +227,7 @@ export SECRETARY_DB_PASSWORD=your-password && bash deploy.sh  # または環境�
 
 ## API
 
-ベースURL: `https://tk2-245-32038.vs.sakura.ne.jp/api/v1/`
+ベースURL: `https://secretary.ryokotu.com/api/v1/`
 
 ### 予定
 

@@ -1,7 +1,7 @@
 #!/bin/bash
 set -eu
 
-PROD_HOST="${PROD_HOST:-tk2-245-32038.vs.sakura.ne.jp}"
+PROD_HOST="${PROD_HOST:-secretary.ryokotu.com}"
 PROD_USER="${PROD_USER:-rocky}"
 IMAGE_NAME="${IMAGE_NAME:-secretary}"
 JAR_FILE="target/secretary-0.0.1-SNAPSHOT.jar"
@@ -192,7 +192,7 @@ build_and_run_remote() {
             -e SERVER_SSL_KEY_ALIAS=secretary \
             -e SMTP_USERNAME="${SMTP_USERNAME:-info.secretary.ryokotu@gmail.com}" \
             -e SMTP_PASSWORD="${SMTP_PASSWORD:-}" \
-            -e APP_BASE_URL="${APP_BASE_URL:-https://tk2-245-32038.vs.sakura.ne.jp}" \
+            -e APP_BASE_URL="${APP_BASE_URL:-https://secretary.ryokotu.com}" \
             -v /etc/secretary:/etc/secretary:ro \
             "${IMAGE_NAME}:latest"
 

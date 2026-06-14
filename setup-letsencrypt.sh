@@ -8,7 +8,7 @@
 #   - ポート80が空いていること
 set -euo pipefail
 
-DOMAIN="${1:-tk2-245-32038.vs.sakura.ne.jp}"
+DOMAIN="${1:-secretary.ryokotu.com}"
 KEYSTORE_DIR="/etc/secretary"
 KEYSTORE_FILE="${KEYSTORE_DIR}/keystore.p12"
 PASSWORD_FILE="${KEYSTORE_DIR}/keystore-password.txt"
