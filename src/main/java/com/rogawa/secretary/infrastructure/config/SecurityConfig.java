@@ -82,7 +82,7 @@ public class SecurityConfig {
     public AbstractRememberMeServices rememberMeServices(
             CustomUserDetailsService userDetailsService,
             PersistentTokenRepository tokenRepository) {
-        PersistentTokenBasedRememberMeServices services = new PersistentTokenBasedRememberMeServices(
+        PersistentTokenBasedRememberMeServices services = new CustomRememberMeServices(
                 "SecretaryRememberMeKey", userDetailsService, tokenRepository);
         services.setTokenValiditySeconds(1209600); // 14日間
         return services;
