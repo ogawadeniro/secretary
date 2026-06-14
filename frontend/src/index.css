@@ -514,6 +514,14 @@ body {
     gap: 8px;
 }
 
+.schedule-card-clickable {
+    cursor: pointer;
+}
+
+.schedule-card-clickable:hover {
+    background: var(--color-hover);
+}
+
 .schedule-card-info {
     display: flex;
     flex-direction: column;

@@ -6,6 +6,7 @@ interface ScheduleCardProps {
   groups: Group[];
   onEdit: () => void;
   onDelete: () => void;
+  onClick?: () => void;
 }
 
 /** 予定のカード背景色（常に surface2） */
@@ -14,7 +15,7 @@ function cardBg(): string {
 }
 
 /** 1件の予定を表示するカード */
-export default function ScheduleCard({ schedule, groups, onEdit, onDelete }: ScheduleCardProps) {
+export default function ScheduleCard({ schedule, groups, onEdit, onDelete, onClick }: ScheduleCardProps) {
   const s = schedule;
   const sd = s.startDatetime.slice(0, 10);
   const ed = s.endDatetime.slice(0, 10);
@@ -22,7 +23,10 @@ export default function ScheduleCard({ schedule, groups, onEdit, onDelete }: Sch
   const members = s.memberUsernames ?? [];
 
   return (
-    <div className="schedule-card">
+    <div
+      className={`schedule-card${onClick ? " schedule-card-clickable" : ""}`}
+      onClick={onClick}
+    >
       <div className="schedule-card-info">
         <strong
           style={{

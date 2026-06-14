@@ -7,7 +7,7 @@ import {
 } from "../api/scheduleApi";
 import { addMember, removeMember } from "../api/memberApi";
 import type { Group } from "../types/group";
-import { PartyPopper } from "lucide-react";
+import { PartyPopper, ArrowLeft, X, Pencil, Trash2, Users, Calendar, Clock, Globe } from "lucide-react";
 import ScheduleCard from "./ScheduleCard";
 import ScheduleForm, { type ScheduleFormData } from "./ScheduleForm";
 
@@ -43,6 +43,7 @@ export default function ScheduleDialog({
   const [error, setError] = useState<string | null>(null);
   const [closing, setClosing] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<Schedule | null>(null);
+  const [viewing, setViewing] = useState<Schedule | null>(null);
 
   const ANIMATION_DURATION = 200;
 
@@ -50,6 +51,22 @@ export default function ScheduleDialog({
     setClosing(true);
     setTimeout(onClose, ANIMATION_DURATION);
   };
+
+  function fmt(iso: string): string {
+      try {
+          const parts = iso.split(/[-/:]/);
+          // format: yyyy/MM/dd-HH:mm:ss → parts: [yyyy, MM, dd, HH, mm, ss]
+          const d = new Date(+parts[0], +parts[1] - 1, +parts[2], +parts[3], +parts[4], +parts[5]);
+          const y = d.getFullYear();
+          const m = String(d.getMonth() + 1).padStart(2, "0");
+          const day = String(d.getDate()).padStart(2, "0");
+          const h = String(d.getHours()).padStart(2, "0");
+          const min = String(d.getMinutes()).padStart(2, "0");
+          return `${y}/${m}/${day} ${h}:${min}`;
+      } catch {
+          return iso;
+      }
+  }
 
   /** 予定を削除 */
   const handleDelete = async (id: number) => {
@@ -151,12 +168,13 @@ export default function ScheduleDialog({
             <p className="empty-msg">予定が入っていないよ</p>
           )}
 
-          {!showForm && !deleteTarget &&
+          {!showForm && !deleteTarget && !viewing &&
             schedules.map((s) => (
               <ScheduleCard
                 key={s.id}
                 schedule={s}
                 groups={groups}
+                onClick={() => setViewing(s)}
                 onEdit={() => {
                   setEditing(s);
                   setShowForm(true);
@@ -175,6 +193,136 @@ export default function ScheduleDialog({
             </div>
           )}
 
+          {viewing && !showForm && !deleteTarget && (() => {
+            const s = viewing;
+            const sd = s.startDatetime.slice(0, 10);
+            const ed = s.endDatetime.slice(0, 10);
+            const multiDay = sd !== ed;
+            const members = s.memberUsernames ?? [];
+
+            const groupName = (gid: number): string => {
+                const g = groups.find((gr) => gr.id === gid);
+                return g?.name ?? `グループ#${gid}`;
+            };
+
+            return (
+              <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                <div className="detail-field">
+                  <span className="detail-label">説明</span>
+                  <span className="detail-value">{s.description || "（説明なし）"}</span>
+                </div>
+
+                <div className="detail-field">
+                  <span className="detail-label">
+                    <Calendar size={14} style={{ marginRight: 4, verticalAlign: "middle" }} />
+                    日時
+                  </span>
+                  <span className="detail-value">
+                    {s.isAllDay
+                      ? multiDay ? `${sd} 終日 ~ ${ed} 終日` : `${sd} 終日`
+                      : multiDay
+                        ? `${sd} ${s.startDatetime.slice(11, 16)} ~ ${ed} ${s.endDatetime.slice(11, 16)}`
+                        : `${sd} ${s.startDatetime.slice(11, 16)} ~ ${s.endDatetime.slice(11, 16)}`}
+                  </span>
+                </div>
+
+                <div className="detail-field">
+                  <span className="detail-label">
+                    <Globe size={14} style={{ marginRight: 4, verticalAlign: "middle" }} />
+                    共有
+                  </span>
+                  <span className="detail-value">{s.shared ? "他のユーザーと共有する" : "共有しない"}</span>
+                </div>
+
+                <div className="detail-field">
+                  <span className="detail-label">作成者</span>
+                  <span className="detail-value">{s.ownerDisplayName ?? s.owner}</span>
+                </div>
+
+                {s.updateTime && (
+                  <div className="detail-field">
+                    <span className="detail-label">
+                      <Clock size={14} style={{ marginRight: 4, verticalAlign: "middle" }} />
+                      更新日時
+                    </span>
+                    <span className="detail-value">{fmt(s.updateTime)}</span>
+                  </div>
+                )}
+
+                {(s.groupIds ?? []).length > 0 && (
+                  <div className="detail-field">
+                    <span className="detail-label">
+                      <Users size={14} style={{ marginRight: 4, verticalAlign: "middle" }} />
+                      共有グループ
+                    </span>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: "4px", marginTop: 4 }}>
+                      {(s.groupIds ?? []).map((gid) => (
+                        <span key={gid} className="detail-badge">{groupName(gid)}</span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {members.length > 0 && (
+                  <div className="detail-field">
+                    <span className="detail-label">
+                      <Users size={14} style={{ marginRight: 4, verticalAlign: "middle" }} />
+                      メンバー
+                    </span>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: "4px", marginTop: 4 }}>
+                      {members.map((uname) => (
+                        <span
+                          key={uname}
+                          className="detail-badge"
+                          style={{
+                            background: s.memberChipBgColors?.[uname]
+                              ? `${s.memberChipBgColors[uname]}44`
+                              : "var(--color-surface2)",
+                          }}
+                        >
+                          {s.memberDisplayNames?.[uname] ?? uname}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <div className="form-actions" style={{ marginTop: 8 }}>
+                  <button className="cancel-btn" onClick={() => setViewing(null)} style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                    <ArrowLeft size={16} />
+                    戻る
+                  </button>
+                  {s.canEdit && (
+                    <>
+                      <button
+                        className="save-btn"
+                        onClick={() => {
+                          setEditing(s);
+                          setShowForm(true);
+                        }}
+                        style={{ display: "flex", alignItems: "center", gap: 6 }}
+                      >
+                        <Pencil size={16} />
+                        編集
+                      </button>
+                      <button
+                        className="cancel-btn"
+                        onClick={() => {
+                          setViewing(null);
+                          setDeleteTarget(s);
+                        }}
+                        style={{ display: "flex", alignItems: "center", gap: 6, color: "var(--color-sun)", borderColor: "var(--color-sun)" }}
+                      >
+                        <Trash2 size={16} />
+                        削除
+                      </button>
+                    </>
+                  )}
+                </div>
+              </div>
+            );
+          })()}
+
           {showForm && (
             <ScheduleForm
               initial={editing}
@@ -190,7 +338,7 @@ export default function ScheduleDialog({
             />
           )}
 
-          {!showForm && (
+          {!showForm && !viewing && (
             <button
               className="add-btn"
               onClick={() => {
